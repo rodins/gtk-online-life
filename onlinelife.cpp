@@ -34,7 +34,7 @@ GtkWidget *pbStatus;
 //Categories
 Categories categories;
 //Results
-Results results(pbStatus);
+Results results;
 //Playlists
 Playlists playlists;
 //Actors

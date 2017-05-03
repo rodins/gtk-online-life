@@ -9,9 +9,8 @@ class Results {
 	string current_page;
 	string page;
 	public:
-	Results(GtkWidget *pb) {
-		html_string.setProgressBar(pb);
-		domain = "http://www.online-life.cc/";
+	Results() {
+		domain = "http://www.online-life.in/";
 	}
 	
 	void getResultsPage(string p) {
