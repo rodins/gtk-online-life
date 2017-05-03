@@ -4,10 +4,19 @@
 
 class Playlists {
 	vector<Playlist> playlists;
+	string title;
 	public:
 	
-	vector<Playlist> getPlaylists() {
+	vector<Playlist>& getPlaylists() {
 		return playlists;
+	}
+	
+	void setTitle(string t) {
+		title = t;
+	}
+	
+	string getTitle() {
+		return title;
 	}
 	
 	void parse(string json) {
@@ -26,7 +35,6 @@ class Playlists {
 		if(file_begin != string::npos && file_end != string::npos) {
 		    size_t file_length = file_end - file_begin;
 		    string file = page.substr(file_begin+8, file_length-8);
-		    //cout << file << endl;	
 		    play_item.set_file(file);
 		}
 		
@@ -36,7 +44,6 @@ class Playlists {
 		if(download_begin != string::npos && download_end != string::npos) {
 			size_t download_length = download_end - download_begin;
 			string download = page.substr(download_begin+12, download_length-12);
-			//cout << download << endl;
 			play_item.set_download(download);
 		}
 		
@@ -46,7 +53,6 @@ class Playlists {
 		if(comment_begin != string::npos && comment_end != string::npos) {
 			size_t comment_length = comment_end - comment_begin;
 			string comment = page.substr(comment_begin+11, comment_length-11);
-			//cout << comment << endl;
 			play_item.set_comment(comment);
 		}
 		return play_item;
@@ -55,7 +61,6 @@ class Playlists {
 	private:
 	
 	Playlist parse_playlist(string items, string comment) {
-		//cout << items << endl;
 		Playlist playlist(comment);
 		size_t item_start = items.find("{");
 		size_t item_end = items.find("}", item_start+1);
@@ -64,7 +69,6 @@ class Playlists {
 		    string item = items.substr(item_start, item_length);
 					
 			PlayItem pl_item = parse_play_item(item);
-			//cout << pl_item.get_comment() << endl;
 			playlist.push_back(pl_item);
 					
 			item_start = items.find("{", item_end+1);
@@ -82,7 +86,6 @@ class Playlists {
 		while(playlist_begin != string::npos && playlist_end != string::npos) {
 			size_t playlist_length = playlist_end - playlist_begin;
 			string playlist = page.substr(playlist_begin, playlist_length);
-			//cout << "Playlist: " << playlist << " :playlist" << endl;
 			
 			//Search for comment
 		    size_t comment_begin = playlist.find("\"comment\"");
@@ -94,7 +97,6 @@ class Playlists {
 				if(comment_new_line != string::npos) {
 				    comment = playlist.substr(comment_begin+11, comment_new_line);
 				}
-			    //cout << comment << endl;
 			    
 				size_t items_length = playlist.length() - comment_end;
 				string items = playlist.substr(comment_end +1, items_length);
@@ -107,6 +109,5 @@ class Playlists {
 			playlist_begin = page.find(begin, playlist_end+2);
 			playlist_end = page.find(end, playlist_begin+1);
 		}
-		//cout << "Found " << playlists.size() << " playlists" << endl;
 	} 
 };

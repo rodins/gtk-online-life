@@ -1,17 +1,28 @@
 #include "Item.hpp"
 
 class Results {
-	HtmlString html_string;
     string prev_link, next_link;
 	string domain;
 	string base_url;
 	vector<Item> results;
 	string current_page;
 	string page;
+	string title;
 	public:
 	Results(GtkWidget *pb) {
-		html_string.setProgressBar(pb);
 		domain = "http://www.online-life.cc/";
+	}
+	
+	void setTitle(string t) {
+		title = t;
+	}
+	
+	string getTitle() {
+		if(current_page.empty()) {
+			return title;
+		}else {
+		    return title + " - Page: " + current_page;	
+		}
 	}
 	
 	void getResultsPage(string p) {
@@ -24,15 +35,19 @@ class Results {
 	    base_url = bu;
 	}
 	
-	vector<Item> getResults() {
+	string& getBaseUrl() {
+		return base_url;
+	}
+	
+	vector<Item> &getResults() {
 	    return results;	
 	}
 	
-	string getPrevLink() {
+	string& getPrevLink() {
 		return prev_link;
 	}
 	
-	string getNextLink() {
+	string& getNextLink() {
 		return next_link;
 	}
 	
@@ -51,7 +66,6 @@ class Results {
 		while(div_end != string::npos && div_begin != string::npos) {
 			size_t div_length = div_end - div_begin + end.length(); 
 			string div = page.substr(div_begin, div_length);
-			//cout << "DIV START: " <<  div << ". END" << endl;
 			
 			//Find title
 			size_t title_begin = div.find("/>");
@@ -64,7 +78,6 @@ class Results {
 				    title = div.substr(title_begin+2, title_new_line + 1);
 					title.erase(title.size()-1);
 				}
-				//cout << title << endl;
 				
 				//Find href
 				size_t href_begin = div.find("href=");
@@ -72,7 +85,6 @@ class Results {
 				if(href_begin != string::npos && href_end != string::npos) {
 					size_t href_length = href_end - href_begin; 
 					string href = div.substr(href_begin+6, href_length-1);
-					//cout << href << endl;
 					
 					//Find id
 					size_t id_begin = href.find(domain);
@@ -80,15 +92,50 @@ class Results {
 					if(id_begin != string::npos && id_end != string::npos) {
 						size_t id_length = id_end - id_begin - domain.length();
 						string id_str = href.substr(id_begin + domain.length(), id_length);
-						//cout << id_str << endl;
-						Item item(title, id_str, href);
-						results.push_back(item);
+						
+						//Find image
+						size_t image_begin = div.find("src=");
+						size_t image_end = div.find(".jpg", image_begin + 1);
+						if(image_begin != string::npos && image_end != string::npos) {
+							size_t image_length = image_end - image_begin;
+							string image = div.substr(image_begin+5, image_length-1);
+							
+							//replace &amp, gives bigger image;
+						    /*string toReplace = "&amp;";
+						    string replaceWith = "&";
+						    size_t entityFound = image.find(toReplace);
+						    while(entityFound != string::npos){
+						        image.replace(entityFound,toReplace.length(),replaceWith);
+							    entityFound = image.find(toReplace, entityFound+1);
+					        }*/
+							
+							Item item(title, id_str, href, image);
+						    results.push_back(item);
+						}
 					}
 				}
 			}
 			
 			div_begin = page.find(begin, div_end+1);
 		    div_end = page.find(end, div_begin+1);
+		}
+	}
+	
+	void parse_anchor(string anchor) {
+		size_t link_begin = anchor.find("=\"");
+		size_t link_end = anchor.find(">", link_begin + 5);
+		if(link_begin != string::npos && link_end != string::npos) {
+			size_t link_length = link_end - link_begin;
+			string link = anchor.substr(link_begin+2, link_length-3);
+			string title = to_utf8(anchor.substr(link_end+1));
+			
+			if(title == "Вперед") {
+				next_link = link;
+			}
+			
+			if(title == "Назад") {
+				prev_link = link;
+			}
 		}
 	}
 	
@@ -99,7 +146,6 @@ class Results {
 		if(pager_end != string::npos && pager_begin != string::npos) {
 			size_t pager_length = pager_end - pager_begin;
 			string pager = page.substr(pager_begin+2, pager_length-2);
-	        //cout << pager << endl;
 	        
 	        // Find spans
 	        string begin_span = "<span>";
@@ -113,12 +159,10 @@ class Results {
 				size_t span_length = span_end - span_begin;
 				spans[count_span] = pager.substr(span_begin+6, span_length-6);
 				pages[count_span] = atoi(spans[count_span].c_str());
-				//cout << atoi(spans[count_span].c_str()) << endl;
 				count_span++;
 				span_begin = pager.find(begin_span, span_end);
 	            span_end = pager.find(end_span, span_begin);
 			}
-			//cout << span << " " << count_span << endl;
 			current_page = "";
 			if(count_span == 1) {
 				current_page = spans[0];
@@ -132,72 +176,51 @@ class Results {
 			}
 	        
 	        //Find menu pager anchors
+	        // <a href="http://google.com.ua">Google</a>
 	        string begin = "<a href";
-		    string end = "\">";
+		    string end = "</a>";
 	        size_t anchor_begin = pager.find(begin);
 	        size_t anchor_end = pager.find(end, anchor_begin+1);
-	        int count_anchor = 0;
 	        string anchor;
 	        while(anchor_end != string::npos && anchor_begin != string::npos) {
 				size_t anchor_length = anchor_end - anchor_begin;
-				anchor = pager.substr(anchor_begin+9, anchor_length-9);
-				//cout << anchor << endl;
+				anchor = pager.substr(anchor_begin, anchor_length);
 				
-				if(count_anchor == 0) { //Get the first link
-					if(count_span == 2) { //First or last page
-					    if(pages[1] == 0) { //Last page
-							prev_link = anchor;
-						}else {
-							prev_link = ""; //First page
-						} 
-				    }else {//Page in the middle
-					    prev_link = anchor;
-				    }
-				}
+				parse_anchor(anchor);
 				
-				count_anchor++;
 			    anchor_begin = pager.find(begin, anchor_end);
 	            anchor_end = pager.find(end, anchor_begin);
 			}
 			
 			//Find search pager anchors
-	        begin = "onclick=\"javascript:list_submit(";
-		    end = ")";
+		    begin = "onclick";
 	        anchor_begin = pager.find(begin);
 	        anchor_end = pager.find(end, anchor_begin+1);
-	        count_anchor = 0;
 	        while(anchor_end != string::npos && anchor_begin != string::npos) {
 				size_t anchor_length = anchor_end - anchor_begin;
-				anchor = pager.substr(anchor_begin+32, anchor_length-32);
-				//cout << anchor << " " << anchor.size() << endl;
+				anchor = pager.substr(anchor_begin, anchor_length);
 				
-				if(count_anchor == 0) { //Get the first link
-					if(count_span == 2) { //First or last page
-					    if(pages[1] == 0) { //Last page
-							prev_link = base_url + "&search_start=" + anchor;
-						} 
-				    }else {//Page in the middle
-					    prev_link = base_url + "&search_start=" + anchor;
-				    }
+				size_t page_begin = anchor.find("(");
+				size_t page_end = anchor.find(")", page_begin+1);
+				if(page_begin != string::npos && page_end != string::npos) {
+					size_t page_length = page_end - page_begin;
+					string page_num = anchor.substr(page_begin+1, page_length-1);
+					
+					size_t title_begin = anchor.find(">");
+					string title = to_utf8(anchor.substr(title_begin+1));
+					
+					if(title == "Вперед") {
+						next_link = base_url + "&search_start=" + page_num;
+					}
+					
+					if(title == "Назад") {
+						prev_link = base_url + "&search_start=" + page_num;
+					}
 				}
 				
-				count_anchor++;
 			    anchor_begin = pager.find(begin, anchor_end);
 	            anchor_end = pager.find(end, anchor_begin);
 			}
-			
-			//Get the last link
-			if(count_span == 2) { //First or last page
-				if(pages[0] == 0) { //First page
-					anchor.size() > 3 ? next_link = anchor : next_link = base_url + "&search_start=" + anchor;
-				} 
-			}else {//Page in the middle
-			    anchor.size() > 3 ? next_link = anchor : next_link = base_url + "&search_start=" + anchor;
-		    }
-			
-			/*cout << "Prev: " << prev_link << endl;
-	        cout << "Current page: " << current_page << endl;
-	        cout << "Next: " << next_link << endl;*/
 		}
 	}
 

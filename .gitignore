@@ -7,3 +7,6 @@ onlinelife
 # Ignore sh
 *.sh
 
+# ignore images
+*.png
+

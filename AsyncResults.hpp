@@ -1,0 +1,5 @@
+//AsyncResults.hpp
+
+class AsyncResults {
+
+}

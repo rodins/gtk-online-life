@@ -24,7 +24,7 @@ class CategoryItem {
 		}
 	}
 	
-	string get_link() {
+	string& get_link() {
 		return _link;
 	}
 	
@@ -32,7 +32,7 @@ class CategoryItem {
 		_subctgs.push_back(item);
 	}
 	
-	vector<CategoryItem> get_subctgs() {
+	vector<CategoryItem>& get_subctgs() {
 		return _subctgs;
 	}
 };
