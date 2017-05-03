@@ -11,13 +11,12 @@
 #include "DisplayMode.hpp"
 #include "HtmlString.hpp"
 
+#define DOMAIN "http://www.online-life.in"
 
 #include "Categories.hpp"
 #include "Results.hpp"
 #include "Playlists.hpp"
 #include "Actors.hpp"
-
-#define DOMAIN "http://online-life.cc"
 
 using namespace std;
 
@@ -31,7 +30,7 @@ GtkWidget *pbStatus;
 //Categories
 Categories categories;
 //Results
-Results results(pbStatus);
+Results results;
 //Playlists
 Playlists playlists;
 //Actors
@@ -393,6 +392,7 @@ void updateResults() {
 
 gpointer getResultsTask(gpointer arg) {
 	string link((char *)arg);
+	cout << "Link: " << link << endl;
 	gdk_threads_enter();
 	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching results...");
     gdk_threads_leave();

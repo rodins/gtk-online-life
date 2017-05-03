@@ -2,16 +2,12 @@
 
 class Results {
     string prev_link, next_link;
-	string domain;
 	string base_url;
 	vector<Item> results;
 	string current_page;
 	string page;
 	string title;
 	public:
-	Results(GtkWidget *pb) {
-		domain = "http://www.online-life.cc/";
-	}
 	
 	void setTitle(string t) {
 		title = t;
@@ -58,6 +54,7 @@ class Results {
 	private:
 	//Parse search results
 	void parse_results() {
+		string domain(DOMAIN);
 		results.clear();
 	    string begin = "<div class=\"custom-poster\"";
 		string end = "</a>";
@@ -66,7 +63,7 @@ class Results {
 		while(div_end != string::npos && div_begin != string::npos) {
 			size_t div_length = div_end - div_begin + end.length(); 
 			string div = page.substr(div_begin, div_length);
-			
+			//cout << "Div: " << div << endl;
 			//Find title
 			size_t title_begin = div.find("/>");
 			size_t title_end = div.find("</a>", title_begin + 1);
@@ -78,6 +75,7 @@ class Results {
 				    title = div.substr(title_begin+2, title_new_line + 1);
 					title.erase(title.size()-1);
 				}
+				//cout << "Title: " << title << endl;
 				
 				//Find href
 				size_t href_begin = div.find("href=");
@@ -85,14 +83,14 @@ class Results {
 				if(href_begin != string::npos && href_end != string::npos) {
 					size_t href_length = href_end - href_begin; 
 					string href = div.substr(href_begin+6, href_length-1);
-					
+					//cout << "Href: " << href << endl;
 					//Find id
 					size_t id_begin = href.find(domain);
 					size_t id_end = href.find("-", id_begin + domain.length());
 					if(id_begin != string::npos && id_end != string::npos) {
 						size_t id_length = id_end - id_begin - domain.length();
 						string id_str = href.substr(id_begin + domain.length(), id_length);
-						
+						//cout << "Id: " << id_str << endl;
 						//Find image
 						size_t image_begin = div.find("src=");
 						size_t image_end = div.find(".jpg", image_begin + 1);
