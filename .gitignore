@@ -1,0 +1,8 @@
+# Ignore html
+*.html
+
+# Ignore sh
+*.sh
+
+# Ignore executable binary 'onlinelife'
+*life 
