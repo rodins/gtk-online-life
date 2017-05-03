@@ -11,7 +11,7 @@
 #include "DisplayMode.hpp"
 #include "HtmlString.hpp"
 
-#define DOMAIN "http://www.online-life.in"
+#define DOMAIN "http://online-life.in"
 
 #include "Categories.hpp"
 #include "Results.hpp"
@@ -392,7 +392,7 @@ void updateResults() {
 
 gpointer getResultsTask(gpointer arg) {
 	string link((char *)arg);
-	cout << "Link: " << link << endl;
+	//cout << "Link: " << link << endl;
 	gdk_threads_enter();
 	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching results...");
     gdk_threads_leave();
