@@ -523,10 +523,10 @@ void displayPlaylists() {
 void processPlayItem(PlayItem item) {
 	if(!item.get_comment().empty()) {
 	    if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
-		    string command = "xterm -e wget -c " + item.get_download() + " &";
+		    string command = "xterm -e wget -P ~/Download -c " + item.get_download() + " &";
 	        system(command.c_str());
 		}else if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay))) {
-		    string command = "xterm -e mplayer -cache 1024 " + item.get_file() + " &";
+		    string command = "xterm -e mplayer -cache 2048 " + item.get_file() + " &";
 	        system(command.c_str());
 		}	
 	}
