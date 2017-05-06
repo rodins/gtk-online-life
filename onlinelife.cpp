@@ -1043,9 +1043,6 @@ int main( int   argc,
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
     
     rbActors = gtk_radio_tool_button_new_from_stock(NULL, "gtk-info");
-    
-    g_signal_connect(rbActors, "clicked", G_CALLBACK(rbActorsClicked), NULL);
-    
     rbPlay = gtk_radio_tool_button_new_with_stock_from_widget(
         GTK_RADIO_TOOL_BUTTON(rbActors), "gtk-media-play");
     rbDownload = gtk_radio_tool_button_new_with_stock_from_widget(
@@ -1058,8 +1055,8 @@ int main( int   argc,
     // Default is "play"
     gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay), TRUE); 
     
+    sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
-    
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), rbPlay, -1);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), rbDownload, -1);
     sep = gtk_separator_tool_item_new();
@@ -1165,6 +1162,8 @@ int main( int   argc,
     gtk_window_set_default_size(GTK_WINDOW(window), 700, 400);
     
     gtk_widget_show_all(window);
+    
+    g_signal_connect(GTK_WIDGET(rbActors), "clicked", G_CALLBACK(rbActorsClicked), NULL);
     
     gtk_widget_set_visible(vbLeft, FALSE);
     gtk_widget_set_visible(vbRight, FALSE);
