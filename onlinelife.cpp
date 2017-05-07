@@ -18,6 +18,8 @@
 #include "Playlists.hpp"
 #include "Actors.hpp"
 
+#define OLD
+
 using namespace std;
 
 enum {
@@ -351,11 +353,14 @@ GtkTreeModel *getResultsModel() {
 		}else {
 			item = defaultItem;
 			iters[link] = iter;
-			/*g_thread_new(NULL, imageDownloadTask, 
-			    (gpointer) results.getResults()[i].get_image_link().c_str());*/
-			g_thread_create(imageDownloadTask,
-			 (gpointer) results.getResults()[i].get_image_link().c_str(),
-			  FALSE, NULL);
+			#ifdef OLD
+				g_thread_create(imageDownloadTask,
+				 (gpointer) results.getResults()[i].get_image_link().c_str(),
+				  FALSE, NULL);
+			#elif
+				g_thread_new(NULL, imageDownloadTask, 
+				    (gpointer) results.getResults()[i].get_image_link().c_str());
+			#endif
 		}
 		
         gtk_list_store_set(store, &iter, IMAGE_COLUMN, item,
@@ -416,22 +421,28 @@ void processCategory(gint *indices, gint count) {//move to results
 		gint i = indices[0];
 		title = PROG_NAME + " - " + categories.getCategories()[i].get_title();
 		results.setTitle(title);
-		/*g_thread_new(NULL, getResultsTask,
-		    (gpointer) categories.getCategories()[i].get_link().c_str());*/
-		g_thread_create(getResultsTask,
-			 (gpointer) categories.getCategories()[i].get_link().c_str(),
-			  FALSE, NULL);
+		#ifdef OLD
+			g_thread_create(getResultsTask,
+				 (gpointer) categories.getCategories()[i].get_link().c_str(),
+				  FALSE, NULL);
+	    #elif
+		    g_thread_new(NULL, getResultsTask,
+			    (gpointer) categories.getCategories()[i].get_link().c_str());
+	    #endif
 		
 	}else if(count == 2) { //Leaf
 		gint i = indices[0];
 		gint j = indices[1];
 		title = PROG_NAME + " - " + categories.getCategories()[i].get_subctgs()[j].get_title();
 		results.setTitle(title);
-		/*g_thread_new(NULL, getResultsTask, 
-		    (gpointer) categories.getCategories()[i].get_subctgs()[j].get_link().c_str());*/
-		g_thread_create(getResultsTask,
-			 (gpointer) categories.getCategories()[i].get_subctgs()[j].get_link().c_str(),
-			  FALSE, NULL);
+		#ifdef OLD
+			g_thread_create(getResultsTask,
+				 (gpointer) categories.getCategories()[i].get_subctgs()[j].get_link().c_str(),
+				  FALSE, NULL);
+	    #elif
+		    g_thread_new(NULL, getResultsTask, 
+			    (gpointer) categories.getCategories()[i].get_subctgs()[j].get_link().c_str());
+		#endif
 	}
 	
 }
@@ -653,18 +664,24 @@ void processResult(gint *indices, gint count) {//move to playlists
 		title = PROG_NAME + " - " + results.getResults()[i].get_title();
 		if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
 			actors.setTitle(title);
-	        /*g_thread_new(NULL, getActorsTask,
-	            (gpointer) results.getResults()[i].get_href().c_str());*/	
-	        g_thread_create(getActorsTask,
-			 (gpointer) results.getResults()[i].get_href().c_str(),
-			  FALSE, NULL);
+	        #ifdef OLD    	
+		        g_thread_create(getActorsTask,
+				 (gpointer) results.getResults()[i].get_href().c_str(),
+				  FALSE, NULL);
+			#elif
+				g_thread_new(NULL, getActorsTask,
+		            (gpointer) results.getResults()[i].get_href().c_str());
+	        #endif    
 		}else {
 			playlists.setTitle(title);
-	        /*g_thread_new(NULL, getPlaylistsTask,
-	            (gpointer) results.getResults()[i].get_id().c_str());*/
-	        g_thread_create(getPlaylistsTask,
-			 (gpointer) results.getResults()[i].get_id().c_str(),
-			  FALSE, NULL);	
+	        #ifdef OLD    
+		        g_thread_create(getPlaylistsTask,
+				 (gpointer) results.getResults()[i].get_id().c_str(),
+				  FALSE, NULL);
+			#elif
+				g_thread_new(NULL, getPlaylistsTask,
+		            (gpointer) results.getResults()[i].get_id().c_str());
+			#endif	
 		}
 	}
 }
@@ -674,11 +691,14 @@ void processActor(gint *indices, gint count) {
 		gint i = indices[0];
 		title = PROG_NAME + " - " + actors.getActors()[i].get_title();
 		results.setTitle(title);
-	    /*g_thread_new(NULL, getResultsTask, 
-	        (gpointer) actors.getActors()[i].get_href().c_str());*/
-	    g_thread_create(getResultsTask,
-			 (gpointer) actors.getActors()[i].get_href().c_str(),
-			  FALSE, NULL);	
+	    #ifdef OLD    
+		    g_thread_create(getResultsTask,
+				 (gpointer) actors.getActors()[i].get_href().c_str(),
+				  FALSE, NULL);
+		#elif
+			g_thread_new(NULL, getResultsTask, 
+		        (gpointer) actors.getActors()[i].get_href().c_str());
+		#endif	  	
 	}
 }
 
@@ -863,10 +883,13 @@ static void btnCategoriesClicked( GtkWidget *widget,
 {
     if(categories.getCategories().empty()) {
 		//Starting new thread to get categories from the net
-		/*g_thread_new(NULL, getCategoriesTask, NULL);*/
-		g_thread_create(getCategoriesTask,
-			  NULL,
-			  FALSE, NULL);
+		#ifdef OLD
+		    g_thread_create(getCategoriesTask,
+			    NULL,
+			    FALSE, NULL);
+		#elif
+	        g_thread_new(NULL, getCategoriesTask, NULL);
+	    #endif
 	}else {
 		updateCategories();
 	}	
@@ -906,21 +929,27 @@ static void btnUpClicked( GtkWidget *widget,
 static void btnPrevClicked( GtkWidget *widget,
                       gpointer   data )
 {   
-	/*g_thread_new(NULL, getResultsTask, 
-	    (gpointer)results.getPrevLink().c_str());*/
-	g_thread_create(getResultsTask,
-			 (gpointer)results.getPrevLink().c_str(),
-			  FALSE, NULL);
+	#ifdef OLD    
+		g_thread_create(getResultsTask,
+				 (gpointer)results.getPrevLink().c_str(),
+				  FALSE, NULL);
+	#elif
+	    g_thread_new(NULL, getResultsTask, 
+	    (gpointer)results.getPrevLink().c_str());
+	#endif		  
 }
 
 static void btnNextClicked( GtkWidget *widget,
                       gpointer   data )
 {   
-	/*g_thread_new(NULL, getResultsTask, 
-	    (gpointer)results.getNextLink().c_str());*/
-	g_thread_create(getResultsTask,
-			 (gpointer)results.getNextLink().c_str(),
-			  FALSE, NULL);
+	#ifdef OLD    
+		g_thread_create(getResultsTask,
+		    (gpointer)results.getNextLink().c_str(),
+		     FALSE, NULL);
+	#elif
+	    g_thread_new(NULL, getResultsTask, 
+	        (gpointer)results.getNextLink().c_str());
+	#endif		  
 }
 
 static void entryActivated( GtkWidget *widget, 
@@ -930,10 +959,13 @@ static void entryActivated( GtkWidget *widget,
     results.setTitle(title);
     string base_url = string(DOMAIN) + "/?do=search&subaction=search&mode=simple&story=" + to_cp1251(query);
     results.setBaseUrl(base_url);
-	//g_thread_new(NULL, getResultsTask, (gpointer) results.getBaseUrl().c_str());
-	g_thread_create(getResultsTask,
-			 (gpointer)results.getBaseUrl().c_str(),
-			  FALSE, NULL);						  
+	#ifdef OLD
+		g_thread_create(getResultsTask,
+				 (gpointer)results.getBaseUrl().c_str(),
+				  FALSE, NULL);
+	#elif
+	    g_thread_new(NULL, getResultsTask, (gpointer) results.getBaseUrl().c_str());
+	#endif		  						  
 }
 
 static void rbActorsClicked(GtkWidget *widget, gpointer data) {
