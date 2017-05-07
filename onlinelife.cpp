@@ -59,7 +59,7 @@ GtkWidget *window;
 GtkWidget *lbPage;
 GtkWidget *entry;
 
-GtkWidget *sw;
+GtkWidget *swTree, *swIcon;
 GtkWidget *tvBackResults, *tvCategories, *tvActors, *tvBackActors;
 GtkWidget *vbLeft, *vbRight;
 
@@ -79,18 +79,13 @@ void writeToFile(string filename, string input) {
 }*/
 
 void switchToTreeView() {
-	GtkWidget *saveIconView = GTK_WIDGET(g_object_ref(iconView));
-	gtk_container_remove(GTK_CONTAINER(sw), iconView);
-	iconView = saveIconView;
-	gtk_container_add(GTK_CONTAINER(sw), treeView);
+	gtk_widget_set_visible(swTree, TRUE);
+	gtk_widget_set_visible(swIcon, FALSE);
 }
 
 void switchToIconView() {
-	GtkWidget *saveTreeView = GTK_WIDGET(g_object_ref(treeView));
-	gtk_container_remove(GTK_CONTAINER(sw), treeView);
-	treeView = saveTreeView;
-	gtk_container_add(GTK_CONTAINER(sw), iconView);
-	gtk_widget_show(iconView);
+	gtk_widget_set_visible(swTree, FALSE);
+	gtk_widget_set_visible(swIcon, TRUE);
 }
 
 GdkPixbuf *create_pixbuf(const gchar * filename) {
@@ -528,10 +523,10 @@ void displayPlaylists() {
 void processPlayItem(PlayItem item) {
 	if(!item.get_comment().empty()) {
 	    if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
-		    string command = "xterm -e wget -c " + item.get_download() + " &";
+		    string command = "xterm -e wget -P ~/Download -c " + item.get_download() + " &";
 	        system(command.c_str());
 		}else if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay))) {
-		    string command = "xterm -e mplayer -cache 1024 " + item.get_file() + " &";
+		    string command = "xterm -e mplayer -cache 2048 " + item.get_file() + " &";
 	        system(command.c_str());
 		}	
 	}
@@ -958,10 +953,8 @@ int main( int   argc,
 {
     
     GtkWidget *vbox;
-    GtkWidget *toolbar;
-    
-    GtkWidget *hbCenter;
-    
+    GtkWidget *toolbar; 
+    GtkWidget *hbCenter;    
     GtkWidget *swLeftTop, *swLeftBottom, *swRightTop, *swRightBottom;
     
 	GtkToolItem *btnCategories;
@@ -1077,14 +1070,20 @@ int main( int   argc,
     
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 1);
     
-    sw = gtk_scrolled_window_new(NULL, NULL);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sw),
+    swTree = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swTree),
             GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-
-    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(sw),
+    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swTree),
+            GTK_SHADOW_ETCHED_IN);
+            
+    swIcon = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swIcon),
+            GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swIcon),
             GTK_SHADOW_ETCHED_IN);
     
-    gtk_container_add(GTK_CONTAINER(sw), treeView);
+    gtk_container_add(GTK_CONTAINER(swTree), treeView);
+    gtk_container_add(GTK_CONTAINER(swIcon), iconView);
     
     tvBackResults = create_view_and_model();
     tvBackActors = create_view_and_model();
@@ -1137,7 +1136,8 @@ int main( int   argc,
     
     //hbCenter
     gtk_box_pack_start(GTK_BOX(hbCenter), vbLeft, FALSE, FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(hbCenter), sw, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(hbCenter), swTree, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(hbCenter), swIcon, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(hbCenter), vbRight, FALSE, FALSE, 1);
     
     gtk_box_pack_start(GTK_BOX(vbox), hbCenter, TRUE, TRUE, 1);
@@ -1167,6 +1167,11 @@ int main( int   argc,
     
     gtk_widget_set_visible(vbLeft, FALSE);
     gtk_widget_set_visible(vbRight, FALSE);
+    
+    gtk_widget_set_visible(swTree, FALSE);
+    
+    gtk_widget_set_visible(swLeftBottom, FALSE);
+    gtk_widget_set_visible(swRightBottom, FALSE);
     
     gtk_main();
     gdk_threads_leave ();
