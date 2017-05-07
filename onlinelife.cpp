@@ -1170,6 +1170,9 @@ int main( int   argc,
     
     gtk_widget_set_visible(swTree, FALSE);
     
+    gtk_widget_set_visible(swLeftBottom, FALSE);
+    gtk_widget_set_visible(swRightBottom, FALSE);
+    
     gtk_main();
     gdk_threads_leave ();
     return 0;
