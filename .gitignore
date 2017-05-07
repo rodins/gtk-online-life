@@ -5,5 +5,5 @@ onlinelife
 *.html
 
 # Ignore sh
-*.sh
+#*.sh
 
