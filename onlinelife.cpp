@@ -32,16 +32,17 @@ GtkWidget *pbStatus;
 //Categories
 Categories categories;
 //Results
-Results results;
+Results results, prevResults;
 //Playlists
 Playlists playlists;
 //Actors
 Actors actors, prevActors;
 
 //vector<Results> resultsBack;
+map <string, Results> backResults;
 //vector<Actors> actorsBack;
 map <string, Actors> backActors;
-GtkWidget *swRightBottom;
+GtkWidget *swRightBottom, *swLeftBottom;
 
 DisplayMode displayMode;
 
@@ -377,8 +378,8 @@ void updateResults() {
 		switchToIconView();
 		displayMode = RESULTS;
 	}
-	
-	gtk_window_set_title(GTK_WINDOW(window), results.getTitle().c_str());
+	string title = PROG_NAME + " - " + results.getTitle();
+	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 	
 	GtkTreeModel *model;
 	model = getResultsModel();
@@ -390,6 +391,20 @@ void updateResults() {
 	gtk_entry_set_text(GTK_ENTRY(entry), "");
 	
 	setSensitiveItemsResults();
+}
+
+void backResultsListAdd(string title) {
+	gtk_widget_set_visible(swLeftBottom, TRUE);
+	//gtk_widget_set_visible(vbLeft, TRUE);
+	
+	GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(
+	    GTK_TREE_VIEW(tvBackResults)));
+	GtkTreeIter iter;
+	GdkPixbuf *icon = create_pixbuf("link_16.png");
+	
+	gtk_list_store_append(store, &iter);
+    gtk_list_store_set(store, &iter, IMAGE_COLUMN, icon,
+           TITLE_COLUMN, title.c_str(), -1);
 }
 
 gpointer getResultsTask(gpointer arg) {
@@ -407,6 +422,14 @@ gpointer getResultsTask(gpointer arg) {
 	results.getResultsPage(page);
 	
 	if(!results.getResults().empty()) {
+		// add back results
+		// save prev results to map
+		// add title to tvBackResults
+		if(backResults.count(prevResults.getTitle()) == 0 
+		        && prevResults.getResults().size() > 0) {
+			backResults[prevResults.getTitle()] = prevResults;
+			backResultsListAdd(prevResults.getTitle());
+		}
 		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Done");
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 		updateResults();
@@ -421,7 +444,8 @@ gpointer getResultsTask(gpointer arg) {
 void processCategory(gint *indices, gint count) {//move to results
 	if(count == 1) { //Node
 		gint i = indices[0];
-		title = PROG_NAME + " - " + categories.getCategories()[i].get_title();
+		prevResults = results;
+		title = categories.getCategories()[i].get_title();
 		results.setTitle(title);
 		#ifdef OLD
 			g_thread_create(getResultsTask,
@@ -435,7 +459,8 @@ void processCategory(gint *indices, gint count) {//move to results
 	}else if(count == 2) { //Leaf
 		gint i = indices[0];
 		gint j = indices[1];
-		title = PROG_NAME + " - " + categories.getCategories()[i].get_subctgs()[j].get_title();
+		prevResults = results;
+		title = categories.getCategories()[i].get_subctgs()[j].get_title();
 		results.setTitle(title);
 		#ifdef OLD
 			g_thread_create(getResultsTask,
@@ -709,7 +734,8 @@ void processResult(gint *indices, gint count) {//move to playlists
 void processActor(gint *indices, gint count) {
 	if(count == 1) { //Node
 		gint i = indices[0];
-		title = PROG_NAME + " - " + actors.getActors()[i].get_title();
+		prevResults = results;
+		title = actors.getActors()[i].get_title();
 		results.setTitle(title);
 	    #ifdef OLD    
 		    g_thread_create(getResultsTask,
@@ -866,6 +892,7 @@ void updateCategories() {
 		gtk_widget_set_visible(vbLeft, TRUE);
 	}else {
 		gtk_widget_set_visible(vbLeft, FALSE);
+		return;
 	}
 	
 	GtkTreeModel *model;
@@ -975,7 +1002,8 @@ static void btnNextClicked( GtkWidget *widget,
 static void entryActivated( GtkWidget *widget, 
                       gpointer data) {
     string query(gtk_entry_get_text(GTK_ENTRY(widget)));
-    title = PROG_NAME + " - Search: " + query;
+    prevResults = results;
+    title = "Search: " + query;
     results.setTitle(title);
     string base_url = string(DOMAIN) + "/?do=search&subaction=search&mode=simple&story=" + to_cp1251(query);
     results.setBaseUrl(base_url);
@@ -1026,7 +1054,7 @@ int main( int   argc,
     GtkWidget *vbox;
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
-    GtkWidget *swLeftTop, *swLeftBottom, *swRightTop;
+    GtkWidget *swLeftTop, *swRightTop;
     
 	GtkToolItem *btnCategories;
 	GtkToolItem *sep;
@@ -1161,6 +1189,13 @@ int main( int   argc,
     gtk_container_add(GTK_CONTAINER(swIcon), iconView);
     
     tvBackResults = create_view_and_model();
+    // Set up store2
+    GtkListStore *store2 
+        = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);    
+    gtk_tree_view_set_model(GTK_TREE_VIEW(tvBackResults), 
+        GTK_TREE_MODEL(store2));
+	g_object_unref(store2);
+    
     tvBackActors = create_view_and_model();
     // Set up store
     GtkListStore *store 
