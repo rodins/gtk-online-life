@@ -5,7 +5,7 @@ onlinelife
 *.html
 
 # Ignore sh
-*.sh
+#*.sh
 
 # Ignore png 
-*.png
+#*.png
