@@ -1039,7 +1039,9 @@ int main( int   argc,
 	 /* Must initialize libcurl before any threads are started */ 
     curl_global_init(CURL_GLOBAL_ALL);
     
+    #ifdef OLD
     g_thread_init(NULL); // needed only for older gtk
+    #endif
     
     gdk_threads_init ();
     gdk_threads_enter ();
