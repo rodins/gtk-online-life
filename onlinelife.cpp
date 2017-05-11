@@ -36,10 +36,12 @@ Results results;
 //Playlists
 Playlists playlists;
 //Actors
-Actors actors;
+Actors actors, prevActors;
 
 //vector<Results> resultsBack;
 //vector<Actors> actorsBack;
+map <string, Actors> backActors;
+GtkWidget *swRightBottom;
 
 DisplayMode displayMode;
 
@@ -632,6 +634,19 @@ void updateActors() {
 	//setSensitiveItemsActors();
 }
 
+void backActorsListAdd(string title) {
+	gtk_widget_set_visible(swRightBottom, TRUE);
+	
+	GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(
+	    GTK_TREE_VIEW(tvBackActors)));
+	GtkTreeIter iter;
+	GdkPixbuf *icon = create_pixbuf("link_16.png");
+	
+	gtk_list_store_append(store, &iter);
+    gtk_list_store_set(store, &iter, IMAGE_COLUMN, icon,
+           TITLE_COLUMN, title.c_str(), -1);
+}
+
 gpointer getActorsTask(gpointer args) {
 	string link((char*)args);
 	gdk_threads_enter();
@@ -646,7 +661,11 @@ gpointer getActorsTask(gpointer args) {
 	    //Save results 
 		//resultsBack.push_back(results);
 		//Save actors
-		//actorsBack.push_back(actors);
+		if(backActors.count(prevActors.getTitle()) == 0 
+		        && prevActors.getActors().size() > 0) {
+		    backActors[prevActors.getTitle()] = prevActors;
+		    backActorsListAdd(prevActors.getTitle());	
+		}
 		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Done");
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 		updateActors();	
@@ -663,7 +682,8 @@ void processResult(gint *indices, gint count) {//move to playlists
 		gint i = indices[0];
 		title = PROG_NAME + " - " + results.getResults()[i].get_title();
 		if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
-			actors.setTitle(title);
+			prevActors = actors;
+			actors.setTitle(results.getResults()[i].get_title());
 	        #ifdef OLD    	
 		        g_thread_create(getActorsTask,
 				 (gpointer) results.getResults()[i].get_href().c_str(),
@@ -980,6 +1000,25 @@ static void rbActorsClicked(GtkWidget *widget, gpointer data) {
 	}
 }
 
+static void backActorsChanged(GtkWidget *widget, gpointer data) {
+	GtkTreeIter iter;
+	GtkTreeModel *model;
+	gchar *value;
+	
+	if (gtk_tree_selection_get_selected(
+	    GTK_TREE_SELECTION(widget), &model, &iter)) {
+	
+		gtk_tree_model_get(model, &iter, TITLE_COLUMN, &value,  -1);
+		if(backActors.count(actors.getTitle()) == 0) {
+			backActors[actors.getTitle()] = actors; // save prev actors
+			backActorsListAdd(actors.getTitle());
+		}
+		actors = backActors[string(value)];// set new actors
+		updateActors();
+		g_free(value);
+    }
+}
+
 int main( int   argc,
           char *argv[] )
 {
@@ -987,13 +1026,15 @@ int main( int   argc,
     GtkWidget *vbox;
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
-    GtkWidget *swLeftTop, *swLeftBottom, *swRightTop, *swRightBottom;
+    GtkWidget *swLeftTop, *swLeftBottom, *swRightTop;
     
 	GtkToolItem *btnCategories;
 	GtkToolItem *sep;
 	GtkToolItem *exit;
 	
 	GdkPixbuf *icon;
+	
+	GtkTreeSelection *selection; 
 	
 	 /* Must initialize libcurl before any threads are started */ 
     curl_global_init(CURL_GLOBAL_ALL);
@@ -1119,6 +1160,18 @@ int main( int   argc,
     
     tvBackResults = create_view_and_model();
     tvBackActors = create_view_and_model();
+    // Set up store
+    GtkListStore *store 
+        = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);    
+    gtk_tree_view_set_model(GTK_TREE_VIEW(tvBackActors), 
+        GTK_TREE_MODEL(store));
+	g_object_unref(store);
+	
+	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tvBackActors));
+
+	g_signal_connect(selection, "changed", 
+	  G_CALLBACK(backActorsChanged), NULL);
+    
     tvCategories = create_view_and_model();
     tvActors = create_view_and_model();
     
