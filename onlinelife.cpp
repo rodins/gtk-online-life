@@ -1047,6 +1047,25 @@ static void backActorsChanged(GtkWidget *widget, gpointer data) {
     }
 }
 
+static void backResultsClicked(GtkWidget *widget, gpointer data) {
+	GtkTreeIter iter;
+	GtkTreeModel *model;
+	gchar *value;
+	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+	if (gtk_tree_selection_get_selected(
+	        GTK_TREE_SELECTION(selection), &model, &iter)) {
+        gtk_tree_model_get(model, &iter, TITLE_COLUMN, &value,  -1);
+        // Save displayed results if not saved
+        if(backResults.count(results.getTitle()) == 0) {
+			backResults[results.getTitle()] = results;
+			backResultsListAdd(results.getTitle());
+		}
+		// Set and display back results
+		results = backResults[string(value)];
+		updateResults();
+	}
+}
+
 int main( int   argc,
           char *argv[] )
 {
@@ -1278,6 +1297,9 @@ int main( int   argc,
         
     g_signal_connect(iconView, "item-activated", 
         G_CALLBACK(resultActivated), NULL);
+        
+    g_signal_connect(tvBackResults, "row-activated",
+        G_CALLBACK(backResultsClicked), NULL);    
     
     gtk_container_add(GTK_CONTAINER(window), vbox);
     
@@ -1285,7 +1307,8 @@ int main( int   argc,
     
     gtk_widget_show_all(window);
     
-    g_signal_connect(GTK_WIDGET(rbActors), "clicked", G_CALLBACK(rbActorsClicked), NULL);
+    g_signal_connect(GTK_WIDGET(rbActors), "clicked", 
+        G_CALLBACK(rbActorsClicked), NULL);
     
     gtk_widget_set_visible(vbLeft, FALSE);
     gtk_widget_set_visible(vbRight, FALSE);
