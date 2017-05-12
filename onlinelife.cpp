@@ -228,7 +228,7 @@ void getPixbufFromUrl(string url) {
 	CURL *curl_handle;
 	CURLcode res;
 	GdkPixbuf *pixbuf = NULL;
-	GdkPixbuf *defaultItem = create_pixbuf("link_16.png");
+	GdkPixbuf *defaultItem = create_pixbuf("blank.png");
 	// Add this item mainly to claim imagesCache and do not allow doubles
 	gdk_threads_enter();
 	imagesCache[url] = defaultItem;
@@ -343,7 +343,7 @@ GtkTreeModel *getResultsModel() {
     store = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);
     
     GdkPixbuf *item = NULL;
-    GdkPixbuf *defaultItem = create_pixbuf("link_16.png");
+    GdkPixbuf *defaultItem = create_pixbuf("blank.png");
     
     for(unsigned i=0; i < results.getResults().size(); i++) {
 		string link = results.getResults()[i].get_image_link();
