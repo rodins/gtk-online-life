@@ -882,23 +882,8 @@ void updateCategories() {
 	//gtk_window_set_title(GTK_WINDOW(window), categories.getTitle().c_str());
 	//clearActorsResults();
 	
-	if(!gtk_widget_get_visible(vbLeft)) {
-		gtk_widget_set_visible(vbLeft, TRUE);
-		gtk_widget_set_visible(swLeftTop, TRUE);
-		gtk_widget_set_visible(swLeftBottom, FALSE); 
-	}else {
-		if(!gtk_widget_get_visible(swLeftBottom)) {
-			gtk_widget_set_visible(vbLeft, FALSE);
-			gtk_widget_set_visible(swLeftTop, FALSE);
-		}else {
-		    if(gtk_widget_get_visible(swLeftTop)) {
-				gtk_widget_set_visible(swLeftTop, FALSE);
-			}else {
-				gtk_widget_set_visible(swLeftTop, TRUE);
-			}	
-		}
-		return;
-	}
+	gtk_widget_set_visible(vbLeft, TRUE);
+	gtk_widget_set_visible(swLeftTop, TRUE);
 	
 	GtkTreeModel *model;
 	model = getCategoriesModel();
@@ -930,20 +915,44 @@ gpointer getCategoriesTask(gpointer arg) {
 	return NULL;
 }
 
+void processCategories() {
+	//Starting new thread to get categories from the net
+	#ifdef OLD
+	    g_thread_create(getCategoriesTask,
+		    NULL,
+		    FALSE, NULL);
+	#elif
+        g_thread_new(NULL, getCategoriesTask, NULL);
+    #endif
+}
+
 static void btnCategoriesClicked( GtkWidget *widget,
-                      gpointer   treeView )
+                      gpointer   data)
 {
-    if(categories.getCategories().empty()) {
-		//Starting new thread to get categories from the net
-		#ifdef OLD
-		    g_thread_create(getCategoriesTask,
-			    NULL,
-			    FALSE, NULL);
-		#elif
-	        g_thread_new(NULL, getCategoriesTask, NULL);
-	    #endif
+	if(!gtk_widget_get_visible(vbLeft)) {
+		if(categories.getCategories().empty()) {
+			processCategories();
+		}else {
+			gtk_widget_set_visible(vbLeft, TRUE);
+			gtk_widget_set_visible(swLeftTop, TRUE);
+			gtk_widget_set_visible(swLeftBottom, FALSE);
+		}
 	}else {
-		updateCategories();
+		if(!gtk_widget_get_visible(swLeftBottom)) {
+			gtk_widget_set_visible(vbLeft, FALSE);
+			gtk_widget_set_visible(swLeftTop, FALSE);
+		}else {
+		    if(gtk_widget_get_visible(swLeftTop)) {
+				gtk_widget_set_visible(swLeftTop, FALSE);
+			}else {
+				if(categories.getCategories().empty()) {
+					processCategories();
+				}else {
+					gtk_widget_set_visible(swLeftTop, TRUE);
+				}
+			}	
+		}
+		return;
 	}	
 }
 
