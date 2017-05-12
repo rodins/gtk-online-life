@@ -224,10 +224,15 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 }
 
 void getPixbufFromUrl(string url) {
-	
+
 	CURL *curl_handle;
 	CURLcode res;
 	GdkPixbuf *pixbuf = NULL;
+	GdkPixbuf *defaultItem = create_pixbuf("link_16.png");
+	// Add this item mainly to claim imagesCache and do not allow doubles
+	gdk_threads_enter();
+	imagesCache[url] = defaultItem;
+	gdk_threads_leave(); 
 	
 	//struct MemoryStruct chunk;
 	GdkPixbufLoader* loader = gdk_pixbuf_loader_new();
@@ -293,15 +298,15 @@ void getPixbufFromUrl(string url) {
              g_error_free(error);
 		 }
 		 
-	    //Make copy of pixbuf to be able to free loader
+		//Make copy of pixbuf to be able to free loader
 		pixbuf = GDK_PIXBUF(g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader)));
 		gdk_threads_enter();
 		GtkListStore *store;
 		imagesCache[url] = pixbuf;
 			
-	    store = GTK_LIST_STORE(gtk_icon_view_get_model
-	        (GTK_ICON_VIEW(iconView))); 
-	    gtk_list_store_set(store, &iter, IMAGE_COLUMN, pixbuf, -1);
+		store = GTK_LIST_STORE(gtk_icon_view_get_model
+			(GTK_ICON_VIEW(iconView))); 
+		gtk_list_store_set(store, &iter, IMAGE_COLUMN, pixbuf, -1);
 		gdk_threads_leave();
 	}
 	
@@ -350,7 +355,24 @@ GtkTreeModel *getResultsModel() {
 		}else {
 			item = defaultItem;
 			iters[link] = iter;
-			#ifdef OLD
+		}
+		
+        gtk_list_store_set(store, &iter, IMAGE_COLUMN, item,
+            TITLE_COLUMN, results.getResults()[i].get_title().c_str(), -1);
+	}
+	g_object_unref(defaultItem);
+    return GTK_TREE_MODEL(store);
+}
+
+void displayRange() {
+	GtkTreePath *path1, *path2;
+	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(iconView), &path1, &path2)) {
+		gint *indices1 = gtk_tree_path_get_indices(path1);
+		gint *indices2 = gtk_tree_path_get_indices(path2);
+		gint index1 = indices1[0];
+		gint index2 = indices2[0];
+		for(int i = index1; i <= index2; i++) {
+		    #ifdef OLD
 				g_thread_create(imageDownloadTask,
 				 (gpointer) results.getResults()[i].get_image_link().c_str(),
 				  FALSE, NULL);
@@ -359,12 +381,9 @@ GtkTreeModel *getResultsModel() {
 				    (gpointer) results.getResults()[i].get_image_link().c_str());
 			#endif
 		}
-		
-        gtk_list_store_set(store, &iter, IMAGE_COLUMN, item,
-            TITLE_COLUMN, results.getResults()[i].get_title().c_str(), -1);
+		gtk_tree_path_free(path1);
+		gtk_tree_path_free(path2);
 	}
-	g_object_unref(defaultItem);
-    return GTK_TREE_MODEL(store);
 }
 
 void updateResults() {
@@ -1101,6 +1120,11 @@ static void backResultsChanged(GtkWidget *widget, gpointer data) {
     }
 }
 
+gboolean iconViewExposed(GtkWidget *widget, GdkEvent *event, gpointer data) {
+	displayRange();
+	return FALSE;
+}
+
 int main( int   argc,
           char *argv[] )
 {
@@ -1337,6 +1361,9 @@ int main( int   argc,
         
     g_signal_connect(iconView, "item-activated", 
         G_CALLBACK(resultActivated), NULL);  
+    
+    g_signal_connect(iconView, "expose-event",
+        G_CALLBACK(iconViewExposed), NULL);
     
     gtk_container_add(GTK_CONTAINER(window), vbox);
     
