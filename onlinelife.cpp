@@ -1047,15 +1047,17 @@ static void backActorsChanged(GtkWidget *widget, gpointer data) {
     }
 }
 
-static void backResultsClicked(GtkWidget *widget, gpointer data) {
+static void backResultsChanged(GtkWidget *widget, gpointer data) {
 	GtkTreeIter iter;
 	GtkTreeModel *model;
 	gchar *value;
-	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
+	
 	if (gtk_tree_selection_get_selected(
-	        GTK_TREE_SELECTION(selection), &model, &iter)) {
-        gtk_tree_model_get(model, &iter, TITLE_COLUMN, &value,  -1);
-        // Save displayed results if not saved
+	    GTK_TREE_SELECTION(widget), &model, &iter)) {
+	
+		gtk_tree_model_get(model, &iter, TITLE_COLUMN, &value,  -1);
+		
+		// Save displayed results if not saved
         if(backResults.count(results.getTitle()) == 0) {
 			backResults[results.getTitle()] = results;
 			backResultsListAdd(results.getTitle());
@@ -1063,7 +1065,9 @@ static void backResultsClicked(GtkWidget *widget, gpointer data) {
 		// Set and display back results
 		results = backResults[string(value)];
 		updateResults();
-	}
+		
+		g_free(value);
+    }
 }
 
 int main( int   argc,
@@ -1081,7 +1085,7 @@ int main( int   argc,
 	
 	GdkPixbuf *icon;
 	
-	GtkTreeSelection *selection; 
+	GtkTreeSelection *selection, *selection2; 
 	
 	 /* Must initialize libcurl before any threads are started */ 
     curl_global_init(CURL_GLOBAL_ALL);
@@ -1214,6 +1218,11 @@ int main( int   argc,
     gtk_tree_view_set_model(GTK_TREE_VIEW(tvBackResults), 
         GTK_TREE_MODEL(store2));
 	g_object_unref(store2);
+	
+	selection2 = gtk_tree_view_get_selection(GTK_TREE_VIEW(tvBackResults));
+
+	g_signal_connect(selection2, "changed", 
+	  G_CALLBACK(backResultsChanged), NULL);
     
     tvBackActors = create_view_and_model();
     // Set up store
@@ -1296,10 +1305,7 @@ int main( int   argc,
         G_CALLBACK(actorsClicked), NULL);
         
     g_signal_connect(iconView, "item-activated", 
-        G_CALLBACK(resultActivated), NULL);
-        
-    g_signal_connect(tvBackResults, "row-activated",
-        G_CALLBACK(backResultsClicked), NULL);    
+        G_CALLBACK(resultActivated), NULL);  
     
     gtk_container_add(GTK_CONTAINER(window), vbox);
     
