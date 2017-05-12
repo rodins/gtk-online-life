@@ -38,11 +38,9 @@ Playlists playlists;
 //Actors
 Actors actors, prevActors;
 
-//vector<Results> resultsBack;
 map <string, Results> backResults;
-//vector<Actors> actorsBack;
 map <string, Actors> backActors;
-GtkWidget *swRightBottom, *swLeftBottom;
+GtkWidget *swRightBottom, *swLeftTop, *swLeftBottom;
 
 DisplayMode displayMode;
 
@@ -144,14 +142,10 @@ void setSensitiveItemsPlaylists() {
 }
 
 void setSensitiveItemsResults() {
-	/*if(!categories.getCategories().empty() || !actorsBack.empty()) {
+	if(backResults.size() > 0) {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), TRUE);
-	}else {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
-	}*/
-	
-	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
-	
+	}
+
 	if(results.getPrevLink().empty()) {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 	}else {
@@ -890,8 +884,19 @@ void updateCategories() {
 	
 	if(!gtk_widget_get_visible(vbLeft)) {
 		gtk_widget_set_visible(vbLeft, TRUE);
+		gtk_widget_set_visible(swLeftTop, TRUE);
+		gtk_widget_set_visible(swLeftBottom, FALSE); 
 	}else {
-		gtk_widget_set_visible(vbLeft, FALSE);
+		if(!gtk_widget_get_visible(swLeftBottom)) {
+			gtk_widget_set_visible(vbLeft, FALSE);
+			gtk_widget_set_visible(swLeftTop, FALSE);
+		}else {
+		    if(gtk_widget_get_visible(swLeftTop)) {
+				gtk_widget_set_visible(swLeftTop, FALSE);
+			}else {
+				gtk_widget_set_visible(swLeftTop, TRUE);
+			}	
+		}
 		return;
 	}
 	
@@ -950,23 +955,40 @@ static void btnUpClicked( GtkWidget *widget,
 		    //Nothing to do
 		    break;
 		case RESULTS:
-		    /*if(!actorsBack.empty()) {
-				//Restore actors
-				actors = actorsBack.back();
-				updateActors();
-			}else if(!categories.getCategories().empty()) {
-			    updateCategories();	
-			}*/
+		    if(!gtk_widget_get_visible(vbLeft)) { // left vbox is hidden
+				gtk_widget_set_visible(vbLeft, TRUE);
+				gtk_widget_set_visible(swLeftBottom, TRUE);
+				gtk_widget_set_visible(swLeftTop, FALSE);
+			}else { //left vbox is visible
+				if(!gtk_widget_get_visible(swLeftTop)) { // hide left vbox
+					gtk_widget_set_visible(swLeftBottom, FALSE);
+					gtk_widget_set_visible(vbLeft, FALSE);
+				}else {
+					if(gtk_widget_get_visible(swLeftBottom)) {
+						gtk_widget_set_visible(swLeftBottom, FALSE);
+					}else {
+						gtk_widget_set_visible(swLeftBottom, TRUE);
+					}
+				}
+			}	
 	        break;
 	    case ACTORS:
-	        //Restore results
-	        //results = resultsBack.back();
-	        //resultsBack.pop_back();
-	        //actorsBack.pop_back();
-	        updateResults();
 	        break;
 	    case PLAYLISTS:
-	        updateResults();
+	        if(gtk_widget_get_visible(vbLeft)) {
+				if(!gtk_widget_get_visible(swLeftTop)) { // hide left vbox
+					gtk_widget_set_visible(swLeftBottom, FALSE);
+					gtk_widget_set_visible(vbLeft, FALSE);
+				}else {
+					if(gtk_widget_get_visible(swLeftBottom)) {
+						gtk_widget_set_visible(swLeftBottom, FALSE);
+					}else {
+						updateResults();
+					}
+				}
+			}else {
+				updateResults();
+			}
 	        break;
 	    case NONE:
 	        break;
@@ -1077,7 +1099,7 @@ int main( int   argc,
     GtkWidget *vbox;
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
-    GtkWidget *swLeftTop, *swRightTop;
+    GtkWidget *swRightTop;
     
 	GtkToolItem *btnCategories;
 	GtkToolItem *sep;
@@ -1320,7 +1342,7 @@ int main( int   argc,
     gtk_widget_set_visible(vbRight, FALSE);
     
     gtk_widget_set_visible(swTree, FALSE);
-    
+    gtk_widget_set_visible(swLeftTop, FALSE);
     gtk_widget_set_visible(swLeftBottom, FALSE);
     gtk_widget_set_visible(swRightBottom, FALSE);
     
