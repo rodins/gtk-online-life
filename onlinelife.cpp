@@ -18,7 +18,7 @@
 #include "Playlists.hpp"
 #include "Actors.hpp"
 
-#define OLD
+//#define OLD
 
 using namespace std;
 
@@ -376,7 +376,7 @@ void displayRange() {
 				g_thread_create(imageDownloadTask,
 				 (gpointer) results.getResults()[i].get_image_link().c_str(),
 				  FALSE, NULL);
-			#elif
+			#else
 				g_thread_new(NULL, imageDownloadTask, 
 				    (gpointer) results.getResults()[i].get_image_link().c_str());
 			#endif
@@ -464,7 +464,7 @@ void processCategory(gint *indices, gint count) {//move to results
 			g_thread_create(getResultsTask,
 				 (gpointer) categories.getCategories()[i].get_link().c_str(),
 				  FALSE, NULL);
-	    #elif
+	    #else
 		    g_thread_new(NULL, getResultsTask,
 			    (gpointer) categories.getCategories()[i].get_link().c_str());
 	    #endif
@@ -479,7 +479,7 @@ void processCategory(gint *indices, gint count) {//move to results
 			g_thread_create(getResultsTask,
 				 (gpointer) categories.getCategories()[i].get_subctgs()[j].get_link().c_str(),
 				  FALSE, NULL);
-	    #elif
+	    #else
 		    g_thread_new(NULL, getResultsTask, 
 			    (gpointer) categories.getCategories()[i].get_subctgs()[j].get_link().c_str());
 		#endif
@@ -726,7 +726,7 @@ void processResult(gint *indices, gint count) {//move to playlists
 		        g_thread_create(getActorsTask,
 				 (gpointer) results.getResults()[i].get_href().c_str(),
 				  FALSE, NULL);
-			#elif
+			#else
 				g_thread_new(NULL, getActorsTask,
 		            (gpointer) results.getResults()[i].get_href().c_str());
 	        #endif    
@@ -736,7 +736,7 @@ void processResult(gint *indices, gint count) {//move to playlists
 		        g_thread_create(getPlaylistsTask,
 				 (gpointer) results.getResults()[i].get_id().c_str(),
 				  FALSE, NULL);
-			#elif
+			#else
 				g_thread_new(NULL, getPlaylistsTask,
 		            (gpointer) results.getResults()[i].get_id().c_str());
 			#endif	
@@ -754,7 +754,7 @@ void processActor(gint *indices, gint count) {
 		    g_thread_create(getResultsTask,
 				 (gpointer) actors.getActors()[i].get_href().c_str(),
 				  FALSE, NULL);
-		#elif
+		#else
 			g_thread_new(NULL, getResultsTask, 
 		        (gpointer) actors.getActors()[i].get_href().c_str());
 		#endif	  	
@@ -940,7 +940,7 @@ void processCategories() {
 	    g_thread_create(getCategoriesTask,
 		    NULL,
 		    FALSE, NULL);
-	#elif
+	#else
         g_thread_new(NULL, getCategoriesTask, NULL);
     #endif
 }
@@ -1030,7 +1030,7 @@ static void btnPrevClicked( GtkWidget *widget,
 		g_thread_create(getResultsTask,
 				 (gpointer)results.getPrevLink().c_str(),
 				  FALSE, NULL);
-	#elif
+	#else
 	    g_thread_new(NULL, getResultsTask, 
 	    (gpointer)results.getPrevLink().c_str());
 	#endif		  
@@ -1043,7 +1043,7 @@ static void btnNextClicked( GtkWidget *widget,
 		g_thread_create(getResultsTask,
 		    (gpointer)results.getNextLink().c_str(),
 		     FALSE, NULL);
-	#elif
+	#else
 	    g_thread_new(NULL, getResultsTask, 
 	        (gpointer)results.getNextLink().c_str());
 	#endif		  
@@ -1061,7 +1061,7 @@ static void entryActivated( GtkWidget *widget,
 		g_thread_create(getResultsTask,
 				 (gpointer)results.getBaseUrl().c_str(),
 				  FALSE, NULL);
-	#elif
+	#else
 	    g_thread_new(NULL, getResultsTask, (gpointer) results.getBaseUrl().c_str());
 	#endif		  						  
 }
