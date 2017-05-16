@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string.h>
 #include <map>
+#include <set>
 
 #include "Converter.hpp"
 #include "DisplayMode.hpp"
@@ -180,6 +181,7 @@ void setSensitiveItemsActors() {
 
 map<string, GdkPixbuf*> imagesCache;
 map<string, GtkTreeIter> iters;
+set<int> imageIndexes;
 
 /*struct MemoryStruct {
   char *memory;
@@ -228,11 +230,6 @@ void getPixbufFromUrl(string url) {
 	CURL *curl_handle;
 	CURLcode res;
 	GdkPixbuf *pixbuf = NULL;
-	GdkPixbuf *defaultItem = create_pixbuf("blank.png");
-	// Add this item mainly to claim imagesCache and do not allow doubles
-	gdk_threads_enter();
-	imagesCache[url] = defaultItem;
-	gdk_threads_leave(); 
 	
 	//struct MemoryStruct chunk;
 	GdkPixbufLoader* loader = gdk_pixbuf_loader_new();
@@ -372,14 +369,17 @@ void displayRange() {
 		gint index1 = indices1[0];
 		gint index2 = indices2[0];
 		for(int i = index1; i <= index2; i++) {
-		    #ifdef OLD
-				g_thread_create(imageDownloadTask,
-				 (gpointer) results.getResults()[i].get_image_link().c_str(),
-				  FALSE, NULL);
-			#else
-				g_thread_new(NULL, imageDownloadTask, 
-				    (gpointer) results.getResults()[i].get_image_link().c_str());
-			#endif
+			if(imageIndexes.count(i) == 0) {
+				imageIndexes.insert(i);
+				#ifdef OLD
+					g_thread_create(imageDownloadTask,
+					 (gpointer) results.getResults()[i].get_image_link().c_str(),
+					  FALSE, NULL);
+				#else
+					g_thread_new(NULL, imageDownloadTask, 
+					    (gpointer) results.getResults()[i].get_image_link().c_str());
+				#endif
+			}
 		}
 		gtk_tree_path_free(path1);
 		gtk_tree_path_free(path2);
@@ -387,6 +387,7 @@ void displayRange() {
 }
 
 void updateResults() {
+	imageIndexes.clear();
 	if(displayMode != RESULTS) {
 		switchToIconView();
 		displayMode = RESULTS;
