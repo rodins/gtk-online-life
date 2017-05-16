@@ -2,11 +2,20 @@
 
 class Actors {
     vector<Item> items;
+    string title;
     public:
     
-    vector<Item> getActors() {
+    vector<Item>& getActors() {
         return items;
     }
+    
+    void setTitle(string t) {
+		title = t;
+	}
+	
+	string& getTitle() {
+		return title;
+	}
     
     void parse(string &page) {
 		items.clear();
