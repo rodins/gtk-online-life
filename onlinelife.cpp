@@ -312,10 +312,6 @@ void getPixbufFromUrl(string url) {
 	
 	//free(chunk.memory);
 	g_object_unref(loader);
-	
-	/* we're done with libcurl, so clean it up */ 
-	curl_global_cleanup();
-	
 }
 
 gpointer imageDownloadTask(gpointer arg) {
@@ -1385,5 +1381,9 @@ int main( int   argc,
     
     gtk_main();
     gdk_threads_leave ();
+ 
+    /* we're done with libcurl, so clean it up */ 
+	curl_global_cleanup();
+
     return 0;
 }
