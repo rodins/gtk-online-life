@@ -397,6 +397,10 @@ void updateResults() {
     //gtk_tree_view_set_model(GTK_TREE_VIEW(treeView), model);
 	g_object_unref(model);
 	
+	// Scroll to the top of the list
+	GtkTreePath *path = gtk_tree_path_new_first();
+	gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path, FALSE, 0, 0);
+	
 	gtk_label_set_text(GTK_LABEL(lbPage), results.getCurrentPage().c_str());
 	gtk_entry_set_text(GTK_ENTRY(entry), "");
 	
