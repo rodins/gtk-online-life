@@ -54,6 +54,7 @@ GtkWidget *iconView;
 GtkToolItem *btnUp;
 GtkToolItem *btnPrev;
 GtkToolItem *btnNext;
+GtkToolItem *btnHistory;
 
 GtkToolItem *rbActors;
 GtkToolItem *rbPlay;
@@ -118,6 +119,7 @@ void disableAllItems() {
 	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
+	gtk_widget_set_sensitive(GTK_WIDGET(btnHistory), FALSE);
 	
 	gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
@@ -1121,6 +1123,10 @@ static void backResultsChanged(GtkWidget *widget, gpointer data) {
     }
 }
 
+static void btnHistoryClicked(GtkWidget *widget, gpointer data) {
+	
+}
+
 gboolean iconViewExposed(GtkWidget *widget, GdkEvent *event, gpointer data) {
 	displayRange();
 	return FALSE;
@@ -1182,6 +1188,16 @@ int main( int   argc,
     g_signal_connect(GTK_WIDGET(btnCategories), "clicked", G_CALLBACK(btnCategoriesClicked), NULL);
     
     sep = gtk_separator_tool_item_new();
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
+	
+	GtkWidget *historyIcon = gtk_image_new_from_file("history_24.png");
+	btnHistory = gtk_tool_button_new(historyIcon, "History");
+	gtk_tool_item_set_tooltip_text(btnHistory, "Results history");
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnHistory, -1);
+	g_signal_connect(GTK_WIDGET(btnHistory), "clicked",
+	    G_CALLBACK(btnHistoryClicked), NULL);
+	    
+	sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
     
     btnUp = gtk_tool_button_new_from_stock(GTK_STOCK_GO_UP);
