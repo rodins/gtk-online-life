@@ -412,9 +412,6 @@ void updateResults() {
 }
 
 void backResultsListAdd(string title) {
-	gtk_widget_set_visible(swLeftBottom, TRUE);
-	//gtk_widget_set_visible(vbLeft, TRUE);
-	
 	GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(
 	    GTK_TREE_VIEW(tvBackResults)));
 	GtkTreeIter iter;
@@ -976,7 +973,6 @@ static void btnCategoriesClicked( GtkWidget *widget,
 				}
 			}	
 		}
-		return;
 	}	
 }
 
@@ -1100,13 +1096,13 @@ static void btnHistoryClicked(GtkWidget *widget, gpointer data) {
 	if(!gtk_widget_get_visible(vbLeft)) { // left vbox is hidden
 		gtk_widget_set_visible(vbLeft, TRUE);
 		gtk_widget_set_visible(swLeftBottom, TRUE);
-		gtk_widget_set_visible(swLeftTop, FALSE);
+		gtk_widget_set_visible(swLeftTop, FALSE); // hide categories
 	}else { //left vbox is visible
-		if(!gtk_widget_get_visible(swLeftTop)) { // hide left vbox
+		if(!gtk_widget_get_visible(swLeftTop)) { // hide left vbox if no categories
 			gtk_widget_set_visible(swLeftBottom, FALSE);
 			gtk_widget_set_visible(vbLeft, FALSE);
 		}else {
-			if(gtk_widget_get_visible(swLeftBottom)) {
+			if(gtk_widget_get_visible(swLeftBottom)) { // show or hide history if categories present
 				gtk_widget_set_visible(swLeftBottom, FALSE);
 			}else {
 				gtk_widget_set_visible(swLeftBottom, TRUE);
