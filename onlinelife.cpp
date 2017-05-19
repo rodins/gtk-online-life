@@ -146,8 +146,10 @@ void setSensitiveItemsPlaylists() {
 
 void setSensitiveItemsResults() {
 	if(backResults.size() > 0) {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnHistory), TRUE);
 	}
+	
+	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 
 	if(results.getPrevLink().empty()) {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
@@ -986,40 +988,11 @@ static void btnUpClicked( GtkWidget *widget,
 		    //Nothing to do
 		    break;
 		case RESULTS:
-		    if(!gtk_widget_get_visible(vbLeft)) { // left vbox is hidden
-				gtk_widget_set_visible(vbLeft, TRUE);
-				gtk_widget_set_visible(swLeftBottom, TRUE);
-				gtk_widget_set_visible(swLeftTop, FALSE);
-			}else { //left vbox is visible
-				if(!gtk_widget_get_visible(swLeftTop)) { // hide left vbox
-					gtk_widget_set_visible(swLeftBottom, FALSE);
-					gtk_widget_set_visible(vbLeft, FALSE);
-				}else {
-					if(gtk_widget_get_visible(swLeftBottom)) {
-						gtk_widget_set_visible(swLeftBottom, FALSE);
-					}else {
-						gtk_widget_set_visible(swLeftBottom, TRUE);
-					}
-				}
-			}	
 	        break;
 	    case ACTORS:
 	        break;
 	    case PLAYLISTS:
-	        if(gtk_widget_get_visible(vbLeft)) {
-				if(!gtk_widget_get_visible(swLeftTop)) { // hide left vbox
-					gtk_widget_set_visible(swLeftBottom, FALSE);
-					gtk_widget_set_visible(vbLeft, FALSE);
-				}else {
-					if(gtk_widget_get_visible(swLeftBottom)) {
-						gtk_widget_set_visible(swLeftBottom, FALSE);
-					}else {
-						updateResults();
-					}
-				}
-			}else {
-				updateResults();
-			}
+			updateResults();
 	        break;
 	    case NONE:
 	        break;
@@ -1124,7 +1097,22 @@ static void backResultsChanged(GtkWidget *widget, gpointer data) {
 }
 
 static void btnHistoryClicked(GtkWidget *widget, gpointer data) {
-	
+	if(!gtk_widget_get_visible(vbLeft)) { // left vbox is hidden
+		gtk_widget_set_visible(vbLeft, TRUE);
+		gtk_widget_set_visible(swLeftBottom, TRUE);
+		gtk_widget_set_visible(swLeftTop, FALSE);
+	}else { //left vbox is visible
+		if(!gtk_widget_get_visible(swLeftTop)) { // hide left vbox
+			gtk_widget_set_visible(swLeftBottom, FALSE);
+			gtk_widget_set_visible(vbLeft, FALSE);
+		}else {
+			if(gtk_widget_get_visible(swLeftBottom)) {
+				gtk_widget_set_visible(swLeftBottom, FALSE);
+			}else {
+				gtk_widget_set_visible(swLeftBottom, TRUE);
+			}
+		}
+	}
 }
 
 gboolean iconViewExposed(GtkWidget *widget, GdkEvent *event, gpointer data) {
