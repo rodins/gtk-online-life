@@ -847,7 +847,6 @@ void resultActivated(GtkWidget *widget, gpointer statusbar) {
 }
 
 GtkWidget *create_view_and_model(void) {
-    
 	GtkTreeViewColumn *col;
 	GtkCellRenderer *renderer;
 	GtkWidget *view;
