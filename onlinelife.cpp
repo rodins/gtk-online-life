@@ -42,6 +42,7 @@ Actors actors, prevActors;
 map <string, Results> backResults;
 map <string, Actors> backActors;
 GtkWidget *swRightBottom, *swLeftTop, *swLeftBottom;
+GtkWidget *frRightBottom, *frLeftTop, *frLeftBottom;
 
 DisplayMode displayMode;
 
@@ -600,7 +601,7 @@ void updateActors() {
 }
 
 void backActorsListAdd(string title) {
-	gtk_widget_set_visible(swRightBottom, TRUE);
+	gtk_widget_set_visible(frRightBottom, TRUE);
 	
 	GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(
 	    GTK_TREE_VIEW(tvBackActors)));
@@ -785,7 +786,7 @@ GtkTreeModel *getCategoriesModel() {
 
 void updateCategories() {
 	gtk_widget_set_visible(vbLeft, TRUE);
-	gtk_widget_set_visible(swLeftTop, TRUE);
+	gtk_widget_set_visible(frLeftTop, TRUE);
 	
 	GtkTreeModel *model;
 	model = getCategoriesModel();
@@ -834,16 +835,16 @@ static void btnCategoriesClicked( GtkWidget *widget,
 			processCategories();
 		}else {
 			gtk_widget_set_visible(vbLeft, TRUE);
-			gtk_widget_set_visible(swLeftTop, TRUE);
-			gtk_widget_set_visible(swLeftBottom, FALSE);
+			gtk_widget_set_visible(frLeftTop, TRUE);
+			gtk_widget_set_visible(frLeftBottom, FALSE);
 		}
 	}else {
-		if(!gtk_widget_get_visible(swLeftBottom)) {
+		if(!gtk_widget_get_visible(frLeftBottom)) {
 			gtk_widget_set_visible(vbLeft, FALSE);
-			gtk_widget_set_visible(swLeftTop, FALSE);
+			gtk_widget_set_visible(frLeftTop, FALSE);
 		}else {
-		    if(gtk_widget_get_visible(swLeftTop)) {
-				gtk_widget_set_visible(swLeftTop, FALSE);
+		    if(gtk_widget_get_visible(frLeftTop)) {
+				gtk_widget_set_visible(frLeftTop, FALSE);
 			}else {
 				if(categories.getCategories().empty()) {
 					processCategories();
@@ -963,17 +964,17 @@ static void backResultsChanged(GtkWidget *widget, gpointer data) {
 static void btnHistoryClicked(GtkWidget *widget, gpointer data) {
 	if(!gtk_widget_get_visible(vbLeft)) { // left vbox is hidden
 		gtk_widget_set_visible(vbLeft, TRUE);
-		gtk_widget_set_visible(swLeftBottom, TRUE);
-		gtk_widget_set_visible(swLeftTop, FALSE); // hide categories
+		gtk_widget_set_visible(frLeftBottom, TRUE);
+		gtk_widget_set_visible(frLeftTop, FALSE); // hide categories
 	}else { //left vbox is visible
-		if(!gtk_widget_get_visible(swLeftTop)) { // hide left vbox if no categories
-			gtk_widget_set_visible(swLeftBottom, FALSE);
+		if(!gtk_widget_get_visible(frLeftTop)) { // hide left vbox if no categories
+			gtk_widget_set_visible(frLeftBottom, FALSE);
 			gtk_widget_set_visible(vbLeft, FALSE);
 		}else {
-			if(gtk_widget_get_visible(swLeftBottom)) { // show or hide history if categories present
-				gtk_widget_set_visible(swLeftBottom, FALSE);
+			if(gtk_widget_get_visible(frLeftBottom)) { // show or hide history if categories present
+				gtk_widget_set_visible(frLeftBottom, FALSE);
 			}else {
-				gtk_widget_set_visible(swLeftBottom, TRUE);
+				gtk_widget_set_visible(frLeftBottom, TRUE);
 			}
 		}
 	}
@@ -991,6 +992,7 @@ int main( int   argc,
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
     GtkWidget *swRightTop;
+    GtkWidget *frRightTop;
     
 	GtkToolItem *btnCategories;
 	GtkToolItem *sep;
@@ -1199,13 +1201,24 @@ int main( int   argc,
     gtk_container_add(GTK_CONTAINER(swRightTop), tvActors);
     gtk_container_add(GTK_CONTAINER(swRightBottom), tvBackActors);
     
+    // Frames
+    frLeftTop = gtk_frame_new("Categories");
+    frLeftBottom = gtk_frame_new("Results history");
+    frRightTop = gtk_frame_new("Actors");
+    frRightBottom = gtk_frame_new("Actors history");
+    
+    gtk_container_add(GTK_CONTAINER(frLeftTop), swLeftTop);
+    gtk_container_add(GTK_CONTAINER(frLeftBottom), swLeftBottom);
+    gtk_container_add(GTK_CONTAINER(frRightTop), swRightTop);
+    gtk_container_add(GTK_CONTAINER(frRightBottom), swRightBottom);
+    
     //vbLeft
-    gtk_box_pack_start(GTK_BOX(vbLeft), swLeftTop, TRUE, TRUE, 1);
-    gtk_box_pack_start(GTK_BOX(vbLeft), swLeftBottom, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbLeft), frLeftTop, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbLeft), frLeftBottom, TRUE, TRUE, 1);
     
     //vbRight
-    gtk_box_pack_start(GTK_BOX(vbRight), swRightTop, TRUE, TRUE, 1);
-    gtk_box_pack_start(GTK_BOX(vbRight), swRightBottom, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbRight), frRightTop, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
     
     //hbCenter
     gtk_box_pack_start(GTK_BOX(hbCenter), vbLeft, FALSE, FALSE, 1);
@@ -1246,9 +1259,9 @@ int main( int   argc,
     gtk_widget_set_visible(vbRight, FALSE);
     
     gtk_widget_set_visible(swTree, FALSE);
-    gtk_widget_set_visible(swLeftTop, FALSE);
-    gtk_widget_set_visible(swLeftBottom, FALSE);
-    gtk_widget_set_visible(swRightBottom, FALSE);
+    gtk_widget_set_visible(frLeftTop, FALSE);
+    gtk_widget_set_visible(frLeftBottom, FALSE);
+    gtk_widget_set_visible(frRightBottom, FALSE);
     
     gtk_main();
     gdk_threads_leave ();
