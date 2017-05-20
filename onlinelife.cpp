@@ -408,7 +408,8 @@ void processCategory(gint *indices, gint count) {//move to results
 		gint i = indices[0];
 		gint j = indices[1];
 		prevResults = results;
-		title = categories.getCategories()[i].get_subctgs()[j].get_title();
+		title = categories.getCategories()[i].get_title() + " - " 
+		      + categories.getCategories()[i].get_subctgs()[j].get_title();
 		results.setTitle(title);
 		#ifdef OLD
 			g_thread_create(getResultsTask,
