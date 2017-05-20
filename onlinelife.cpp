@@ -41,7 +41,6 @@ Actors actors, prevActors;
 
 map <string, Results> backResults;
 map <string, Actors> backActors;
-GtkWidget *swRightBottom, *swLeftTop, *swLeftBottom;
 GtkWidget *frRightBottom, *frLeftTop, *frLeftBottom;
 
 DisplayMode displayMode;
@@ -849,7 +848,7 @@ static void btnCategoriesClicked( GtkWidget *widget,
 				if(categories.getCategories().empty()) {
 					processCategories();
 				}else {
-					gtk_widget_set_visible(swLeftTop, TRUE);
+					gtk_widget_set_visible(frLeftTop, TRUE);
 				}
 			}	
 		}
@@ -991,7 +990,7 @@ int main( int   argc,
     GtkWidget *vbox;
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
-    GtkWidget *swRightTop;
+    GtkWidget *swRightTop, *swRightBottom, *swLeftTop, *swLeftBottom;;
     GtkWidget *frRightTop;
     
 	GtkToolItem *btnCategories;
