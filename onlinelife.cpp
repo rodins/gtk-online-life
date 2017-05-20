@@ -94,24 +94,14 @@ void switchToIconView() {
 }
 
 GdkPixbuf *create_pixbuf(const gchar * filename) {
-    
     GdkPixbuf *pixbuf;
     GError *error = NULL;
     pixbuf = gdk_pixbuf_new_from_file(filename, &error);
-    
     if (!pixbuf) {
-        
         fprintf(stderr, "%s\n", error->message);
         g_error_free(error);
-        
     }
-    
     return pixbuf;
-}
-
-void clearActorsResults() {
-	//resultsBack.clear();
-	//actorsBack.clear();
 }
 
 void disableAllItems() {
@@ -126,8 +116,6 @@ void disableAllItems() {
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
 }
 
-//bool is_switched_from_actors = FALSE;
-
 void setSensitiveItemsPlaylists() {
 	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), TRUE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
@@ -136,12 +124,6 @@ void setSensitiveItemsPlaylists() {
 	gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
-    
-    //Actors is selected but will be disabled, so switch to rbPlay
-    /*if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
-		gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay), TRUE);
-		is_switched_from_actors = TRUE; // flag to switch back to actors on the way back
-	}*/
 }
 
 void setSensitiveItemsResults() {
@@ -165,12 +147,6 @@ void setSensitiveItemsResults() {
 	gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbActors), TRUE);
-    
-    // Switching back to actors if flag is true if actors were selected in results list.
-    /*if(is_switched_from_actors) {
-		gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(rbActors), TRUE);
-		is_switched_from_actors = FALSE;
-	}*/
 }
 
 void setSensitiveItemsActors() {
@@ -187,11 +163,6 @@ map<string, GdkPixbuf*> imagesCache;
 map<string, GtkTreeIter> iters;
 set<int> imageIndexes;
 
-/*struct MemoryStruct {
-  char *memory;
-  size_t size;
-};*/
-
 struct ArgsStruct {
 	GdkPixbufLoader* loader;
 	GtkTreeIter iter;
@@ -201,8 +172,6 @@ static size_t
 WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
 	size_t realsize = size * nmemb;
-	//struct MemoryStruct *mem = (struct MemoryStruct *)userp;
-	//GdkPixbufLoader* loader = GDK_PIXBUF_LOADER(userp);
 	struct ArgsStruct *args = (struct ArgsStruct *)userp;
 	
 	gdk_pixbuf_loader_write(args->loader, (const guchar*)contents, realsize, NULL);
@@ -215,17 +184,6 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 		gdk_threads_leave();
 	}
 	
-	/*mem->memory = (char*)realloc(mem->memory, mem->size + realsize + 1);
-	if(mem->memory == NULL) {
-		// out of memory! 
-		cout << "not enough memory (realloc returned NULL)" << endl;
-		return 0;
-	}
-	
-	memcpy(&(mem->memory[mem->size]), contents, realsize);
-	mem->size += realsize;
-	mem->memory[mem->size] = 0;*/
-	
 	return realsize;
 }
 
@@ -235,15 +193,11 @@ void getPixbufFromUrl(string url) {
 	CURLcode res;
 	GdkPixbuf *pixbuf = NULL;
 	
-	//struct MemoryStruct chunk;
 	GdkPixbufLoader* loader = gdk_pixbuf_loader_new();
 	GtkTreeIter iter = iters[url];
 	struct ArgsStruct args;
 	args.loader = loader;
 	args.iter = iter;
-	
-	//chunk.memory = (char*) malloc(1);  /* will be grown as needed by the realloc above */ 
-	//chunk.size = 0;    /* no data at this point */ 
 	
 	/* init the curl session */ 
 	curl_handle = curl_easy_init();
@@ -272,26 +226,7 @@ void getPixbufFromUrl(string url) {
 		gdk_pixbuf_loader_close(loader, NULL); //close in case of error
 		fprintf(stderr, "curl_easy_perform() failed: %s\n",
 				curl_easy_strerror(res));
-	}else {
-		/*
-		 * Now, our chunk.memory points to a memory block that is chunk.size
-		 * bytes big and contains the remote file.
-		 *
-		 * Do something nice with it!
-		 */ 
-		 
-		 /*GInputStream *gis = g_memory_input_stream_new_from_data(
-		     chunk.memory, chunk.size , NULL);
-		     
-		 GError *err = NULL;
-		 pixbuf = gdk_pixbuf_new_from_stream(gis, NULL, &err);
-		 if(!pixbuf) {
-			 fprintf(stderr, "%s\n", err->message);
-             g_error_free(err);
-		 }*/
-		 
-		 //GdkPixbufLoader* loader = gdk_pixbuf_loader_new();
-		 //gdk_pixbuf_loader_write(loader, (const guchar*)chunk.memory, chunk.size, NULL);
+	}else { 
 		 GError *error = NULL;
 		 gboolean ok = gdk_pixbuf_loader_close(loader, &error);
 		 if(!ok) {
@@ -336,7 +271,7 @@ GtkTreeModel *getResultsModel() {
 	GtkListStore *store;
     GtkTreeIter iter;
     iters.clear();
-    
+   
     store = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);
     
     GdkPixbuf *item = NULL;
@@ -398,7 +333,6 @@ void updateResults() {
 	GtkTreeModel *model;
 	model = getResultsModel();
 	gtk_icon_view_set_model(GTK_ICON_VIEW(iconView), model);
-    //gtk_tree_view_set_model(GTK_TREE_VIEW(treeView), model);
 	g_object_unref(model);
 	
 	// Scroll to the top of the list
@@ -424,7 +358,6 @@ void backResultsListAdd(string title) {
 
 gpointer getResultsTask(gpointer arg) {
 	string link((char *)arg);
-	//cout << "Link: " << link << endl;
 	gdk_threads_enter();
 	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching results...");
     gdk_threads_leave();
@@ -656,10 +589,6 @@ GtkTreeModel *getActorsModel() {
 }
 
 void updateActors() {
-	//switchToTreeView();
-	//displayMode = ACTORS;
-	//gtk_window_set_title(GTK_WINDOW(window), actors.getTitle().c_str());
-	
 	if(!gtk_widget_get_visible(vbRight)) {
 		gtk_widget_set_visible(vbRight, TRUE);
 	}
@@ -668,10 +597,6 @@ void updateActors() {
 	model = getActorsModel();
     gtk_tree_view_set_model(GTK_TREE_VIEW(tvActors), model);
 	g_object_unref(model);
-	
-	//gtk_label_set_text(GTK_LABEL(lbPage), "");
-	
-	//setSensitiveItemsActors();
 }
 
 void backActorsListAdd(string title) {
@@ -698,9 +623,6 @@ gpointer getActorsTask(gpointer args) {
 	gdk_threads_enter();
 	actors.parse(page);
 	if(!actors.getActors().empty()) {
-	    //Save results 
-		//resultsBack.push_back(results);
-		//Save actors
 		if(backActors.count(prevActors.getTitle()) == 0 
 		        && prevActors.getActors().size() > 0) {
 		    backActors[prevActors.getTitle()] = prevActors;
@@ -796,42 +718,10 @@ void actorsClicked(GtkWidget *widget, gpointer data) {
 }
 
 void on_changed(GtkWidget *widget, gpointer statusbar) {
-    
     IndicesCount inCount = getIndicesCount(widget);
 	if(inCount.indices != NULL) {
 		processPlayItem(inCount.indices, inCount.count);
 	}
-    
-	/*GtkTreeIter iter;
-	GtkTreeModel *model;
-	GtkTreePath *path;
-	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
-	
-	if (gtk_tree_selection_get_selected(
-	  GTK_TREE_SELECTION(selection), &model, &iter)) {
-		
-		path = gtk_tree_model_get_path(model, &iter);
-		gint count;
-		gint *indices = gtk_tree_path_get_indices_with_depth(path, &count);
-		if(indices != NULL) {
-			switch(displayMode) {
-				case CATEGORIES:
-				    //processCategory(indices, count);
-				    break;
-				case RESULTS:
-				    processResult(indices, count);// Never called
-				    break;
-				case ACTORS:
-				    //processActor(indices, count);
-				    break;
-				case PLAYLISTS:
-				    processPlayItem(indices, count);
-				    break;
-				case NONE:
-				    break;
-			}
-		}
-	}*/
 }
 
 void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
@@ -894,14 +784,6 @@ GtkTreeModel *getCategoriesModel() {
 }
 
 void updateCategories() {
-	/*if(displayMode == RESULTS) {
-		//If moving from results
-		switchToTreeView();
-	}*/
-	//displayMode = CATEGORIES;
-	//gtk_window_set_title(GTK_WINDOW(window), categories.getTitle().c_str());
-	//clearActorsResults();
-	
 	gtk_widget_set_visible(vbLeft, TRUE);
 	gtk_widget_set_visible(swLeftTop, TRUE);
 	
@@ -909,8 +791,6 @@ void updateCategories() {
 	model = getCategoriesModel();
     gtk_tree_view_set_model(GTK_TREE_VIEW(tvCategories), model);
 	g_object_unref(model);
-	
-	//disableAllItems();
 }
 
 gpointer getCategoriesTask(gpointer arg) {
@@ -978,19 +858,8 @@ static void btnCategoriesClicked( GtkWidget *widget,
 static void btnUpClicked( GtkWidget *widget,
                       gpointer   data )
 {
-    switch(displayMode) {
-		case CATEGORIES:
-		    //Nothing to do
-		    break;
-		case RESULTS:
-	        break;
-	    case ACTORS:
-	        break;
-	    case PLAYLISTS:
-			updateResults();
-	        break;
-	    case NONE:
-	        break;
+	if(displayMode == PLAYLISTS) {
+		updateResults();
 	}
 }
 
@@ -1118,7 +987,6 @@ gboolean iconViewExposed(GtkWidget *widget, GdkEvent *event, gpointer data) {
 int main( int   argc,
           char *argv[] )
 {
-    
     GtkWidget *vbox;
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
