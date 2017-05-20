@@ -42,6 +42,7 @@ Actors actors, prevActors;
 map <string, Results> backResults;
 map <string, Actors> backActors;
 GtkWidget *frRightBottom, *frLeftTop, *frLeftBottom;
+GtkWidget *lbInfo;
 
 DisplayMode displayMode;
 
@@ -593,7 +594,7 @@ void updateActors() {
 	if(!gtk_widget_get_visible(vbRight)) {
 		gtk_widget_set_visible(vbRight, TRUE);
 	}
-	
+	gtk_label_set_text(GTK_LABEL(lbInfo), actors.getTitle().c_str());
 	GtkTreeModel *model;
 	model = getActorsModel();
     gtk_tree_view_set_model(GTK_TREE_VIEW(tvActors), model);
@@ -992,7 +993,8 @@ int main( int   argc,
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
     GtkWidget *swRightTop, *swRightBottom, *swLeftTop, *swLeftBottom;;
-    GtkWidget *frRightTop;
+    GtkWidget *frRightTop, *frInfo;
+    GtkWidget *vbRightTop;
     
 	GtkToolItem *btnCategories;
 	GtkToolItem *sep;
@@ -1212,12 +1214,20 @@ int main( int   argc,
     gtk_container_add(GTK_CONTAINER(frRightTop), swRightTop);
     gtk_container_add(GTK_CONTAINER(frRightBottom), swRightBottom);
     
+    // Movie info
+    vbRightTop = gtk_vbox_new(FALSE, 1);
+    frInfo = gtk_frame_new("Info");
+    lbInfo = gtk_label_new("Movie info should be here...");
+    gtk_container_add(GTK_CONTAINER(frInfo), lbInfo);
+    gtk_box_pack_start(GTK_BOX(vbRightTop), frInfo, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbRightTop), frRightTop, TRUE, TRUE, 1);
+    
     //vbLeft
     gtk_box_pack_start(GTK_BOX(vbLeft), frLeftTop, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeft), frLeftBottom, TRUE, TRUE, 1);
     
     //vbRight
-    gtk_box_pack_start(GTK_BOX(vbRight), frRightTop, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbRight), vbRightTop, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
     
     //hbCenter
