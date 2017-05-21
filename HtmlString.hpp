@@ -109,7 +109,7 @@ class HtmlString {
 	
 	    string strData(data);
 	    // Find begining
-	    size_t begin = strData.find(to_cp1251("Страна:"));
+	    size_t begin = strData.find(to_cp1251("Название:"));
 	    // Find end
 	    string strEnd = to_cp1251("Премьера в мире:");
 	    size_t end = strData.find(strEnd);

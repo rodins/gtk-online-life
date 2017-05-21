@@ -20,11 +20,27 @@ class Actors {
     void parse(string &page) {
 		items.clear();
 		page = to_utf8(page);
+		string year = parse_simple_info(page, "Год: ");
+		string country = parse_simple_info(page, "Страна: ");
+		title = title + " - " + year + " - " + country;
 		parse_info(page, "Режиссер:", " (режиссер)");
 		parse_info(page, "В ролях:", "");
 	}
 	
 	private:
+	
+	string parse_simple_info(string &page, string query) {
+		string begin = query;
+		string end = "\n";
+		size_t info_begin = page.find(begin);
+		size_t info_end = page.find(end, info_begin);
+		if(info_begin != string::npos && info_end != string::npos) {
+			size_t info_length = info_end - info_begin;
+			string info = page.substr(info_begin, info_length);
+			return info;
+		}
+		return "";
+	}
 	
 	void parse_info(string page, string query, string director) {
 		string begin = query; // "В ролях:";
