@@ -2,11 +2,7 @@ class CategoryItem {
     string _title;
     string _link;
     vector<CategoryItem> _subctgs;
-    string _domain;
     public:
-    CategoryItem() {
-		_domain = "http://www.online-life.cc";
-	}
 	
 	void set_title(string title) {
 		_title = title;
@@ -17,8 +13,8 @@ class CategoryItem {
 	}
 	
 	void set_link(string link) {
-		if(link.find(_domain) == string::npos) {
-			_link = _domain + link;
+		if(link.find(DOMAIN) == string::npos) {
+			_link = DOMAIN + link;
 		}else {
 			_link = link;
 		}
