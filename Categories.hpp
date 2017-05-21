@@ -21,7 +21,7 @@ class Categories {
 			size_t nav_length = nav_end - nav_begin + 6; 
 			string nav = page.substr(nav_begin, nav_length);
 			CategoryItem main;
-			main.set_link(DOMAIN);
+			main.set_link("");
 			main.set_title("Главная");
 			
 			// Find nodrop items

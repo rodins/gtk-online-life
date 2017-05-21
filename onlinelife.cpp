@@ -359,6 +359,7 @@ void backResultsListAdd(string title) {
 
 gpointer getResultsTask(gpointer arg) {
 	string link((char *)arg);
+	//cout << "Link: " << link << endl;
 	gdk_threads_enter();
 	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching results...");
     gdk_threads_leave();

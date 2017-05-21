@@ -63,7 +63,7 @@ class Results {
 		while(div_end != string::npos && div_begin != string::npos) {
 			size_t div_length = div_end - div_begin + end.length(); 
 			string div = page.substr(div_begin, div_length);
-			//cout << "Div: " << div << endl;
+			//cout << "Div: " << div << " Div END" << endl;
 			//Find title
 			size_t title_begin = div.find("/>");
 			size_t title_end = div.find("</a>", title_begin + 1);
