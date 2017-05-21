@@ -1218,6 +1218,8 @@ int main( int   argc,
     vbRightTop = gtk_vbox_new(FALSE, 1);
     frInfo = gtk_frame_new("Info");
     lbInfo = gtk_label_new("Movie info should be here...");
+    gtk_widget_set_size_request(lbInfo, SIDE_SIZE, -1);
+    gtk_label_set_line_wrap(GTK_LABEL(lbInfo), TRUE);
     gtk_container_add(GTK_CONTAINER(frInfo), lbInfo);
     gtk_box_pack_start(GTK_BOX(vbRightTop), frInfo, FALSE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbRightTop), frRightTop, TRUE, TRUE, 1);
