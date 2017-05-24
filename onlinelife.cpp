@@ -534,6 +534,17 @@ void processPlayItem(gint *indices, gint count) {
 	}
 }
 
+string getTrailerId(string &page) {
+	size_t begin = page.find("?trailer_id=");
+	size_t end = page.find("' ", begin+13);
+	if(begin != string::npos && end != string::npos) {
+		size_t length = end - begin;
+		string trailerId = page.substr(begin+12, length-12);
+		return trailerId;
+	}
+	return "";
+}
+
 gpointer getPlaylistsTask(gpointer args) {
 	gint i = (gint)args;
 	Item result = results.getResults()[i];
@@ -569,11 +580,20 @@ gpointer getPlaylistsTask(gpointer args) {
 			gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 			processPlayItem(playItem); 
 		}else {
-			gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");
-			gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
-
 			if(results.getTitle().find("Трейлеры") != string::npos) {
-				
+				gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching trailer...");
+				gdk_threads_leave();
+				// Searching for alternative trailers links
+	            string infoHtml = html_string.get_string(result.get_href(), referer);
+	            string trailerId = getTrailerId(infoHtml); 
+	            url = "http://dterod.com/js.php?id=" + trailerId + "&trailer=1";
+	            referer = "http://dterod.com/player.php?trailer_id=" + trailerId;
+	            string json = html_string.get_string(url, referer);
+				gdk_threads_enter();
+				processPlayItem(playlists.parse_play_item(json)); 
+			}else {
+				gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");
+			    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 			}
 		}
 		gdk_threads_leave();
