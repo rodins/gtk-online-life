@@ -228,23 +228,23 @@ void getPixbufFromUrl(string url) {
 		fprintf(stderr, "curl_easy_perform() failed: %s\n",
 				curl_easy_strerror(res));
 	}else { 
-		 GError *error = NULL;
-		 gboolean ok = gdk_pixbuf_loader_close(loader, &error);
-		 if(!ok) {
-			 fprintf(stderr, "On close: %s\n", error->message);
-             g_error_free(error);
-		 }
-		 
-		//Make copy of pixbuf to be able to free loader
-		pixbuf = GDK_PIXBUF(g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader)));
-		gdk_threads_enter();
-		GtkListStore *store;
-		imagesCache[url] = pixbuf;
-			
-		store = GTK_LIST_STORE(gtk_icon_view_get_model
-			(GTK_ICON_VIEW(iconView))); 
-		gtk_list_store_set(store, &iter, IMAGE_COLUMN, pixbuf, -1);
-		gdk_threads_leave();
+        GError *error = NULL;
+		gboolean ok = gdk_pixbuf_loader_close(loader, &error);
+		if(!ok) {
+	        fprintf(stderr, "On close: %s\n", error->message);
+            g_error_free(error);
+		}else {
+            //Make copy of pixbuf to be able to free loader
+			pixbuf = GDK_PIXBUF(g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader)));
+			gdk_threads_enter();
+			GtkListStore *store;
+			imagesCache[url] = pixbuf;
+				
+			store = GTK_LIST_STORE(gtk_icon_view_get_model
+				(GTK_ICON_VIEW(iconView))); 
+			gtk_list_store_set(store, &iter, IMAGE_COLUMN, pixbuf, -1);
+        }
+        gdk_threads_leave();
 	}
 	
 	/* cleanup curl stuff */ 
@@ -535,7 +535,9 @@ void processPlayItem(gint *indices, gint count) {
 }
 
 gpointer getPlaylistsTask(gpointer args) {
-	string id((char*)args);
+	gint i = (gint)args;
+	Item result = results.getResults()[i];
+	string id = result.get_id();
 	string url = "http://dterod.com/js.php?id=" + id;
 	string referer = "http://dterod.com/player.php?newsid=" + id;
 	
@@ -569,6 +571,10 @@ gpointer getPlaylistsTask(gpointer args) {
 		}else {
 			gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");
 			gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
+
+			if(results.getTitle().find("Трейлеры") != string::npos) {
+				
+			}
 		}
 		gdk_threads_leave();
 	}
@@ -647,6 +653,7 @@ void processResult(gint *indices, gint count) {//move to playlists
 		gint i = indices[0];
 		title = PROG_NAME + " - " + results.getResults()[i].get_title();
 		if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
+			// Fetch actors
 			prevActors = actors;
 			actors.setTitle(results.getResults()[i].get_title());
 	        #ifdef OLD    	
@@ -658,14 +665,15 @@ void processResult(gint *indices, gint count) {//move to playlists
 		            (gpointer) results.getResults()[i].get_href().c_str());
 	        #endif    
 		}else {
+			// Fetch playlists/playItem
 			playlists.setTitle(title);
 	        #ifdef OLD    
 		        g_thread_create(getPlaylistsTask,
-				 (gpointer) results.getResults()[i].get_id().c_str(),
+				 (gpointer) i,
 				  FALSE, NULL);
 			#else
 				g_thread_new(NULL, getPlaylistsTask,
-		            (gpointer) results.getResults()[i].get_id().c_str());
+		            (gpointer) i);
 			#endif	
 		}
 	}
