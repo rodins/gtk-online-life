@@ -72,6 +72,11 @@ GtkWidget *vbLeft, *vbRight;
 GtkWidget *spCenter;
 GtkWidget *lbCenterError;
 
+GtkWidget *spCategories;
+GtkWidget *lbCategoriesError;
+
+GtkWidget *swLeftTop;
+
 /*string readFromFile(string filename) {
 	ifstream in(filename.c_str());
 	if(in) {
@@ -835,8 +840,12 @@ GtkTreeModel *getCategoriesModel() {
 }
 
 void updateCategories() {
-	gtk_widget_set_visible(vbLeft, TRUE);
-	gtk_widget_set_visible(frLeftTop, TRUE);
+	//gtk_widget_set_visible(vbLeft, TRUE);
+	//gtk_widget_set_visible(frLeftTop, TRUE);
+	gtk_widget_set_visible(lbCategoriesError, FALSE);
+	gtk_widget_set_visible(spCategories, FALSE);
+	gtk_spinner_stop(GTK_SPINNER(spCategories));
+	gtk_widget_set_visible(swLeftTop, TRUE);
 	
 	GtkTreeModel *model;
 	model = getCategoriesModel();
@@ -844,9 +853,28 @@ void updateCategories() {
 	g_object_unref(model);
 }
 
+void showSpCategories() {
+	gtk_widget_set_visible(vbLeft, TRUE);
+	gtk_widget_set_visible(frLeftTop, TRUE);
+	gtk_widget_set_visible(swLeftTop, FALSE);
+	gtk_widget_set_visible(lbCategoriesError, FALSE);
+	gtk_widget_set_visible(spCategories, TRUE);
+	gtk_spinner_start(GTK_SPINNER(spCategories));
+}
+
+void showCategoriesError() {
+	gtk_widget_set_visible(vbLeft, TRUE);
+	gtk_widget_set_visible(frLeftTop, TRUE);
+	gtk_widget_set_visible(swLeftTop, FALSE);
+	gtk_widget_set_visible(lbCategoriesError, TRUE);
+	gtk_widget_set_visible(spCategories, FALSE);
+	gtk_spinner_stop(GTK_SPINNER(spCategories));
+}
+
 gpointer getCategoriesTask(gpointer arg) {
 	gdk_threads_enter();
 	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching categories...");
+	showSpCategories();
 	gdk_threads_leave();
 	
 	HtmlString html_string(pbStatus);
@@ -861,6 +889,7 @@ gpointer getCategoriesTask(gpointer arg) {
 	}else {
 		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
+		showCategoriesError();
 	}
 	gdk_threads_leave();
 	return NULL;
@@ -1041,9 +1070,9 @@ int main( int   argc,
     GtkWidget *vbox;
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
-    GtkWidget *swRightTop, *swRightBottom, *swLeftTop, *swLeftBottom;;
+    GtkWidget *swRightTop, *swRightBottom, *swLeftBottom;;
     GtkWidget *frRightTop, *frInfo;
-    GtkWidget *vbRightTop;
+    GtkWidget *vbRightTop, *vbLeftTop;
     
 	GtkToolItem *btnCategories;
 	GtkToolItem *sep;
@@ -1258,7 +1287,15 @@ int main( int   argc,
     frRightTop = gtk_frame_new("Actors");
     frRightBottom = gtk_frame_new("Actors history");
     
-    gtk_container_add(GTK_CONTAINER(frLeftTop), swLeftTop);
+    // Add categories spinner and error
+    vbLeftTop = gtk_vbox_new(FALSE, 1);
+    spCategories = gtk_spinner_new();
+    lbCategoriesError = gtk_label_new("No categories found");
+    gtk_box_pack_start(GTK_BOX(vbLeftTop), swLeftTop, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbLeftTop), spCategories, TRUE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbLeftTop), lbCategoriesError, TRUE, FALSE, 1);
+    
+    gtk_container_add(GTK_CONTAINER(frLeftTop), vbLeftTop);
     gtk_container_add(GTK_CONTAINER(frLeftBottom), swLeftBottom);
     gtk_container_add(GTK_CONTAINER(frRightTop), swRightTop);
     gtk_container_add(GTK_CONTAINER(frRightBottom), swRightBottom);
@@ -1281,7 +1318,7 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbRight), vbRightTop, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
     
-    // Add spinner and error label
+    // Add center spinner and error label
     spCenter = gtk_spinner_new();
     lbCenterError = gtk_label_new("Nothing found");
     
@@ -1333,6 +1370,10 @@ int main( int   argc,
     gtk_widget_set_visible(spCenter, FALSE);
     gtk_widget_set_visible(lbCenterError, FALSE);
     gtk_widget_set_size_request(spCenter, 32, 32);
+    
+    gtk_widget_set_visible(spCategories, FALSE);
+    gtk_widget_set_visible(lbCategoriesError, FALSE);
+    gtk_widget_set_size_request(spCategories, 32, 32);
     
     gtk_main();
     gdk_threads_leave ();
