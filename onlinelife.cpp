@@ -69,6 +69,9 @@ GtkWidget *swTree, *swIcon;
 GtkWidget *tvBackResults, *tvCategories, *tvActors, *tvBackActors;
 GtkWidget *vbLeft, *vbRight;
 
+GtkWidget *spCenter;
+GtkWidget *lbCenterError;
+
 /*string readFromFile(string filename) {
 	ifstream in(filename.c_str());
 	if(in) {
@@ -87,11 +90,17 @@ void writeToFile(string filename, string input) {
 void switchToTreeView() {
 	gtk_widget_set_visible(swTree, TRUE);
 	gtk_widget_set_visible(swIcon, FALSE);
+	gtk_widget_set_visible(spCenter, FALSE);
+	gtk_spinner_stop(GTK_SPINNER(spCenter));
+	gtk_widget_set_visible(lbCenterError, FALSE);
 }
 
 void switchToIconView() {
 	gtk_widget_set_visible(swTree, FALSE);
 	gtk_widget_set_visible(swIcon, TRUE);
+	gtk_widget_set_visible(spCenter, FALSE);
+	gtk_spinner_stop(GTK_SPINNER(spCenter));
+	gtk_widget_set_visible(lbCenterError, FALSE);
 }
 
 GdkPixbuf *create_pixbuf(const gchar * filename) {
@@ -325,9 +334,9 @@ void displayRange() {
 void updateResults() {
 	imageIndexes.clear();
 	if(displayMode != RESULTS) {
-		switchToIconView();
 		displayMode = RESULTS;
 	}
+	switchToIconView();
 	string title = PROG_NAME + " - " + results.getTitle();
 	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 	
@@ -357,11 +366,20 @@ void backResultsListAdd(string title) {
            TITLE_COLUMN, title.c_str(), -1);
 }
 
+void showSpCenter() {
+	gtk_widget_set_visible(swTree, FALSE);
+	gtk_widget_set_visible(swIcon, FALSE);
+	gtk_widget_set_visible(lbCenterError, FALSE);
+	gtk_widget_set_visible(spCenter, TRUE);
+	gtk_spinner_start(GTK_SPINNER(spCenter));
+}
+
 gpointer getResultsTask(gpointer arg) {
 	string link((char *)arg);
 	//cout << "Link: " << link << endl;
 	gdk_threads_enter();
 	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching results...");
+	showSpCenter();
     gdk_threads_leave();
     
 	HtmlString html_string(pbStatus);
@@ -386,6 +404,7 @@ gpointer getResultsTask(gpointer arg) {
 	}else {
 		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
+		gtk_widget_set_visible(lbCenterError, TRUE);
 	}
 	gdk_threads_leave();
 	return NULL;
@@ -554,6 +573,7 @@ gpointer getPlaylistsTask(gpointer args) {
 	
 	gdk_threads_enter();
 	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching playlists...");
+	showSpCenter();
 	gdk_threads_leave();
 	
 	HtmlString html_string(pbStatus);
@@ -1261,10 +1281,16 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbRight), vbRightTop, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
     
+    // Add spinner and error label
+    spCenter = gtk_spinner_new();
+    lbCenterError = gtk_label_new("Nothing found");
+    
     //hbCenter
     gtk_box_pack_start(GTK_BOX(hbCenter), vbLeft, FALSE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(hbCenter), swTree, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(hbCenter), swIcon, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(hbCenter), spCenter, TRUE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(hbCenter), lbCenterError, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(hbCenter), vbRight, FALSE, FALSE, 1);
     
     gtk_box_pack_start(GTK_BOX(vbox), hbCenter, TRUE, TRUE, 1);
@@ -1303,6 +1329,10 @@ int main( int   argc,
     gtk_widget_set_visible(frLeftTop, FALSE);
     gtk_widget_set_visible(frLeftBottom, FALSE);
     gtk_widget_set_visible(frRightBottom, FALSE);
+    
+    gtk_widget_set_visible(spCenter, FALSE);
+    gtk_widget_set_visible(lbCenterError, FALSE);
+    gtk_widget_set_size_request(spCenter, 32, 32);
     
     gtk_main();
     gdk_threads_leave ();
