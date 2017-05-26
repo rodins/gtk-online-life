@@ -43,6 +43,7 @@ map <string, Results> backResults;
 map <string, Actors> backActors;
 GtkWidget *frRightBottom, *frLeftTop, *frLeftBottom;
 GtkWidget *lbInfo;
+GtkWidget *frRightTop, *frInfo;
 
 DisplayMode displayMode;
 
@@ -76,6 +77,9 @@ GtkWidget *spCategories;
 GtkWidget *lbCategoriesError;
 
 GtkWidget *swLeftTop;
+
+GtkWidget *spActors;
+GtkWidget *lbActorsError;
 
 /*string readFromFile(string filename) {
 	ifstream in(filename.c_str());
@@ -662,9 +666,6 @@ GtkTreeModel *getActorsModel() {
 }
 
 void updateActors() {
-	if(!gtk_widget_get_visible(vbRight)) {
-		gtk_widget_set_visible(vbRight, TRUE);
-	}
 	gtk_label_set_text(GTK_LABEL(lbInfo), actors.getTitle().c_str());
 	GtkTreeModel *model;
 	model = getActorsModel();
@@ -685,10 +686,37 @@ void backActorsListAdd(string title) {
            TITLE_COLUMN, title.c_str(), -1);
 }
 
+void showSpActors() {
+	gtk_widget_set_visible(frInfo, FALSE);
+	gtk_widget_set_visible(frRightTop, FALSE);
+	gtk_widget_set_visible(lbActorsError, FALSE);
+	gtk_widget_set_visible(spActors, TRUE);
+	gtk_spinner_start(GTK_SPINNER(spActors));
+	gtk_widget_set_visible(vbRight, TRUE);
+}
+
+void showActors() {
+	gtk_widget_set_visible(frInfo, TRUE);
+	gtk_widget_set_visible(frRightTop, TRUE);
+	gtk_widget_set_visible(lbActorsError, FALSE);
+	gtk_widget_set_visible(spActors, FALSE);
+	gtk_spinner_stop(GTK_SPINNER(spActors));
+}
+
+void showActorsError() {
+	gtk_widget_set_visible(frInfo, FALSE);
+	gtk_widget_set_visible(frRightTop, FALSE);
+	gtk_widget_set_visible(lbActorsError, TRUE);
+	gtk_widget_set_visible(spActors, FALSE);
+	gtk_spinner_stop(GTK_SPINNER(spActors));
+}
+
+
 gpointer getActorsTask(gpointer args) {
 	string link((char*)args);
 	gdk_threads_enter();
 	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching actors...");
+	showSpActors();
 	gdk_threads_leave();
 	HtmlString html_string(pbStatus);
 	html_string.setMode(ACTORS);
@@ -703,10 +731,12 @@ gpointer getActorsTask(gpointer args) {
 		}
 		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Done");
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
+		showActors();
 		updateActors();	
 	}else {
 	    gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");	
 	    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
+	    showActorsError();
 	}
 	gdk_threads_leave();
 	return NULL;
@@ -1091,8 +1121,7 @@ int main( int   argc,
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
     GtkWidget *swRightTop, *swRightBottom, *swLeftBottom;;
-    GtkWidget *frRightTop, *frInfo;
-    GtkWidget *vbRightTop, *vbLeftTop;
+    GtkWidget *vbLeftTop;
     
 	GtkToolItem *btnCategories;
 	GtkToolItem *sep;
@@ -1321,21 +1350,26 @@ int main( int   argc,
     gtk_container_add(GTK_CONTAINER(frRightBottom), swRightBottom);
     
     // Movie info
-    vbRightTop = gtk_vbox_new(FALSE, 1);
     frInfo = gtk_frame_new("Info");
-    lbInfo = gtk_label_new("Movie info should be here...");
+    lbInfo = gtk_label_new("");
     gtk_widget_set_size_request(lbInfo, SIDE_SIZE, -1);
     gtk_label_set_line_wrap(GTK_LABEL(lbInfo), TRUE);
     gtk_container_add(GTK_CONTAINER(frInfo), lbInfo);
-    gtk_box_pack_start(GTK_BOX(vbRightTop), frInfo, FALSE, FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(vbRightTop), frRightTop, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbRight), frInfo, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbRight), frRightTop, TRUE, TRUE, 1);
+    
+    // Actors spinner and error label
+    spActors = gtk_spinner_new();
+    lbActorsError = gtk_label_new("No actors found");
+    gtk_box_pack_start(GTK_BOX(vbRight), spActors, TRUE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbRight), lbActorsError, TRUE, FALSE, 1);
+    gtk_widget_set_size_request(spActors, 32, 32);
     
     //vbLeft
     gtk_box_pack_start(GTK_BOX(vbLeft), frLeftTop, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeft), frLeftBottom, TRUE, TRUE, 1);
     
     //vbRight
-    gtk_box_pack_start(GTK_BOX(vbRight), vbRightTop, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
     
     // Add center spinner and error label
@@ -1394,6 +1428,9 @@ int main( int   argc,
     gtk_widget_set_visible(spCategories, FALSE);
     gtk_widget_set_visible(lbCategoriesError, FALSE);
     gtk_widget_set_size_request(spCategories, 32, 32);
+    
+    gtk_widget_set_visible(spActors, FALSE);
+    gtk_widget_set_visible(lbActorsError, FALSE);
     
     gtk_main();
     gdk_threads_leave ();
