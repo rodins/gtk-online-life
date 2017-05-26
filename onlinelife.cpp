@@ -29,7 +29,6 @@ enum {
 	NUM_COLS
 };
 
-GtkWidget *pbStatus;
 //Categories
 Categories categories;
 //Results
@@ -387,11 +386,10 @@ gpointer getResultsTask(gpointer arg) {
 	string link((char *)arg);
 	//cout << "Link: " << link << endl;
 	gdk_threads_enter();
-	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching results...");
 	showSpCenter();
     gdk_threads_leave();
     
-	HtmlString html_string(pbStatus);
+	HtmlString html_string;
 	html_string.setMode(RESULTS);
 	string page = html_string.get_string(link);
 	
@@ -406,12 +404,8 @@ gpointer getResultsTask(gpointer arg) {
 			backResults[prevResults.getTitle()] = prevResults;
 			backResultsListAdd(prevResults.getTitle());
 		}
-		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Done");
-		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 		updateResults();
 	}else {
-		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");
-		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 		// Pretend to be playlists to be able to back to results from error
 		// using back button
 		gtk_label_set_text(GTK_LABEL(lbPage), "");
@@ -597,11 +591,10 @@ gpointer getPlaylistsTask(gpointer args) {
 	string referer = "http://dterod.com/player.php?newsid=" + id;
 	
 	gdk_threads_enter();
-	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching playlists...");
 	showSpCenter();
 	gdk_threads_leave();
 	
-	HtmlString html_string(pbStatus);
+	HtmlString html_string;
 	string js = html_string.get_string(url, referer);
 	string playlist_link = get_txt_link(js);
 	if(!playlist_link.empty()) { // Playlists found
@@ -609,12 +602,9 @@ gpointer getPlaylistsTask(gpointer args) {
 		gdk_threads_enter();
 		playlists.parse(json);
 		if(!playlists.getPlaylists().empty()) {
-			gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Done");
-			gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 			displayPlaylists();
 		}else {
-			gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");
-			gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
+			show_error_dialog();
 		}
 		gdk_threads_leave();
 	}else { //PlayItem found
@@ -623,12 +613,9 @@ gpointer getPlaylistsTask(gpointer args) {
 		switchToIconView();
 		PlayItem playItem = playlists.parse_play_item(js);
 		if(!playItem.get_comment().empty()) {
-			gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Done");
-			gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 			processPlayItem(playItem); 
 		}else {
 			if(results.getTitle().find("Трейлеры") != string::npos) {
-				gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching trailer...");
 				gdk_threads_leave();
 				// Searching for alternative trailers links
 	            string infoHtml = html_string.get_string(result.get_href(), referer);
@@ -639,8 +626,6 @@ gpointer getPlaylistsTask(gpointer args) {
 				gdk_threads_enter();
 				processPlayItem(playlists.parse_play_item(json)); 
 			}else {
-				gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");
-			    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 			    show_error_dialog();
 			}
 		}
@@ -715,10 +700,9 @@ void showActorsError() {
 gpointer getActorsTask(gpointer args) {
 	string link((char*)args);
 	gdk_threads_enter();
-	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching actors...");
 	showSpActors();
 	gdk_threads_leave();
-	HtmlString html_string(pbStatus);
+	HtmlString html_string;
 	html_string.setMode(ACTORS);
 	string page = html_string.get_string(link);
 	gdk_threads_enter();
@@ -729,13 +713,9 @@ gpointer getActorsTask(gpointer args) {
 		    backActors[prevActors.getTitle()] = prevActors;
 		    backActorsListAdd(prevActors.getTitle());	
 		}
-		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Done");
-		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 		showActors();
 		updateActors();	
 	}else {
-	    gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");	
-	    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 	    showActorsError();
 	}
 	gdk_threads_leave();
@@ -922,22 +902,17 @@ void showCategoriesError() {
 
 gpointer getCategoriesTask(gpointer arg) {
 	gdk_threads_enter();
-	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Searching categories...");
 	showSpCategories();
 	gdk_threads_leave();
 	
-	HtmlString html_string(pbStatus);
+	HtmlString html_string;
 	html_string.setMode(CATEGORIES);
 	string page = html_string.get_string(DOMAIN);
 	gdk_threads_enter();
 	categories.parse_categories(page);
 	if(!categories.getCategories().empty()) {
-		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Done");
-		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 		updateCategories();
 	}else {
-		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");
-		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 		showCategoriesError();
 	}
 	gdk_threads_leave();
@@ -1385,9 +1360,6 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(hbCenter), vbRight, FALSE, FALSE, 1);
     
     gtk_box_pack_start(GTK_BOX(vbox), hbCenter, TRUE, TRUE, 1);
-    
-    pbStatus = gtk_progress_bar_new();
-    gtk_box_pack_start(GTK_BOX(vbox), pbStatus, FALSE, FALSE, 1);
     
     g_signal_connect(treeView, "row-activated", 
         G_CALLBACK(on_changed), NULL);
