@@ -569,6 +569,18 @@ string getTrailerId(string &page) {
 	return "";
 }
 
+void show_error_dialog() {
+	GtkWidget *dialog;
+	dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+			GTK_DIALOG_DESTROY_WITH_PARENT,
+			GTK_MESSAGE_ERROR,
+			GTK_BUTTONS_OK,
+			"File not found");
+	gtk_window_set_title(GTK_WINDOW(dialog), "Error");
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
+}
+
 gpointer getPlaylistsTask(gpointer args) {
 	gint i = (gint)args;
 	Item result = results.getResults()[i];
@@ -584,7 +596,7 @@ gpointer getPlaylistsTask(gpointer args) {
 	HtmlString html_string(pbStatus);
 	string js = html_string.get_string(url, referer);
 	string playlist_link = get_txt_link(js);
-	if(!playlist_link.empty()) {
+	if(!playlist_link.empty()) { // Playlists found
 		string json = html_string.get_string(playlist_link);
 		gdk_threads_enter();
 		playlists.parse(json);
@@ -597,8 +609,10 @@ gpointer getPlaylistsTask(gpointer args) {
 			gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
 		}
 		gdk_threads_leave();
-	}else {
+	}else { //PlayItem found
 		gdk_threads_enter();
+		// get results list back
+		switchToIconView();
 		PlayItem playItem = playlists.parse_play_item(js);
 		if(!playItem.get_comment().empty()) {
 			gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Done");
@@ -619,6 +633,7 @@ gpointer getPlaylistsTask(gpointer args) {
 			}else {
 				gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");
 			    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
+			    show_error_dialog();
 			}
 		}
 		gdk_threads_leave();
