@@ -127,6 +127,13 @@ class HtmlString {
 			}
 		}
 		
+		// Append middle
+		if(end == string::npos && !writerData->empty()) {
+			writerData->append(data, size *nmemb);
+			return size *nmemb;
+		}
+
+		
 		// Append end
 		if(end != string::npos && !writerData->empty()) {
 			string data_end = strData.substr(0, end + strEnd.size());
@@ -177,11 +184,12 @@ class HtmlString {
 			
 			curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &buffer);
 			
-			curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 0L);
-			curl_easy_setopt(curl_handle, CURLOPT_PROGRESSFUNCTION, HtmlString::my_progress_func);
-            curl_easy_setopt(curl_handle, CURLOPT_PROGRESSDATA, Bar);
-			
-			
+			if(Bar != NULL) {
+				curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 0L);
+			    curl_easy_setopt(curl_handle, CURLOPT_PROGRESSFUNCTION, HtmlString::my_progress_func);
+                curl_easy_setopt(curl_handle, CURLOPT_PROGRESSDATA, Bar);
+			}
+
 			/* get it */
 			curl_easy_perform(curl_handle);
 			
@@ -199,10 +207,10 @@ public:
 		mode = NONE;
 	}
     
-    HtmlString(GtkWidget *bar) {
+    /*HtmlString(GtkWidget *bar) {
 		Bar = bar;
 		mode = NONE;
-	}
+	}*/
 	
 	void setProgressBar(GtkWidget *bar) {
 		Bar = bar;
