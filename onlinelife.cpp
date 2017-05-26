@@ -392,9 +392,8 @@ gpointer getResultsTask(gpointer arg) {
 	string page = html_string.get_string(link);
 	
     gdk_threads_enter();
-	results.getResultsPage(page);
-	
-	if(!results.getResults().empty()) {
+	if(!page.empty()) {
+		results.getResultsPage(page);
 		// add back results
 		// save prev results to map
 		// add title to tvBackResults
@@ -409,7 +408,13 @@ gpointer getResultsTask(gpointer arg) {
 	}else {
 		gtk_progress_bar_set_text(GTK_PROGRESS_BAR(pbStatus), "Nothing found");
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(pbStatus), 0);
+		// Pretend to be playlists to be able to back to results from error
+		// using back button
+		gtk_label_set_text(GTK_LABEL(lbPage), "");
+	    setSensitiveItemsPlaylists();
+		displayMode = PLAYLISTS;
 		gtk_widget_set_visible(lbCenterError, TRUE);
+		gtk_widget_set_visible(spCenter, FALSE);
 	}
 	gdk_threads_leave();
 	return NULL;
@@ -529,7 +534,6 @@ void displayPlaylists() {
 	g_object_unref(model);
 	
 	gtk_label_set_text(GTK_LABEL(lbPage), "");
-	
 	setSensitiveItemsPlaylists();
 }
 
@@ -575,7 +579,7 @@ void show_error_dialog() {
 			GTK_DIALOG_DESTROY_WITH_PARENT,
 			GTK_MESSAGE_ERROR,
 			GTK_BUTTONS_OK,
-			"File not found");
+			"Nothing found");
 	gtk_window_set_title(GTK_WINDOW(dialog), "Error");
 	gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
@@ -954,7 +958,8 @@ static void btnUpClicked( GtkWidget *widget,
                       gpointer   data )
 {
 	if(displayMode == PLAYLISTS) {
-		updateResults();
+		switchToIconView();
+		setSensitiveItemsResults();
 	}
 }
 
