@@ -72,12 +72,12 @@ GtkWidget *vbLeft, *vbRight;
 GtkWidget *spCenter;
 
 GtkWidget *spCategories;
-GtkWidget *lbCategoriesError;
+GtkWidget *hbCategoriesError;
 
 GtkWidget *swLeftTop;
 
 GtkWidget *spActors;
-GtkWidget *lbActorsError;
+GtkWidget *hbActorsError;
 
 /*string readFromFile(string filename) {
 	ifstream in(filename.c_str());
@@ -665,7 +665,7 @@ void backActorsListAdd(string title) {
 void showSpActors() {
 	gtk_widget_set_visible(frInfo, FALSE);
 	gtk_widget_set_visible(frRightTop, FALSE);
-	gtk_widget_set_visible(lbActorsError, FALSE);
+	gtk_widget_set_visible(hbActorsError, FALSE);
 	gtk_widget_set_visible(spActors, TRUE);
 	gtk_spinner_start(GTK_SPINNER(spActors));
 	gtk_widget_set_visible(vbRight, TRUE);
@@ -674,7 +674,7 @@ void showSpActors() {
 void showActors() {
 	gtk_widget_set_visible(frInfo, TRUE);
 	gtk_widget_set_visible(frRightTop, TRUE);
-	gtk_widget_set_visible(lbActorsError, FALSE);
+	gtk_widget_set_visible(hbActorsError, FALSE);
 	gtk_widget_set_visible(spActors, FALSE);
 	gtk_spinner_stop(GTK_SPINNER(spActors));
 }
@@ -682,7 +682,7 @@ void showActors() {
 void showActorsError() {
 	gtk_widget_set_visible(frInfo, FALSE);
 	gtk_widget_set_visible(frRightTop, FALSE);
-	gtk_widget_set_visible(lbActorsError, TRUE);
+	gtk_widget_set_visible(hbActorsError, TRUE);
 	gtk_widget_set_visible(spActors, FALSE);
 	gtk_spinner_stop(GTK_SPINNER(spActors));
 }
@@ -862,7 +862,7 @@ GtkTreeModel *getCategoriesModel() {
 void updateCategories() {
 	//gtk_widget_set_visible(vbLeft, TRUE);
 	//gtk_widget_set_visible(frLeftTop, TRUE);
-	gtk_widget_set_visible(lbCategoriesError, FALSE);
+	gtk_widget_set_visible(hbCategoriesError, FALSE);
 	gtk_widget_set_visible(spCategories, FALSE);
 	gtk_spinner_stop(GTK_SPINNER(spCategories));
 	gtk_widget_set_visible(swLeftTop, TRUE);
@@ -877,7 +877,7 @@ void showSpCategories() {
 	gtk_widget_set_visible(vbLeft, TRUE);
 	gtk_widget_set_visible(frLeftTop, TRUE);
 	gtk_widget_set_visible(swLeftTop, FALSE);
-	gtk_widget_set_visible(lbCategoriesError, FALSE);
+	gtk_widget_set_visible(hbCategoriesError, FALSE);
 	gtk_widget_set_visible(spCategories, TRUE);
 	gtk_spinner_start(GTK_SPINNER(spCategories));
 }
@@ -886,7 +886,7 @@ void showCategoriesError() {
 	gtk_widget_set_visible(vbLeft, TRUE);
 	gtk_widget_set_visible(frLeftTop, TRUE);
 	gtk_widget_set_visible(swLeftTop, FALSE);
-	gtk_widget_set_visible(lbCategoriesError, TRUE);
+	gtk_widget_set_visible(hbCategoriesError, TRUE);
 	gtk_widget_set_visible(spCategories, FALSE);
 	gtk_spinner_stop(GTK_SPINNER(spCategories));
 }
@@ -1088,6 +1088,8 @@ int main( int   argc,
     GtkWidget *hbCenter;    
     GtkWidget *swRightTop, *swRightBottom, *swLeftBottom;;
     GtkWidget *vbLeftTop;
+    GtkWidget *btnCategoriesError;
+    GtkWidget *btnActorsError;
     
 	GtkToolItem *btnCategories;
 	GtkToolItem *sep;
@@ -1304,11 +1306,13 @@ int main( int   argc,
     
     // Add categories spinner and error
     vbLeftTop = gtk_vbox_new(FALSE, 1);
+    hbCategoriesError = gtk_hbox_new(FALSE, 1); // for Repeat button normal size
     spCategories = gtk_spinner_new();
-    lbCategoriesError = gtk_label_new("No categories found");
+    btnCategoriesError = gtk_button_new_with_label("Repeat");
+    gtk_box_pack_start(GTK_BOX(hbCategoriesError), btnCategoriesError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbLeftTop), swLeftTop, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeftTop), spCategories, TRUE, FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(vbLeftTop), lbCategoriesError, TRUE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbLeftTop), hbCategoriesError, TRUE, FALSE, 1);
     
     gtk_container_add(GTK_CONTAINER(frLeftTop), vbLeftTop);
     gtk_container_add(GTK_CONTAINER(frLeftBottom), swLeftBottom);
@@ -1324,11 +1328,13 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbRight), frInfo, FALSE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), frRightTop, TRUE, TRUE, 1);
     
-    // Actors spinner and error label
+    // Actors spinner and error button
+    hbActorsError = gtk_hbox_new(FALSE, 1);
     spActors = gtk_spinner_new();
-    lbActorsError = gtk_label_new("No actors found");
+    btnActorsError = gtk_button_new_with_label("Repeat");
+    gtk_box_pack_start(GTK_BOX(hbActorsError), btnActorsError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbRight), spActors, TRUE, FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(vbRight), lbActorsError, TRUE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbRight), hbActorsError, TRUE, FALSE, 1);
     gtk_widget_set_size_request(spActors, 32, 32);
     
     //vbLeft
@@ -1386,11 +1392,11 @@ int main( int   argc,
     gtk_widget_set_size_request(spCenter, 32, 32);
     
     gtk_widget_set_visible(spCategories, FALSE);
-    gtk_widget_set_visible(lbCategoriesError, FALSE);
+    gtk_widget_set_visible(hbCategoriesError, FALSE);
     gtk_widget_set_size_request(spCategories, 32, 32);
     
     gtk_widget_set_visible(spActors, FALSE);
-    gtk_widget_set_visible(lbActorsError, FALSE);
+    gtk_widget_set_visible(hbActorsError, FALSE);
     
     gtk_main();
     gdk_threads_leave ();
