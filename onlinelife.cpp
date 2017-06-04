@@ -70,7 +70,6 @@ GtkWidget *tvBackResults, *tvCategories, *tvActors, *tvBackActors;
 GtkWidget *vbLeft, *vbRight;
 
 GtkWidget *spCenter;
-GtkWidget *lbCenterError;
 
 GtkWidget *spCategories;
 GtkWidget *lbCategoriesError;
@@ -100,7 +99,6 @@ void switchToTreeView() {
 	gtk_widget_set_visible(swIcon, FALSE);
 	gtk_widget_set_visible(spCenter, FALSE);
 	gtk_spinner_stop(GTK_SPINNER(spCenter));
-	gtk_widget_set_visible(lbCenterError, FALSE);
 }
 
 void switchToIconView() {
@@ -108,7 +106,6 @@ void switchToIconView() {
 	gtk_widget_set_visible(swIcon, TRUE);
 	gtk_widget_set_visible(spCenter, FALSE);
 	gtk_spinner_stop(GTK_SPINNER(spCenter));
-	gtk_widget_set_visible(lbCenterError, FALSE);
 }
 
 GdkPixbuf *create_pixbuf(const gchar * filename) {
@@ -377,9 +374,20 @@ void backResultsListAdd(string title) {
 void showSpCenter() {
 	gtk_widget_set_visible(swTree, FALSE);
 	gtk_widget_set_visible(swIcon, FALSE);
-	gtk_widget_set_visible(lbCenterError, FALSE);
 	gtk_widget_set_visible(spCenter, TRUE);
 	gtk_spinner_start(GTK_SPINNER(spCenter));
+}
+
+void show_error_dialog() {
+	GtkWidget *dialog;
+	dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+			GTK_DIALOG_DESTROY_WITH_PARENT,
+			GTK_MESSAGE_ERROR,
+			GTK_BUTTONS_OK,
+			"Nothing found");
+	gtk_window_set_title(GTK_WINDOW(dialog), "Error");
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
 }
 
 gpointer getResultsTask(gpointer arg) {
@@ -406,13 +414,8 @@ gpointer getResultsTask(gpointer arg) {
 		}
 		updateResults();
 	}else {
-		// Pretend to be playlists to be able to back to results from error
-		// using back button
-		gtk_label_set_text(GTK_LABEL(lbPage), "");
-	    setSensitiveItemsPlaylists();
-		displayMode = PLAYLISTS;
-		gtk_widget_set_visible(lbCenterError, TRUE);
-		gtk_widget_set_visible(spCenter, FALSE);
+		switchToIconView();
+		show_error_dialog();
 	}
 	gdk_threads_leave();
 	return NULL;
@@ -569,18 +572,6 @@ string getTrailerId(string &page) {
 		return trailerId;
 	}
 	return "";
-}
-
-void show_error_dialog() {
-	GtkWidget *dialog;
-	dialog = gtk_message_dialog_new(GTK_WINDOW(window),
-			GTK_DIALOG_DESTROY_WITH_PARENT,
-			GTK_MESSAGE_ERROR,
-			GTK_BUTTONS_OK,
-			"Nothing found");
-	gtk_window_set_title(GTK_WINDOW(dialog), "Error");
-	gtk_dialog_run(GTK_DIALOG(dialog));
-	gtk_widget_destroy(dialog);
 }
 
 gpointer getPlaylistsTask(gpointer args) {
@@ -1347,16 +1338,14 @@ int main( int   argc,
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
     
-    // Add center spinner and error label
+    // Add center spinner
     spCenter = gtk_spinner_new();
-    lbCenterError = gtk_label_new("Nothing found");
     
     //hbCenter
     gtk_box_pack_start(GTK_BOX(hbCenter), vbLeft, FALSE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(hbCenter), swTree, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(hbCenter), swIcon, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(hbCenter), spCenter, TRUE, FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(hbCenter), lbCenterError, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(hbCenter), vbRight, FALSE, FALSE, 1);
     
     gtk_box_pack_start(GTK_BOX(vbox), hbCenter, TRUE, TRUE, 1);
@@ -1394,7 +1383,6 @@ int main( int   argc,
     gtk_widget_set_visible(frRightBottom, FALSE);
     
     gtk_widget_set_visible(spCenter, FALSE);
-    gtk_widget_set_visible(lbCenterError, FALSE);
     gtk_widget_set_size_request(spCenter, 32, 32);
     
     gtk_widget_set_visible(spCategories, FALSE);
