@@ -1056,6 +1056,10 @@ static void backResultsChanged(GtkWidget *widget, gpointer data) {
     }
 }
 
+static void btnCategoriesRepeatClicked(GtkWidget *widget, gpointer data) {
+	processCategories();
+}
+
 static void btnHistoryClicked(GtkWidget *widget, gpointer data) {
 	if(!gtk_widget_get_visible(vbLeft)) { // left vbox is hidden
 		gtk_widget_set_visible(vbLeft, TRUE);
@@ -1309,6 +1313,8 @@ int main( int   argc,
     hbCategoriesError = gtk_hbox_new(FALSE, 1); // for Repeat button normal size
     spCategories = gtk_spinner_new();
     btnCategoriesError = gtk_button_new_with_label("Repeat");
+    g_signal_connect(btnCategoriesError, "clicked", 
+        G_CALLBACK(btnCategoriesRepeatClicked), NULL);
     gtk_box_pack_start(GTK_BOX(hbCategoriesError), btnCategoriesError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbLeftTop), swLeftTop, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeftTop), spCategories, TRUE, FALSE, 1);
