@@ -79,6 +79,8 @@ GtkWidget *swLeftTop;
 GtkWidget *spActors;
 GtkWidget *hbActorsError;
 
+string lastActorsHref;
+
 /*string readFromFile(string filename) {
 	ifstream in(filename.c_str());
 	if(in) {
@@ -697,8 +699,8 @@ gpointer getActorsTask(gpointer args) {
 	html_string.setMode(ACTORS);
 	string page = html_string.get_string(link);
 	gdk_threads_enter();
-	actors.parse(page);
-	if(!actors.getActors().empty()) {
+	if(!page.empty()) {
+		actors.parse(page);
 		if(backActors.count(prevActors.getTitle()) == 0 
 		        && prevActors.getActors().size() > 0) {
 		    backActors[prevActors.getTitle()] = prevActors;
@@ -718,6 +720,7 @@ void processResult(gint *indices, gint count) {//move to playlists
 		gint i = indices[0];
 		title = PROG_NAME + " - " + results.getResults()[i].get_title();
 		if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
+			lastActorsHref = results.getResults()[i].get_href();
 			// Fetch actors
 			prevActors = actors;
 			actors.setTitle(results.getResults()[i].get_title());
@@ -1060,6 +1063,17 @@ static void btnCategoriesRepeatClicked(GtkWidget *widget, gpointer data) {
 	processCategories();
 }
 
+static void btnActorsRepeatClicked(GtkWidget *widget, gpointer data) {
+	#ifdef OLD    	
+        g_thread_create(getActorsTask,
+		 (gpointer) lastActorsHref.c_str(),
+		  FALSE, NULL);
+	#else
+		g_thread_new(NULL, getActorsTask,
+            (gpointer) lastActorsHref.c_str());
+	#endif
+}
+
 static void btnHistoryClicked(GtkWidget *widget, gpointer data) {
 	if(!gtk_widget_get_visible(vbLeft)) { // left vbox is hidden
 		gtk_widget_set_visible(vbLeft, TRUE);
@@ -1334,10 +1348,12 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbRight), frInfo, FALSE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), frRightTop, TRUE, TRUE, 1);
     
-    // Actors spinner and error button
+    // Actors spinner and repeat button
     hbActorsError = gtk_hbox_new(FALSE, 1);
     spActors = gtk_spinner_new();
     btnActorsError = gtk_button_new_with_label("Repeat");
+    g_signal_connect(btnActorsError, "clicked",
+        G_CALLBACK(btnActorsRepeatClicked), NULL);
     gtk_box_pack_start(GTK_BOX(hbActorsError), btnActorsError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbRight), spActors, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), hbActorsError, TRUE, FALSE, 1);
