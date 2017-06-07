@@ -1,5 +1,6 @@
-Rename getResultsTask to resultsTask and so on.
+COMPLETED Rename getResultsTask to resultsTask and so on.
 Only one thread should run at the time. Start new and kill others.
 Make pager like recyclerVeiw in android. Make endless scrolling like youtube app.
     Might need to think about if results history needed in this case.
 Implement bookmarking (saving) of results. Add and delete.
+Mark watched serial parts somehow, maybe with changed font color.
