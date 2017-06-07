@@ -577,7 +577,7 @@ string getTrailerId(string &page) {
 }
 
 gpointer playlistsTask(gpointer args) {
-	gint i = (gint)args;
+	gint i = (gint)(glong)args;
 	Item result = results.getResults()[i];
 	string id = result.get_id();
 	string url = "http://dterod.com/js.php?id=" + id;
@@ -737,11 +737,11 @@ void processResult(gint *indices, gint count) {//move to playlists
 			playlists.setTitle(title);
 	        #ifdef OLD    
 		        g_thread_create(playlistsTask,
-				 (gpointer) i,
+				 GINT_TO_POINTER(i),
 				  FALSE, NULL);
 			#else
 				g_thread_new(NULL, playlistsTask,
-		            (gpointer) i);
+		            GINT_TO_POINTER(i));
 			#endif	
 		}
 	}
