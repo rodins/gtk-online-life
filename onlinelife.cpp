@@ -81,6 +81,7 @@ GtkWidget *hbActorsError;
 
 GThreadPool *imagesThreadPool;
 GThreadPool *resultsThreadPool;
+GThreadPool *actorsThreadPool;
 
 string lastActorsHref;
 
@@ -695,7 +696,7 @@ void showActorsError() {
 }
 
 
-gpointer actorsTask(gpointer args) {
+void actorsTask(gpointer args, gpointer args2) {
 	string link((char*)args);
 	gdk_threads_enter();
 	showSpActors();
@@ -717,7 +718,6 @@ gpointer actorsTask(gpointer args) {
 	    showActorsError();
 	}
 	gdk_threads_leave();
-	return NULL;
 }
 
 void processResult(gint *indices, gint count) {//move to playlists
@@ -734,8 +734,9 @@ void processResult(gint *indices, gint count) {//move to playlists
 				 (gpointer) results.getResults()[i].get_href().c_str(),
 				  FALSE, NULL);
 			#else
-				g_thread_new(NULL, actorsTask,
-		            (gpointer) results.getResults()[i].get_href().c_str());
+		        g_thread_pool_push(actorsThreadPool,
+		            (gpointer) results.getResults()[i].get_href().c_str(),
+		            NULL);
 	        #endif    
 		}else {
 			// Fetch playlists/playItem
@@ -1079,8 +1080,9 @@ static void btnActorsRepeatClicked(GtkWidget *widget, gpointer data) {
 		 (gpointer) lastActorsHref.c_str(),
 		  FALSE, NULL);
 	#else
-		g_thread_new(NULL, actorsTask,
-            (gpointer) lastActorsHref.c_str());
+        g_thread_pool_push(actorsThreadPool, 
+            (gpointer) lastActorsHref.c_str(),
+            NULL);
 	#endif
 }
 
@@ -1439,6 +1441,13 @@ int main( int   argc,
                                    
     // GThreadPool for results
     resultsThreadPool = g_thread_pool_new(resultsTask,
+                                   NULL,
+                                   1, // Run one thread at the time
+                                   FALSE,
+                                   NULL);
+                                   
+    // GThreadPool for actors
+    actorsThreadPool = g_thread_pool_new(actorsTask,
                                    NULL,
                                    1, // Run one thread at the time
                                    FALSE,
