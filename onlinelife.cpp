@@ -79,7 +79,8 @@ GtkWidget *swLeftTop;
 GtkWidget *spActors;
 GtkWidget *hbActorsError;
 
-GThreadPool *threadPool;
+GThreadPool *imagesThreadPool;
+GThreadPool *resultsThreadPool;
 
 string lastActorsHref;
 
@@ -272,7 +273,7 @@ void getPixbufFromUrl(string url) {
 	g_object_unref(loader);
 }
 // Function is now brocken for OLD thread macros
-gpointer imageDownloadTask(gpointer arg, gpointer arg1) {
+void imageDownloadTask(gpointer arg, gpointer arg1) {
 	string link((char*)arg);
 	
 	gdk_threads_enter();
@@ -282,8 +283,6 @@ gpointer imageDownloadTask(gpointer arg, gpointer arg1) {
 	if(count == 0) { //if map does not have pixbuf
 		getPixbufFromUrl(link);
 	}
-	
-	return NULL;
 }
 
 GtkTreeModel *getResultsModel() {
@@ -330,7 +329,7 @@ void displayRange() {
 					 (gpointer) results.getResults()[i].get_image_link().c_str(),
 					  FALSE, NULL);*/
 				#else
-					g_thread_pool_push(threadPool, 
+					g_thread_pool_push(imagesThreadPool, 
 					    (gpointer) results.getResults()[i]
 					    .get_image_link().c_str(), NULL);
 				#endif
@@ -395,7 +394,7 @@ void show_error_dialog() {
 	gtk_widget_destroy(dialog);
 }
 
-gpointer resultsTask(gpointer arg) {
+void resultsTask(gpointer arg, gpointer arg1) {
 	string link((char *)arg);
 	//cout << "Link: " << link << endl;
 	gdk_threads_enter();
@@ -423,7 +422,6 @@ gpointer resultsTask(gpointer arg) {
 		show_error_dialog();
 	}
 	gdk_threads_leave();
-	return NULL;
 }
 
 void processCategory(gint *indices, gint count) {//move to results
@@ -437,8 +435,9 @@ void processCategory(gint *indices, gint count) {//move to results
 				 (gpointer) categories.getCategories()[i].get_link().c_str(),
 				  FALSE, NULL);
 	    #else
-		    g_thread_new(NULL, resultsTask,
-			    (gpointer) categories.getCategories()[i].get_link().c_str());
+			g_thread_pool_push(resultsThreadPool,
+			     (gpointer) categories.getCategories()[i].get_link().c_str(),
+			     NULL);
 	    #endif
 		
 	}else if(count == 2) { //Leaf
@@ -453,8 +452,9 @@ void processCategory(gint *indices, gint count) {//move to results
 				 (gpointer) categories.getCategories()[i].get_subctgs()[j].get_link().c_str(),
 				  FALSE, NULL);
 	    #else
-		    g_thread_new(NULL, resultsTask, 
-			    (gpointer) categories.getCategories()[i].get_subctgs()[j].get_link().c_str());
+			g_thread_pool_push(resultsThreadPool,
+			     (gpointer) categories.getCategories()[i].get_subctgs()[j].get_link().c_str(),
+			     NULL);
 		#endif
 	}
 	
@@ -761,8 +761,9 @@ void processActor(gint *indices, gint count) {
 				 (gpointer) actors.getActors()[i].get_href().c_str(),
 				  FALSE, NULL);
 		#else
-			g_thread_new(NULL, resultsTask, 
-		        (gpointer) actors.getActors()[i].get_href().c_str());
+		    g_thread_pool_push(resultsThreadPool,
+		        (gpointer) actors.getActors()[i].get_href().c_str(),
+		        NULL);
 		#endif	  	
 	}
 }
@@ -973,8 +974,9 @@ static void btnPrevClicked( GtkWidget *widget,
 				 (gpointer)results.getPrevLink().c_str(),
 				  FALSE, NULL);
 	#else
-	    g_thread_new(NULL, resultsTask, 
-	    (gpointer)results.getPrevLink().c_str());
+	    g_thread_pool_push(resultsThreadPool,
+	        (gpointer)results.getPrevLink().c_str(),
+	        NULL);
 	#endif		  
 }
 
@@ -986,8 +988,9 @@ static void btnNextClicked( GtkWidget *widget,
 		    (gpointer)results.getNextLink().c_str(),
 		     FALSE, NULL);
 	#else
-	    g_thread_new(NULL, resultsTask, 
-	        (gpointer)results.getNextLink().c_str());
+	    g_thread_pool_push(resultsThreadPool,
+	        (gpointer)results.getNextLink().c_str(),
+	        NULL);
 	#endif		  
 }
 
@@ -1004,7 +1007,9 @@ static void entryActivated( GtkWidget *widget,
 				 (gpointer)results.getBaseUrl().c_str(),
 				  FALSE, NULL);
 	#else
-	    g_thread_new(NULL, resultsTask, (gpointer) results.getBaseUrl().c_str());
+	    g_thread_pool_push(resultsThreadPool,
+	        (gpointer) results.getBaseUrl().c_str(),
+	        NULL);
 	#endif		  						  
 }
 
@@ -1424,9 +1429,16 @@ int main( int   argc,
     gtk_widget_set_visible(hbActorsError, FALSE);
     
     // GThreadPool for downloading images
-    threadPool = g_thread_pool_new((GFunc)imageDownloadTask,
+    imagesThreadPool = g_thread_pool_new(imageDownloadTask,
                                    NULL, 
                                    -1,
+                                   FALSE,
+                                   NULL);
+                                   
+    // GThreadPool for results
+    resultsThreadPool = g_thread_pool_new(resultsTask,
+                                   NULL,
+                                   1, // Run one thread at the time
                                    FALSE,
                                    NULL);
     
