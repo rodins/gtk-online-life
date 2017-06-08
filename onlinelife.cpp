@@ -159,6 +159,8 @@ void setSensitiveItemsResults() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
 	}
 	
+	gtk_widget_set_visible(lbPage, TRUE);
+	
 	if(results.getNextLink().empty()) {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 	}else {
@@ -539,7 +541,7 @@ void displayPlaylists() {
 	gtk_tree_view_set_model(GTK_TREE_VIEW(treeView), model);
 	g_object_unref(model);
 	
-	gtk_label_set_text(GTK_LABEL(lbPage), "");
+	gtk_widget_set_visible(lbPage, FALSE);
 	setSensitiveItemsPlaylists();
 }
 
