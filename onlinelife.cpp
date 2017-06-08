@@ -79,6 +79,8 @@ GtkWidget *swLeftTop;
 GtkWidget *spActors;
 GtkWidget *hbActorsError;
 
+GThreadPool *threadPool;
+
 string lastActorsHref;
 
 /*string readFromFile(string filename) {
@@ -269,8 +271,8 @@ void getPixbufFromUrl(string url) {
 	//free(chunk.memory);
 	g_object_unref(loader);
 }
-
-gpointer imageDownloadTask(gpointer arg) {
+// Function is now brocken for OLD thread macros
+gpointer imageDownloadTask(gpointer arg, gpointer arg1) {
 	string link((char*)arg);
 	
 	gdk_threads_enter();
@@ -324,12 +326,13 @@ void displayRange() {
 			if(imageIndexes.count(i) == 0) {
 				imageIndexes.insert(i);
 				#ifdef OLD
-					g_thread_create(imageDownloadTask,
+					/*g_thread_create(imageDownloadTask,
 					 (gpointer) results.getResults()[i].get_image_link().c_str(),
-					  FALSE, NULL);
+					  FALSE, NULL);*/
 				#else
-					g_thread_new(NULL, imageDownloadTask, 
-					    (gpointer) results.getResults()[i].get_image_link().c_str());
+					g_thread_pool_push(threadPool, 
+					    (gpointer) results.getResults()[i]
+					    .get_image_link().c_str(), NULL);
 				#endif
 			}
 		}
@@ -1419,6 +1422,13 @@ int main( int   argc,
     
     gtk_widget_set_visible(spActors, FALSE);
     gtk_widget_set_visible(hbActorsError, FALSE);
+    
+    // GThreadPool for downloading images
+    threadPool = g_thread_pool_new((GFunc)imageDownloadTask,
+                                   NULL, 
+                                   -1,
+                                   FALSE,
+                                   NULL);
     
     gtk_main();
     gdk_threads_leave ();
