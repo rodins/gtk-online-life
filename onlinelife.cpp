@@ -13,6 +13,7 @@
 #include "HtmlString.hpp"
 
 #define DOMAIN "http://online-life.in"
+#define WDOMAIN "http://www.online-life.in"
 
 #include "Categories.hpp"
 #include "Results.hpp"
@@ -392,7 +393,7 @@ void show_error_dialog() {
 
 void resultsTask(gpointer arg, gpointer arg1) {
 	string link((char *)arg);
-	//cout << "Link: " << link << endl;
+	cout << "Link: " << link << endl;
 	gdk_threads_enter();
 	showSpCenter();
     gdk_threads_leave();

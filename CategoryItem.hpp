@@ -13,8 +13,8 @@ class CategoryItem {
 	}
 	
 	void set_link(string link) {
-		if(link.find(DOMAIN) == string::npos) {
-			_link = DOMAIN + link;
+		if(link.find(WDOMAIN) == string::npos) {
+			_link = WDOMAIN + link;
 		}else {
 			_link = link;
 		}
