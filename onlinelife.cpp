@@ -82,6 +82,7 @@ GtkWidget *hbActorsError;
 GThreadPool *imagesThreadPool;
 GThreadPool *resultsThreadPool;
 GThreadPool *actorsThreadPool;
+GThreadPool *playlistsThreadPool;
 
 string lastActorsHref;
 
@@ -582,8 +583,9 @@ string getTrailerId(string &page) {
 	return "";
 }
 
-gpointer playlistsTask(gpointer args) {
+void playlistsTask(gpointer args, gpointer args2) {
 	gint i = (gint)args;
+	i--; // decrement index to restore it's value
 	Item result = results.getResults()[i];
 	string id = result.get_id();
 	string url = "http://dterod.com/js.php?id=" + id;
@@ -630,7 +632,6 @@ gpointer playlistsTask(gpointer args) {
 		}
 		gdk_threads_leave();
 	}
-	return NULL;
 }
 
 GtkTreeModel *getActorsModel() {
@@ -746,8 +747,8 @@ void processResult(gint *indices, gint count) {//move to playlists
 				 (gpointer) i,
 				  FALSE, NULL);
 			#else
-				g_thread_new(NULL, playlistsTask,
-		            (gpointer) i);
+                i++; // increment index as cast 0 to pointer gives NULL and error at 0 index
+			    g_thread_pool_push(playlistsThreadPool, (gpointer)i, NULL);
 			#endif	
 		}
 	}
@@ -1448,6 +1449,13 @@ int main( int   argc,
                                    
     // GThreadPool for actors
     actorsThreadPool = g_thread_pool_new(actorsTask,
+                                   NULL,
+                                   1, // Run one thread at the time
+                                   FALSE,
+                                   NULL);
+                                   
+    // GThreadPool for playlists
+    playlistsThreadPool = g_thread_pool_new(playlistsTask,
                                    NULL,
                                    1, // Run one thread at the time
                                    FALSE,
