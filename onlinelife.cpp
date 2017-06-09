@@ -564,9 +564,14 @@ string getTrailerId(string &page) {
 	return "";
 }
 
+<<<<<<< HEAD
 void playlistsTask(gpointer args, gpointer args2) {
 	gint i = (gint)args;
 	i--; // decrement index to restore it's value
+=======
+gpointer playlistsTask(gpointer args) {
+	gint i = (gint)(glong)args;
+>>>>>>> 6e9abd20f4d749a29a7a50f8141c06ff4dd934de
 	Item result = results.getResults()[i];
 	string id = result.get_id();
 	string url = "http://dterod.com/js.php?id=" + id;
@@ -717,8 +722,19 @@ void processResult(gint *indices, gint count) {//move to playlists
 		}else {
 			// Fetch playlists/playItem
 			playlists.setTitle(title);
+<<<<<<< HEAD
 			i++; // increment index as cast 0 to pointer gives NULL and error at 0 index
 		    g_thread_pool_push(playlistsThreadPool, (gpointer)i, NULL);	
+=======
+	        #ifdef OLD    
+		        g_thread_create(playlistsTask,
+				 GINT_TO_POINTER(i),
+				  FALSE, NULL);
+			#else
+				g_thread_new(NULL, playlistsTask,
+		            GINT_TO_POINTER(i));
+			#endif	
+>>>>>>> 6e9abd20f4d749a29a7a50f8141c06ff4dd934de
 		}
 	}
 }
