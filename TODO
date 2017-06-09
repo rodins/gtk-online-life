@@ -1,5 +1,5 @@
 COMPLETED Rename getResultsTask to resultsTask and so on.
-Only one thread should run at the time. Start new and kill others.
+COMPLETED Used GThreadPools. Only one thread should run at the time. Start new and kill others.
     Check newer gtk threading on newer gtk.
 COMPLETED    Use GThreadPool for imageDownloadTask
     Fix threding for old gtk.
@@ -10,3 +10,4 @@ Mark watched serial parts somehow, maybe with changed font color.
 Replace OLD macros with autodetection based on gtk version (older then 2.32).
 Optimization of ListView callback functions. Use functions with different params.
 Video player autodetection.
+Display spinner only if looking for serials.
