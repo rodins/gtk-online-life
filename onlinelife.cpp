@@ -393,7 +393,7 @@ void show_error_dialog() {
 
 void resultsTask(gpointer arg, gpointer arg1) {
 	string link((char *)arg);
-	cout << "Link: " << link << endl;
+	//cout << "Link: " << link << endl;
 	gdk_threads_enter();
 	showSpCenter();
     gdk_threads_leave();
@@ -565,7 +565,7 @@ string getTrailerId(string &page) {
 }
 
 void playlistsTask(gpointer args, gpointer args2) {
-	gint i = (gint)args;
+	gint i = (gint)(glong)args;
 	i--; // decrement index to restore it's value
 	Item result = results.getResults()[i];
 	string id = result.get_id();
@@ -718,7 +718,7 @@ void processResult(gint *indices, gint count) {//move to playlists
 			// Fetch playlists/playItem
 			playlists.setTitle(title);
 			i++; // increment index as cast 0 to pointer gives NULL and error at 0 index
-		    g_thread_pool_push(playlistsThreadPool, (gpointer)i, NULL);	
+		    g_thread_pool_push(playlistsThreadPool, GINT_TO_POINTER(i), NULL);	
 		}
 	}
 }
