@@ -1045,6 +1045,29 @@ gboolean iconViewExposed(GtkWidget *widget, GdkEvent *event, gpointer data) {
 	return FALSE;
 }
 
+void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
+	gdouble value = gtk_adjustment_get_value(adj);
+	gdouble upper = gtk_adjustment_get_upper(adj);
+	gdouble page_size = gtk_adjustment_get_page_size(adj);
+	gdouble max_value = upper - page_size;
+	if (value == 0) {
+		if(!results.getPrevLink().empty()) {
+			//cout << "Move to prev page." << endl;
+			g_thread_pool_push(resultsThreadPool,
+	            (gpointer)results.getPrevLink().c_str(),
+	             NULL);
+		}
+	}
+	if (value == max_value) {
+		if(!results.getNextLink().empty()) {
+			//cout << "Move to next page." << endl;
+			g_thread_pool_push(resultsThreadPool,
+                (gpointer)results.getNextLink().c_str(),
+                NULL);
+		}
+	}
+}
+
 int main( int   argc,
           char *argv[] )
 {
@@ -1390,6 +1413,12 @@ int main( int   argc,
                                    1, // Run one thread at the time
                                    FALSE,
                                    NULL);
+                                   
+    // IconView scroll to the bottom detection code
+    GtkAdjustment *vadjustment;
+    vadjustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(swIcon));
+    g_signal_connect(vadjustment, "value-changed",
+        G_CALLBACK(swIconVScrollChanged), NULL);
     
     gtk_main();
     gdk_threads_leave ();
