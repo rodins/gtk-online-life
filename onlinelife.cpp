@@ -288,12 +288,15 @@ void imageDownloadTask(gpointer arg, gpointer arg1) {
 	}
 }
 
-GtkTreeModel *getResultsModel() {
+void appendToResultsModel() {
 	GtkListStore *store;
+	GtkTreeModel *model;
     GtkTreeIter iter;
     iters.clear();
-   
-    store = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);
+    
+    model = gtk_icon_view_get_model(GTK_ICON_VIEW(iconView));
+    store = GTK_LIST_STORE(model);
+    gtk_list_store_clear(store);
     
     GdkPixbuf *item = NULL;
     GdkPixbuf *defaultItem = create_pixbuf("blank.png");
@@ -314,7 +317,6 @@ GtkTreeModel *getResultsModel() {
             TITLE_COLUMN, results.getResults()[i].get_title().c_str(), -1);
 	}
 	g_object_unref(defaultItem);
-    return GTK_TREE_MODEL(store);
 }
 
 void displayRange() {
@@ -346,10 +348,7 @@ void updateResults() {
 	string title = PROG_NAME + " - " + results.getTitle();
 	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 	
-	GtkTreeModel *model;
-	model = getResultsModel();
-	gtk_icon_view_set_model(GTK_ICON_VIEW(iconView), model);
-	g_object_unref(model);
+	appendToResultsModel();
 	
 	// Scroll to the top of the list
 	GtkTreePath *path = gtk_tree_path_new_first();
@@ -1111,6 +1110,14 @@ int main( int   argc,
     gtk_icon_view_set_pixbuf_column(GTK_ICON_VIEW(iconView), IMAGE_COLUMN);                                                  
     gtk_icon_view_set_text_column(GTK_ICON_VIEW(iconView), TITLE_COLUMN);
     gtk_icon_view_set_item_width(GTK_ICON_VIEW(iconView), 180);
+    
+    // set model to iconView
+    GtkTreeModel *model;
+    GtkListStore *iconViewStore;
+	iconViewStore = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);
+	model = GTK_TREE_MODEL(iconViewStore);
+	gtk_icon_view_set_model(GTK_ICON_VIEW(iconView), model);
+	g_object_unref(model);
     
     toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
