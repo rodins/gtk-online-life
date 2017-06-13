@@ -11,6 +11,8 @@
 #include "Converter.hpp"
 #include "DisplayMode.hpp"
 #include "HtmlString.hpp"
+#include "CreatePixbuf.hpp"
+#include "ColumnsEnum.hpp"
 
 #define DOMAIN "http://online-life.in"
 #define WDOMAIN "http://www.online-life.in"
@@ -21,12 +23,6 @@
 #include "Actors.hpp"
 
 using namespace std;
-
-enum {
-	IMAGE_COLUMN = 0,
-	TITLE_COLUMN,
-	NUM_COLS
-};
 
 //Categories
 Categories categories;
@@ -85,6 +81,8 @@ GThreadPool *playlistsThreadPool;
 
 string lastActorsHref;
 
+bool isPage;
+
 /*string readFromFile(string filename) {
 	ifstream in(filename.c_str());
 	if(in) {
@@ -112,17 +110,6 @@ void switchToIconView() {
 	gtk_widget_set_visible(swIcon, TRUE);
 	gtk_widget_set_visible(spCenter, FALSE);
 	gtk_spinner_stop(GTK_SPINNER(spCenter));
-}
-
-GdkPixbuf *create_pixbuf(const gchar * filename) {
-    GdkPixbuf *pixbuf;
-    GError *error = NULL;
-    pixbuf = gdk_pixbuf_new_from_file(filename, &error);
-    if (!pixbuf) {
-        fprintf(stderr, "%s\n", error->message);
-        g_error_free(error);
-    }
-    return pixbuf;
 }
 
 void disableAllItems() {
@@ -182,8 +169,6 @@ void setSensitiveItemsActors() {
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
 }
 
-map<string, GdkPixbuf*> imagesCache;
-map<string, GtkTreeIter> iters;
 set<int> imageIndexes;
 
 struct ArgsStruct {
@@ -217,7 +202,7 @@ void getPixbufFromUrl(string url) {
 	GdkPixbuf *pixbuf = NULL;
 	
 	GdkPixbufLoader* loader = gdk_pixbuf_loader_new();
-	GtkTreeIter iter = iters[url];
+	GtkTreeIter iter = results.getIter(url);
 	struct ArgsStruct args;
 	args.loader = loader;
 	args.iter = iter;
@@ -260,7 +245,7 @@ void getPixbufFromUrl(string url) {
 			pixbuf = GDK_PIXBUF(g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader)));
 			gdk_threads_enter();
 			GtkListStore *store;
-			imagesCache[url] = pixbuf;
+			results.setImageToCache(pixbuf, url);
 				
 			store = GTK_LIST_STORE(gtk_icon_view_get_model
 				(GTK_ICON_VIEW(iconView))); 
@@ -275,48 +260,17 @@ void getPixbufFromUrl(string url) {
 	//free(chunk.memory);
 	g_object_unref(loader);
 }
-// Function is now brocken for OLD thread macros
+
 void imageDownloadTask(gpointer arg, gpointer arg1) {
 	string link((char*)arg);
 	
 	gdk_threads_enter();
-	int count = imagesCache.count(link);
+	int count = results.getImagesCache().count(link);
 	gdk_threads_leave();
 	
 	if(count == 0) { //if map does not have pixbuf
 		getPixbufFromUrl(link);
 	}
-}
-
-void appendToResultsModel() {
-	GtkListStore *store;
-	GtkTreeModel *model;
-    GtkTreeIter iter;
-    iters.clear();
-    
-    model = gtk_icon_view_get_model(GTK_ICON_VIEW(iconView));
-    store = GTK_LIST_STORE(model);
-    gtk_list_store_clear(store);
-    
-    GdkPixbuf *item = NULL;
-    GdkPixbuf *defaultItem = create_pixbuf("blank.png");
-    
-    for(unsigned i=0; i < results.getResults().size(); i++) {
-		string link = results.getResults()[i].get_image_link();
-		
-		gtk_list_store_append(store, &iter);
-		
-		if(imagesCache.count(link) > 0) {
-			item = imagesCache[link];
-		}else {
-			item = defaultItem;
-			iters[link] = iter;
-		}
-		
-        gtk_list_store_set(store, &iter, IMAGE_COLUMN, item,
-            TITLE_COLUMN, results.getResults()[i].get_title().c_str(), -1);
-	}
-	g_object_unref(defaultItem);
 }
 
 void displayRange() {
@@ -330,8 +284,8 @@ void displayRange() {
 			if(imageIndexes.count(i) == 0) {
 				imageIndexes.insert(i);
 				g_thread_pool_push(imagesThreadPool, 
-				    (gpointer) results.getResults()[i]
-				    .get_image_link().c_str(), NULL);
+				    (gpointer) results.getResults()[i].get_image_link().c_str(),
+				     NULL);
 			}
 		}
 		gtk_tree_path_free(path1);
@@ -340,7 +294,9 @@ void displayRange() {
 }
 
 void updateResults() {
-	imageIndexes.clear();
+	if (!isPage) {
+		imageIndexes.clear();
+	}
 	if(displayMode != RESULTS) {
 		displayMode = RESULTS;
 	}
@@ -348,12 +304,12 @@ void updateResults() {
 	string title = PROG_NAME + " - " + results.getTitle();
 	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 	
-	appendToResultsModel();
-	
-	// Scroll to the top of the list
-	GtkTreePath *path = gtk_tree_path_new_first();
-	gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path, FALSE, 0, 0);
-	
+	if (!isPage) {
+		// Scroll to the top of the list
+	    GtkTreePath *path = gtk_tree_path_new_first();
+	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path, FALSE, 0, 0);
+	}
+
 	gtk_label_set_text(GTK_LABEL(lbPage), results.getCurrentPage().c_str());
 	gtk_entry_set_text(GTK_ENTRY(entry), "");
 	
@@ -394,6 +350,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 	string link((char *)arg);
 	//cout << "Link: " << link << endl;
 	gdk_threads_enter();
+	
 	showSpCenter();
     gdk_threads_leave();
     
@@ -403,15 +360,16 @@ void resultsTask(gpointer arg, gpointer arg1) {
 	
     gdk_threads_enter();
 	if(!page.empty()) {
+		results.clearResultsAndModel(isPage);
 		results.getResultsPage(page);
 		// add back results
 		// save prev results to map
 		// add title to tvBackResults
-		if(backResults.count(prevResults.getTitle()) == 0 
+		/*if(backResults.count(prevResults.getTitle()) == 0 
 		        && prevResults.getResults().size() > 0) {
 			backResults[prevResults.getTitle()] = prevResults;
 			backResultsListAdd(prevResults.getTitle());
-		}
+		}*/
 		updateResults();
 	}else {
 		switchToIconView();
@@ -421,6 +379,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 }
 
 void processCategory(gint *indices, gint count) {//move to results
+    isPage = false;
 	if(count == 1) { //Node
 		gint i = indices[0];
 		prevResults = results;
@@ -724,6 +683,7 @@ void processResult(gint *indices, gint count) {//move to playlists
 
 void processActor(gint *indices, gint count) {
 	if(count == 1) { //Node
+	    isPage = false;
 		gint i = indices[0];
 		prevResults = results;
 		title = actors.getActors()[i].get_title();
@@ -929,6 +889,7 @@ static void btnUpClicked( GtkWidget *widget,
 static void btnPrevClicked( GtkWidget *widget,
                       gpointer   data )
 {     
+	isPage = true;
     g_thread_pool_push(resultsThreadPool,
         (gpointer)results.getPrevLink().c_str(),
         NULL);		  
@@ -937,6 +898,7 @@ static void btnPrevClicked( GtkWidget *widget,
 static void btnNextClicked( GtkWidget *widget,
                       gpointer   data )
 {   
+	isPage = true;
     g_thread_pool_push(resultsThreadPool,
         (gpointer)results.getNextLink().c_str(),
         NULL);	  
@@ -950,7 +912,7 @@ static void entryActivated( GtkWidget *widget,
     results.setTitle(title);
     string base_url = string(DOMAIN) + "/?do=search&subaction=search&mode=simple&story=" + to_cp1251(query);
     results.setBaseUrl(base_url);
-	
+	isPage = false;
     g_thread_pool_push(resultsThreadPool,
         (gpointer) results.getBaseUrl().c_str(),
         NULL);		  						  
@@ -1049,17 +1011,19 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 	gdouble upper = gtk_adjustment_get_upper(adj);
 	gdouble page_size = gtk_adjustment_get_page_size(adj);
 	gdouble max_value = upper - page_size;
-	if (value == 0) {
+	/*if (value == 0) {
 		if(!results.getPrevLink().empty()) {
 			//cout << "Move to prev page." << endl;
+			isPage = true;
 			g_thread_pool_push(resultsThreadPool,
 	            (gpointer)results.getPrevLink().c_str(),
 	             NULL);
 		}
-	}
+	}*/
 	if (value == max_value) {
 		if(!results.getNextLink().empty()) {
 			//cout << "Move to next page." << endl;
+			isPage = true;
 			g_thread_pool_push(resultsThreadPool,
                 (gpointer)results.getNextLink().c_str(),
                 NULL);
@@ -1118,6 +1082,8 @@ int main( int   argc,
 	model = GTK_TREE_MODEL(iconViewStore);
 	gtk_icon_view_set_model(GTK_ICON_VIEW(iconView), model);
 	g_object_unref(model);
+	// set iconView to get model out of it
+	results.setIconView(iconView);
     
     toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);

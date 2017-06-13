@@ -7,7 +7,48 @@ class Results {
 	string current_page;
 	string page;
 	string title;
+	
+	GtkListStore *store;
+	GtkTreeIter iter;
+	GdkPixbuf *pixbuf;
+    GdkPixbuf *defaultPixbuf;
+    
+    map<string, GdkPixbuf*> imagesCache;
+    map<string, GtkTreeIter> iters;
 	public:
+	
+	Results() {
+		defaultPixbuf = NULL; 
+	}
+	
+	// TODO: destructor
+	//g_object_unref(defaultItem);
+	
+	map<string, GdkPixbuf*> &getImagesCache() {
+		return imagesCache;
+	}
+	
+	void setImageToCache(GdkPixbuf *pixbuf, string url) {
+		imagesCache[url] = pixbuf;
+	}
+	
+	GtkTreeIter getIter(string url) {
+		return iters[url];
+	}
+	
+	void setIconView(GtkWidget *iconView) {
+		GtkTreeModel *model;
+		model = gtk_icon_view_get_model(GTK_ICON_VIEW(iconView));
+        store = GTK_LIST_STORE(model);
+	}
+	
+	void clearResultsAndModel(bool isPage) {
+		if(!isPage) {
+			results.clear();
+			iters.clear();
+			gtk_list_store_clear(store);
+		}
+	}
 	
 	void setTitle(string t) {
 		title = t;
@@ -22,6 +63,10 @@ class Results {
 	}
 	
 	void getResultsPage(string p) {
+		// Initialize pixbuf here
+		if (defaultPixbuf == NULL) {
+			defaultPixbuf = create_pixbuf("blank.png");
+		}
 	    page = p;
 	    parse_results();
 	    parse_pager();         	
@@ -52,10 +97,27 @@ class Results {
 	}
 	
 	private:
+	
+	void appendToStore(Item item) {
+		string link = item.get_image_link();
+		
+		gtk_list_store_append(store, &iter);
+		
+		if(imagesCache.count(link) > 0) {
+			pixbuf = imagesCache[link];
+		}else {
+			pixbuf = defaultPixbuf;
+			iters[link] = iter;
+		}
+		
+        gtk_list_store_set(store, &iter, IMAGE_COLUMN, pixbuf,
+            TITLE_COLUMN, item.get_title().c_str(), -1);
+	}
+	
 	//Parse search results
 	void parse_results() {
 		string domain("http://www.online-life.in/");
-		results.clear();
+		//results.clear();
 	    string begin = "<div class=\"custom-poster\"";
 		string end = "</a>";
 		size_t div_begin = page.find(begin);
@@ -109,6 +171,7 @@ class Results {
 							
 							Item item(title, id_str, href, image);
 						    results.push_back(item);
+						    appendToStore(item);
 						}
 					}
 				}
