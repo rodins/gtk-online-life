@@ -55,11 +55,7 @@ class Results {
 	}
 	
 	string getTitle() {
-		if(current_page.empty()) {
-			return title;
-		}else {
-		    return title + " - Page: " + current_page;	
-		}
+		return title;
 	}
 	
 	void getResultsPage(string p) {
