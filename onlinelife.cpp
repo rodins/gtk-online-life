@@ -82,6 +82,7 @@ GThreadPool *playlistsThreadPool;
 string lastActorsHref;
 
 bool isPage;
+set<string> resultsThreadsLinks;
 
 /*string readFromFile(string filename) {
 	ifstream in(filename.c_str());
@@ -303,12 +304,6 @@ void updateResults() {
 	switchToIconView();
 	string title = PROG_NAME + " - " + results.getTitle();
 	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-	
-	if (!isPage) {
-		// Scroll to the top of the list
-	    GtkTreePath *path = gtk_tree_path_new_first();
-	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path, FALSE, 0, 0);
-	}
 
 	gtk_label_set_text(GTK_LABEL(lbPage), results.getCurrentPage().c_str());
 	gtk_entry_set_text(GTK_ENTRY(entry), "");
@@ -349,10 +344,9 @@ void show_error_dialog() {
 void resultsTask(gpointer arg, gpointer arg1) {
 	string link((char *)arg);
 	//cout << "Link: " << link << endl;
-	gdk_threads_enter();
-	
+	/*gdk_threads_enter();
 	showSpCenter();
-    gdk_threads_leave();
+    gdk_threads_leave();*/
     
 	HtmlString html_string;
 	html_string.setMode(RESULTS);
@@ -360,6 +354,14 @@ void resultsTask(gpointer arg, gpointer arg1) {
 	
     gdk_threads_enter();
 	if(!page.empty()) {
+		if (!isPage) {
+			// Scroll to the top of the list
+		    GtkTreePath *path = gtk_tree_path_new_first();
+		    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path, FALSE, 0, 0);
+		    
+		    // Clear results links set if not paging
+		    resultsThreadsLinks.clear();
+		}
 		results.clearResultsAndModel(isPage);
 		results.getResultsPage(page);
 		// add back results
@@ -372,6 +374,10 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		}*/
 		updateResults();
 	}else {
+		// Remove link from set on results error
+		if(resultsThreadsLinks.count(results.getNextLink()) > 0) {
+			resultsThreadsLinks.erase(results.getNextLink());
+		}
 		switchToIconView();
 		show_error_dialog();
 	}
@@ -1010,23 +1016,17 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 	gdouble value = gtk_adjustment_get_value(adj);
 	gdouble upper = gtk_adjustment_get_upper(adj);
 	gdouble page_size = gtk_adjustment_get_page_size(adj);
-	gdouble max_value = upper - page_size;
-	/*if (value == 0) {
-		if(!results.getPrevLink().empty()) {
-			//cout << "Move to prev page." << endl;
-			isPage = true;
-			g_thread_pool_push(resultsThreadPool,
-	            (gpointer)results.getPrevLink().c_str(),
-	             NULL);
-		}
-	}*/
-	if (value == max_value) {
+	gdouble max_value = upper - page_size - page_size;
+	if (value > max_value) {
 		if(!results.getNextLink().empty()) {
-			//cout << "Move to next page." << endl;
-			isPage = true;
-			g_thread_pool_push(resultsThreadPool,
-                (gpointer)results.getNextLink().c_str(),
-                NULL);
+			// Search for the same link only once if it's not saved in set.
+			if(resultsThreadsLinks.count(results.getNextLink()) == 0) {
+				isPage = true;
+				resultsThreadsLinks.insert(results.getNextLink());
+				g_thread_pool_push(resultsThreadPool,
+	                (gpointer)results.getNextLink().c_str(),
+	                NULL);
+			}
 		}
 	}
 }
