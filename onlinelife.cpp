@@ -351,9 +351,12 @@ void show_error_dialog() {
 void resultsTask(gpointer arg, gpointer arg1) {
 	string link((char *)arg);
 	//cout << "Link: " << link << endl;
-	/*gdk_threads_enter();
-	showSpCenter();
-    gdk_threads_leave();*/
+	gdk_threads_enter();
+	// Display spinner for new results, not paging
+	if(!isPage) {
+		showSpCenter();
+	}
+    gdk_threads_leave();
     
 	HtmlString html_string;
 	html_string.setMode(RESULTS);
