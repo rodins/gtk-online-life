@@ -17,6 +17,10 @@
 #define DOMAIN "http://online-life.in"
 #define WDOMAIN "http://www.online-life.in"
 
+GdkPixbuf *defaultPixbuf;
+map<string, GdkPixbuf*> imagesCache;
+GtkWidget *iconView;
+
 #include "Categories.hpp"
 #include "Results.hpp"
 #include "Playlists.hpp"
@@ -45,7 +49,6 @@ string title;
 const string PROG_NAME("Online life");
 
 GtkWidget *treeView;
-GtkWidget *iconView;
 
 GtkToolItem *btnUp;
 GtkToolItem *btnPrev;
@@ -182,7 +185,7 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
 	size_t realsize = size * nmemb;
 	struct ArgsStruct *args = (struct ArgsStruct *)userp;
-	
+	// Setting new partially downloaded image here
 	gdk_pixbuf_loader_write(args->loader, (const guchar*)contents, realsize, NULL);
 	GdkPixbuf* pixbufOrig = gdk_pixbuf_loader_get_pixbuf(args->loader);
 	if(pixbufOrig != NULL) {
@@ -196,14 +199,13 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 	return realsize;
 }
 
-void getPixbufFromUrl(string url) {
-
+void getPixbufFromUrl(string url, GtkTreeIter iter) {
+    
 	CURL *curl_handle;
 	CURLcode res;
-	GdkPixbuf *pixbuf = NULL;
+	GdkPixbuf *pixbuf;
 	
 	GdkPixbufLoader* loader = gdk_pixbuf_loader_new();
-	GtkTreeIter iter = results.getIter(url);
 	struct ArgsStruct args;
 	args.loader = loader;
 	args.iter = iter;
@@ -242,17 +244,18 @@ void getPixbufFromUrl(string url) {
 	        fprintf(stderr, "On close: %s\n", error->message);
             g_error_free(error);
 		}else {
+			// Setting new fully downloaded image here
             //Make copy of pixbuf to be able to free loader
 			pixbuf = GDK_PIXBUF(g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader)));
 			gdk_threads_enter();
 			GtkListStore *store;
-			results.setImageToCache(pixbuf, url);
+			imagesCache[url] = pixbuf;
 				
 			store = GTK_LIST_STORE(gtk_icon_view_get_model
 				(GTK_ICON_VIEW(iconView))); 
 			gtk_list_store_set(store, &iter, IMAGE_COLUMN, pixbuf, -1);
+			gdk_threads_leave();
         }
-        gdk_threads_leave();
 	}
 	
 	/* cleanup curl stuff */ 
@@ -266,11 +269,15 @@ void imageDownloadTask(gpointer arg, gpointer arg1) {
 	string link((char*)arg);
 	
 	gdk_threads_enter();
-	int count = results.getImagesCache().count(link);
-	gdk_threads_leave();
+	int count = imagesCache.count(link);
+	int itersCount = results.getIters().count(link);
 	
-	if(count == 0) { //if map does not have pixbuf
-		getPixbufFromUrl(link);
+	// get stored iter by link in iconView
+	GtkTreeIter iter = results.getIters()[link];
+	gdk_threads_leave();
+	//if map does not have pixbuf and has iter with link
+	if(count == 0 && itersCount > 0) { 
+		getPixbufFromUrl(link, iter);
 	}
 }
 
@@ -367,11 +374,11 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		// add back results
 		// save prev results to map
 		// add title to tvBackResults
-		/*if(backResults.count(prevResults.getTitle()) == 0 
+		if(backResults.count(prevResults.getTitle()) == 0 
 		        && prevResults.getResults().size() > 0) {
 			backResults[prevResults.getTitle()] = prevResults;
 			backResultsListAdd(prevResults.getTitle());
-		}*/
+		}
 		updateResults();
 	}else {
 		// Remove link from set on results error
@@ -962,7 +969,7 @@ static void backResultsChanged(GtkWidget *widget, gpointer data) {
 	
 	if (gtk_tree_selection_get_selected(
 	    GTK_TREE_SELECTION(widget), &model, &iter)) {
-	
+	    isPage = false;
 		gtk_tree_model_get(model, &iter, TITLE_COLUMN, &value,  -1);
 		
 		// Save displayed results if not saved
@@ -970,8 +977,16 @@ static void backResultsChanged(GtkWidget *widget, gpointer data) {
 			backResults[results.getTitle()] = results;
 			backResultsListAdd(results.getTitle());
 		}
+		// Scroll to the top of the list
+	    GtkTreePath *path = gtk_tree_path_new_first();
+	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path, FALSE, 0, 0);
+	    
+	    // Clear results links set if not paging
+	    resultsThreadsLinks.clear();
+		
 		// Set and display back results
 		results = backResults[string(value)];
+		results.copyToModel();
 		updateResults();
 		
 		g_free(value);
@@ -1076,14 +1091,12 @@ int main( int   argc,
     gtk_icon_view_set_item_width(GTK_ICON_VIEW(iconView), 180);
     
     // set model to iconView
-    GtkTreeModel *model;
     GtkListStore *iconViewStore;
+    GtkTreeModel *model;
 	iconViewStore = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);
 	model = GTK_TREE_MODEL(iconViewStore);
 	gtk_icon_view_set_model(GTK_ICON_VIEW(iconView), model);
 	g_object_unref(model);
-	// set iconView to get model out of it
-	results.setIconView(iconView);
     
     toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
@@ -1392,6 +1405,9 @@ int main( int   argc,
     vadjustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(swIcon));
     g_signal_connect(vadjustment, "value-changed",
         G_CALLBACK(swIconVScrollChanged), NULL);
+        
+    // Initialize default pixbuf for iconView here
+    defaultPixbuf = create_pixbuf("blank.png");
     
     gtk_main();
     gdk_threads_leave ();

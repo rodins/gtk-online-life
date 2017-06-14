@@ -8,45 +8,16 @@ class Results {
 	string page;
 	string title;
 	
-	GtkListStore *store;
-	GtkTreeIter iter;
-	GdkPixbuf *pixbuf;
-    GdkPixbuf *defaultPixbuf;
-    
-    map<string, GdkPixbuf*> imagesCache;
-    map<string, GtkTreeIter> iters;
+	GtkListStore *iconViewStore;
+	map<string, GtkTreeIter> iters;
 	public:
-	
-	Results() {
-		defaultPixbuf = NULL; 
-	}
-	
-	// TODO: destructor
-	//g_object_unref(defaultItem);
-	
-	map<string, GdkPixbuf*> &getImagesCache() {
-		return imagesCache;
-	}
-	
-	void setImageToCache(GdkPixbuf *pixbuf, string url) {
-		imagesCache[url] = pixbuf;
-	}
-	
-	GtkTreeIter getIter(string url) {
-		return iters[url];
-	}
-	
-	void setIconView(GtkWidget *iconView) {
-		GtkTreeModel *model;
-		model = gtk_icon_view_get_model(GTK_ICON_VIEW(iconView));
-        store = GTK_LIST_STORE(model);
-	}
 	
 	void clearResultsAndModel(bool isPage) {
 		if(!isPage) {
+			getModelFromIconView();
 			results.clear();
 			iters.clear();
-			gtk_list_store_clear(store);
+			gtk_list_store_clear(iconViewStore);
 		}
 	}
 	
@@ -59,10 +30,6 @@ class Results {
 	}
 	
 	void getResultsPage(string p) {
-		// Initialize pixbuf here
-		if (defaultPixbuf == NULL) {
-			defaultPixbuf = create_pixbuf("blank.png");
-		}
 	    page = p;
 	    parse_results();
 	    parse_pager();         	
@@ -92,21 +59,41 @@ class Results {
 		return current_page;
 	}
 	
+	map<string, GtkTreeIter> &getIters() {
+		return iters;
+	}
+	
+	void copyToModel() {
+		getModelFromIconView();
+		gtk_list_store_clear(iconViewStore);
+		iters.clear();
+		for (unsigned i = 0; i < results.size(); i++) {
+			appendToStore(results[i]);
+		}
+	}
+	
 	private:
 	
+	void getModelFromIconView() {
+		iconViewStore = GTK_LIST_STORE(gtk_icon_view_get_model
+				(GTK_ICON_VIEW(iconView))); 
+	}
+	
 	void appendToStore(Item item) {
+		static GtkTreeIter iter;
+		static GdkPixbuf *pixbuf;
 		string link = item.get_image_link();
 		
-		gtk_list_store_append(store, &iter);
-		
+		gtk_list_store_append(iconViewStore, &iter);
+		// store iter by link in iters map
+		iters[link] = iter;
 		if(imagesCache.count(link) > 0) {
 			pixbuf = imagesCache[link];
 		}else {
 			pixbuf = defaultPixbuf;
-			iters[link] = iter;
 		}
 		
-        gtk_list_store_set(store, &iter, IMAGE_COLUMN, pixbuf,
+        gtk_list_store_set(iconViewStore, &iter, IMAGE_COLUMN, pixbuf,
             TITLE_COLUMN, item.get_title().c_str(), -1);
 	}
 	
