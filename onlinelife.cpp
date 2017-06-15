@@ -377,10 +377,12 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		// add back results
 		// save prev results to map
 		// add title to tvBackResults
-		if(backResults.count(prevResults.getTitle()) == 0 
-		        && prevResults.getResults().size() > 0) {
+		if(prevResults.getResults().size() > 0) {
+			// Add first time to map, add to listView
+			if(backResults.count(prevResults.getTitle()) == 0) {
+				backResultsListAdd(prevResults.getTitle());
+			}
 			backResults[prevResults.getTitle()] = prevResults;
-			backResultsListAdd(prevResults.getTitle());
 		}
 		updateResults();
 	}else {
@@ -975,10 +977,13 @@ static void backResultsChanged(GtkWidget *widget, gpointer data) {
 	    isPage = false;
 		gtk_tree_model_get(model, &iter, TITLE_COLUMN, &value,  -1);
 		
-		// Save displayed results if not saved
-        if(backResults.count(results.getTitle()) == 0) {
+		// Save or resave displayed results
+		if(results.getResults().size() > 0) {
+			// Add first time to map, add to listView
+			if(backResults.count(results.getTitle()) == 0) {
+				backResultsListAdd(results.getTitle());
+			}
 			backResults[results.getTitle()] = results;
-			backResultsListAdd(results.getTitle());
 		}
 		// Scroll to the top of the list
 	    GtkTreePath *path = gtk_tree_path_new_first();
