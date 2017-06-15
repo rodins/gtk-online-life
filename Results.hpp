@@ -91,6 +91,8 @@ class Results {
 			pixbuf = imagesCache[link];
 		}else {
 			pixbuf = defaultPixbuf;
+			// store iter by link in iters map
+		    iters[link] = iter;
 		}
 		
         gtk_list_store_set(iconViewStore, &iter, IMAGE_COLUMN, pixbuf,
