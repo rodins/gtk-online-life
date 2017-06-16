@@ -60,7 +60,6 @@ GtkToolItem *rbPlay;
 GtkToolItem *rbDownload;
 
 GtkWidget *window;
-GtkWidget *lbPage;
 GtkWidget *entry;
 
 GtkWidget *swTree, *swIcon;
@@ -117,7 +116,6 @@ void switchToIconView() {
 }
 
 void disableAllItems() {
-	gtk_label_set_text(GTK_LABEL(lbPage), "");
 	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
@@ -151,7 +149,6 @@ void setSensitiveItemsResults() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
 	}
 	
-	gtk_widget_set_visible(lbPage, TRUE);
 	
 	if(results.getNextLink().empty()) {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
@@ -321,8 +318,6 @@ void updateResults() {
 	switchToIconView();
 	string title = PROG_NAME + " - " + results.getTitle();
 	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-
-	gtk_label_set_text(GTK_LABEL(lbPage), results.getCurrentPage().c_str());
 	gtk_entry_set_text(GTK_ENTRY(entry), "");
 	
 	setSensitiveItemsResults();
@@ -512,7 +507,6 @@ void displayPlaylists() {
 	gtk_tree_view_set_model(GTK_TREE_VIEW(treeView), model);
 	g_object_unref(model);
 	
-	gtk_widget_set_visible(lbPage, FALSE);
 	setSensitiveItemsPlaylists();
 }
 
@@ -1150,11 +1144,6 @@ int main( int   argc,
     gtk_tool_item_set_tooltip_text(btnPrev, "Go to previous page");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnPrev, -1);
     g_signal_connect(btnPrev, "clicked", G_CALLBACK(btnPrevClicked), NULL);
-    
-    lbPage = gtk_label_new("");
-    GtkToolItem *labelItem = gtk_tool_item_new();
-    gtk_container_add(GTK_CONTAINER(labelItem), lbPage);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), labelItem, -1);
     
     btnNext = gtk_tool_button_new_from_stock(GTK_STOCK_GO_FORWARD);
     gtk_tool_item_set_tooltip_text(btnNext, "Go to next page");
