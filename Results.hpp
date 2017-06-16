@@ -10,7 +10,17 @@ class Results {
 	
 	GtkListStore *iconViewStore;
 	map<string, GtkTreeIter> iters;
+	
+	string index; // save position of iconView
 	public:
+	
+	string getIndex() {
+		return index;
+	}
+	
+	void setIndex(string i) {
+		index = i;
+	}
 	
 	void clearResultsAndModel(bool isPage) {
 		if(!isPage) {
@@ -144,15 +154,6 @@ class Results {
 						if(image_begin != string::npos && image_end != string::npos) {
 							size_t image_length = image_end - image_begin;
 							string image = div.substr(image_begin+5, image_length-1);
-							
-							//replace &amp, gives bigger image;
-						    /*string toReplace = "&amp;";
-						    string replaceWith = "&";
-						    size_t entityFound = image.find(toReplace);
-						    while(entityFound != string::npos){
-						        image.replace(entityFound,toReplace.length(),replaceWith);
-							    entityFound = image.find(toReplace, entityFound+1);
-					        }*/
 							
 							Item item(title, id_str, href, image);
 						    results.push_back(item);

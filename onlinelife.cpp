@@ -281,6 +281,16 @@ void imageDownloadTask(gpointer arg, gpointer arg1) {
 	}
 }
 
+void saveResultsPostion() {
+	GtkTreePath *path1, *path2;
+	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(iconView), &path1, &path2)) {
+		string index(gtk_tree_path_to_string(path1));
+        results.setIndex(index);
+		gtk_tree_path_free(path1);
+	    gtk_tree_path_free(path2);
+	}
+}
+
 void displayRange() {
 	GtkTreePath *path1, *path2;
 	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(iconView), &path1, &path2)) {
@@ -364,6 +374,16 @@ void resultsTask(gpointer arg, gpointer arg1) {
 	
     gdk_threads_enter();
 	if(!page.empty()) {
+		// add back results
+		// save prev results to map
+		// add title to tvBackResults
+		if(prevResults.getResults().size() > 0 && !isPage) {
+			// Add first time to map, add to listView
+			if(backResults.count(prevResults.getTitle()) == 0) {
+				backResultsListAdd(prevResults.getTitle());
+			}
+			backResults[prevResults.getTitle()] = prevResults;
+		}
 		if (!isPage) {
 			// Scroll to the top of the list
 		    GtkTreePath *path = gtk_tree_path_new_first();
@@ -374,16 +394,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		}
 		results.clearResultsAndModel(isPage);
 		results.getResultsPage(page);
-		// add back results
-		// save prev results to map
-		// add title to tvBackResults
-		if(prevResults.getResults().size() > 0) {
-			// Add first time to map, add to listView
-			if(backResults.count(prevResults.getTitle()) == 0) {
-				backResultsListAdd(prevResults.getTitle());
-			}
-			backResults[prevResults.getTitle()] = prevResults;
-		}
+		
 		updateResults();
 	}else {
 		// Remove link from set on results error
@@ -397,6 +408,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 }
 
 void processCategory(gint *indices, gint count) {//move to results
+	saveResultsPostion();
     isPage = false;
 	if(count == 1) { //Node
 		gint i = indices[0];
@@ -701,6 +713,7 @@ void processResult(gint *indices, gint count) {//move to playlists
 
 void processActor(gint *indices, gint count) {
 	if(count == 1) { //Node
+	    saveResultsPostion();
 	    isPage = false;
 		gint i = indices[0];
 		prevResults = results;
@@ -925,6 +938,7 @@ static void btnNextClicked( GtkWidget *widget,
 static void entryActivated( GtkWidget *widget, 
                       gpointer data) {
     string query(gtk_entry_get_text(GTK_ENTRY(widget)));
+    saveResultsPostion();
     prevResults = results;
     title = "Search: " + query;
     results.setTitle(title);
@@ -983,20 +997,23 @@ static void backResultsChanged(GtkWidget *widget, gpointer data) {
 			if(backResults.count(results.getTitle()) == 0) {
 				backResultsListAdd(results.getTitle());
 			}
+			saveResultsPostion();
 			backResults[results.getTitle()] = results;
 		}
-		// Scroll to the top of the list
-	    GtkTreePath *path = gtk_tree_path_new_first();
-	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path, FALSE, 0, 0);
 	    
 	    // Clear results links set if not paging
-	    resultsThreadsLinks.clear();
-		
-		// Set and display back results
+	    // (do not allow next page thread to be called twice)
+	    resultsThreadsLinks.clear(); 
+		// Set back results as results
 		results = backResults[string(value)];
+		// Scroll to saved position
+		string index = results.getIndex();
+		GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
+		gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path1, FALSE, 0, 0);
+	    gtk_tree_path_free(path1);
+		// Update iconView with history results
 		results.copyToModel();
 		updateResults();
-		
 		g_free(value);
     }
 }
