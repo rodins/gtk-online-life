@@ -362,9 +362,14 @@ void resultsTask(gpointer arg, gpointer arg1) {
 	string link((char *)arg);
 	//cout << "Link: " << link << endl;
 	gdk_threads_enter();
-	// Display spinner for new results, not paging
 	if(!isPage) {
+		// Display spinner for new results, not paging
 		showSpCenter();
+		// Save position and copy to save variable
+		if(results.getResults().size() > 0) {
+			saveResultsPostion();
+		    prevResults = results;
+		}
 	}
     gdk_threads_leave();
     
@@ -379,7 +384,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		// add title to tvBackResults
 		if(prevResults.getResults().size() > 0 && !isPage) {
 			// Add first time to map, add to listView
-			if(backResults.count(prevResults.getTitle()) == 0) {
+			if(backResults.count(prevResults.getTitle()) == 0) { 
 				backResultsListAdd(prevResults.getTitle());
 			}
 			backResults[prevResults.getTitle()] = prevResults;
@@ -391,6 +396,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		    
 		    // Clear results links set if not paging
 		    resultsThreadsLinks.clear();
+		    results.setTitle(title);
 		}
 		results.clearResultsAndModel(isPage);
 		results.getResultsPage(page);
@@ -408,24 +414,18 @@ void resultsTask(gpointer arg, gpointer arg1) {
 }
 
 void processCategory(gint *indices, gint count) {//move to results
-	saveResultsPostion();
     isPage = false;
 	if(count == 1) { //Node
 		gint i = indices[0];
-		prevResults = results;
 		title = categories.getCategories()[i].get_title();
-		results.setTitle(title);
 		g_thread_pool_push(resultsThreadPool,
 		     (gpointer) categories.getCategories()[i].get_link().c_str(),
 		     NULL);
-		
 	}else if(count == 2) { //Leaf
 		gint i = indices[0];
 		gint j = indices[1];
-		prevResults = results;
 		title = categories.getCategories()[i].get_title() + " - " 
 		      + categories.getCategories()[i].get_subctgs()[j].get_title();
-		results.setTitle(title);
 		g_thread_pool_push(resultsThreadPool,
 		     (gpointer) categories.getCategories()[i].get_subctgs()[j].get_link().c_str(),
 		     NULL);
@@ -713,12 +713,9 @@ void processResult(gint *indices, gint count) {//move to playlists
 
 void processActor(gint *indices, gint count) {
 	if(count == 1) { //Node
-	    saveResultsPostion();
 	    isPage = false;
 		gint i = indices[0];
-		prevResults = results;
 		title = actors.getActors()[i].get_title();
-		results.setTitle(title);
 	    g_thread_pool_push(resultsThreadPool,
 	        (gpointer) actors.getActors()[i].get_href().c_str(),
 	        NULL);	  	
@@ -938,10 +935,7 @@ static void btnNextClicked( GtkWidget *widget,
 static void entryActivated( GtkWidget *widget, 
                       gpointer data) {
     string query(gtk_entry_get_text(GTK_ENTRY(widget)));
-    saveResultsPostion();
-    prevResults = results;
     title = "Search: " + query;
-    results.setTitle(title);
     string base_url = string(DOMAIN) + "/?do=search&subaction=search&mode=simple&story=" + to_cp1251(query);
     results.setBaseUrl(base_url);
 	isPage = false;
