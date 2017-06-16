@@ -11,3 +11,5 @@ Replace OLD macros with autodetection based on gtk version (older then 2.32).
 Optimization of ListView callback functions. Use functions with different params.
 Video player autodetection.
 Display spinner only if looking for serials.
+resultsTask updateResults optimization.
+Fix domain in Results to WDOMAIN.
