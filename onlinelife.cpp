@@ -1000,13 +1000,15 @@ static void backResultsChanged(GtkWidget *widget, gpointer data) {
 	    resultsThreadsLinks.clear(); 
 		// Set back results as results
 		results = backResults[string(value)];
-		// Scroll to saved position
+		
+		// Update iconView with history results
+		results.copyToModel();
+		// Scroll to saved position after updating model
 		string index = results.getIndex();
 		GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
 		gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path1, FALSE, 0, 0);
 	    gtk_tree_path_free(path1);
-		// Update iconView with history results
-		results.copyToModel();
+	    
 		updateResults();
 		g_free(value);
     }
