@@ -76,6 +76,8 @@ GtkWidget *swLeftTop;
 GtkWidget *spActors;
 GtkWidget *hbActorsError;
 
+GtkWidget *vbCenter;
+
 GThreadPool *imagesThreadPool;
 GThreadPool *resultsThreadPool;
 GThreadPool *actorsThreadPool;
@@ -143,18 +145,18 @@ void setSensitiveItemsResults() {
 	
 	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 
-	if(results.getPrevLink().empty()) {
+	/*if(results.getPrevLink().empty()) {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 	}else {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
 	}
 	
-	
 	if(results.getNextLink().empty()) {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 	}else {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), TRUE);
-	}
+	}*/
+	
 	gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbActors), TRUE);
@@ -336,7 +338,16 @@ void backResultsListAdd(string title) {
 
 void showSpCenter() {
 	gtk_widget_set_visible(swTree, FALSE);
-	gtk_widget_set_visible(swIcon, FALSE);
+	// Show and hide of iconView depends on isPage
+	gtk_widget_set_visible(swIcon, isPage);
+	// Change packing params of spCenter
+	gtk_box_set_child_packing(
+	    GTK_BOX(vbCenter),
+	    spCenter,
+	    !isPage,
+	    FALSE,
+	    1,
+	    GTK_PACK_START);
 	gtk_widget_set_visible(spCenter, TRUE);
 	gtk_spinner_start(GTK_SPINNER(spCenter));
 }
@@ -357,9 +368,10 @@ void resultsTask(gpointer arg, gpointer arg1) {
 	string link((char *)arg);
 	//cout << "Link: " << link << endl;
 	gdk_threads_enter();
+	// Display spinner for new and paging results
+    showSpCenter();
+	
 	if(!isPage) {
-		// Display spinner for new results, not paging
-		showSpCenter();
 		// Save position and copy to save variable
 		if(results.getResults().size() > 0) {
 			saveResultsPostion();
@@ -1141,12 +1153,12 @@ int main( int   argc,
     g_signal_connect(GTK_WIDGET(btnUp), "clicked", G_CALLBACK(btnUpClicked), NULL);
     
     btnPrev = gtk_tool_button_new_from_stock(GTK_STOCK_GO_BACK);
-    gtk_tool_item_set_tooltip_text(btnPrev, "Go to previous page");
+    gtk_tool_item_set_tooltip_text(btnPrev, "Go back in history");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnPrev, -1);
     g_signal_connect(btnPrev, "clicked", G_CALLBACK(btnPrevClicked), NULL);
     
     btnNext = gtk_tool_button_new_from_stock(GTK_STOCK_GO_FORWARD);
-    gtk_tool_item_set_tooltip_text(btnNext, "Go to next page");
+    gtk_tool_item_set_tooltip_text(btnNext, "Go forward in history");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnNext, -1);
     g_signal_connect(GTK_WIDGET(btnNext), "clicked", G_CALLBACK(btnNextClicked), NULL);
     
@@ -1331,11 +1343,16 @@ int main( int   argc,
     // Add center spinner
     spCenter = gtk_spinner_new();
     
+    // add vbox center
+    vbCenter = gtk_vbox_new(FALSE, 1);
+    // add items to vbCenter
+    gtk_box_pack_start(GTK_BOX(vbCenter), swTree, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbCenter), swIcon, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbCenter), spCenter, TRUE, FALSE, 1);
+    
     //hbCenter
     gtk_box_pack_start(GTK_BOX(hbCenter), vbLeft, FALSE, FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(hbCenter), swTree, TRUE, TRUE, 1);
-    gtk_box_pack_start(GTK_BOX(hbCenter), swIcon, TRUE, TRUE, 1);
-    gtk_box_pack_start(GTK_BOX(hbCenter), spCenter, TRUE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(hbCenter), vbCenter, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(hbCenter), vbRight, FALSE, FALSE, 1);
     
     gtk_box_pack_start(GTK_BOX(vbox), hbCenter, TRUE, TRUE, 1);
