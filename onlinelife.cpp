@@ -923,19 +923,13 @@ static void btnUpClicked( GtkWidget *widget,
 static void btnPrevClicked( GtkWidget *widget,
                       gpointer   data )
 {     
-	isPage = true;
-    g_thread_pool_push(resultsThreadPool,
-        (gpointer)results.getPrevLink().c_str(),
-        NULL);		  
+			  
 }
 
 static void btnNextClicked( GtkWidget *widget,
                       gpointer   data )
 {   
-	isPage = true;
-    g_thread_pool_push(resultsThreadPool,
-        (gpointer)results.getNextLink().c_str(),
-        NULL);	  
+     
 }
 
 static void entryActivated( GtkWidget *widget, 
