@@ -13,3 +13,6 @@ Video player autodetection.
 Display spinner only if looking for serials.
 resultsTask updateResults optimization.
 Fix domain in Results to WDOMAIN.
+Make terminal inside gui for download with wget or for players.
+Use embedded player, like ffmpeg.
+Make pager spinner and repeat button.
