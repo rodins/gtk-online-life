@@ -39,6 +39,9 @@ Actors actors, prevActors;
 
 map <string, Results> backResults;
 map <string, Actors> backActors;
+
+vector<Results> backResultsStack, forwardResultsStack;
+
 GtkWidget *frRightBottom, *frLeftTop, *frLeftBottom;
 GtkWidget *lbInfo;
 GtkWidget *frRightTop, *frInfo;
@@ -145,17 +148,17 @@ void setSensitiveItemsResults() {
 	
 	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 
-	/*if(results.getPrevLink().empty()) {
+	if(backResultsStack.empty()) {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 	}else {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
 	}
 	
-	if(results.getNextLink().empty()) {
+	if(forwardResultsStack.empty()) {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 	}else {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), TRUE);
-	}*/
+	}
 	
 	gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
@@ -395,6 +398,10 @@ void resultsTask(gpointer arg, gpointer arg1) {
 				backResultsListAdd(prevResults.getTitle());
 			}
 			backResults[prevResults.getTitle()] = prevResults;
+			// also save prevResults to backResultsStack
+			backResultsStack.push_back(prevResults);
+			// clear forward results stack on fetching new results
+			forwardResultsStack.clear();
 		}
 		if (!isPage) {
 			// Scroll to the top of the list
@@ -920,16 +927,44 @@ static void btnUpClicked( GtkWidget *widget,
 	}
 }
 
+void savedRecovery() {
+	// Clear results links set if not paging
+    // (do not allow next page thread to be called twice)
+    resultsThreadsLinks.clear(); 
+    
+	// Update iconView with history results
+	results.copyToModel();
+	// Scroll to saved position after updating model
+	string index = results.getIndex();
+	GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
+	gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path1, FALSE, 0, 0);
+    gtk_tree_path_free(path1);
+}
+
 static void btnPrevClicked( GtkWidget *widget,
                       gpointer   data )
-{     
-			  
+{   
+	isPage = false;
+	// Save current results to forwardResultsStack
+	forwardResultsStack.push_back(results);  
+	// Display top results from backResultsStack
+	results = backResultsStack.back();
+	backResultsStack.pop_back();
+	savedRecovery();
+	updateResults();		  
 }
 
 static void btnNextClicked( GtkWidget *widget,
                       gpointer   data )
 {   
-     
+	isPage = false;
+    // Save current results to backResultsStack
+    backResultsStack.push_back(results);
+    // Display top result from forwardResultsStack
+    results = forwardResultsStack.back();
+    forwardResultsStack.pop_back();
+    savedRecovery();
+    updateResults(); 
 }
 
 static void entryActivated( GtkWidget *widget, 
@@ -995,20 +1030,9 @@ static void backResultsChanged(GtkWidget *widget, gpointer data) {
 			backResults[results.getTitle()] = results;
 		}
 	    
-	    // Clear results links set if not paging
-	    // (do not allow next page thread to be called twice)
-	    resultsThreadsLinks.clear(); 
-		// Set back results as results
+	    // Set back results as results
 		results = backResults[string(value)];
-		
-		// Update iconView with history results
-		results.copyToModel();
-		// Scroll to saved position after updating model
-		string index = results.getIndex();
-		GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
-		gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path1, FALSE, 0, 0);
-	    gtk_tree_path_free(path1);
-	    
+	    savedRecovery();
 		updateResults();
 		g_free(value);
     }
