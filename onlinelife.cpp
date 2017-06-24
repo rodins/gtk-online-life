@@ -14,8 +14,8 @@
 #include "CreatePixbuf.hpp"
 #include "ColumnsEnum.hpp"
 
-#define DOMAIN "http://online-life.in"
-#define WDOMAIN "http://www.online-life.in"
+#define DOMAIN "http://online-life.club"
+#define WDOMAIN "http://www.online-life.club/"
 
 GdkPixbuf *defaultPixbuf;
 map<string, GdkPixbuf*> imagesCache;

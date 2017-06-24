@@ -111,7 +111,7 @@ class Results {
 	
 	//Parse search results
 	void parse_results() {
-		string domain("http://www.online-life.in/");
+		string domain(WDOMAIN);
 		//results.clear();
 	    string begin = "<div class=\"custom-poster\"";
 		string end = "</a>";
