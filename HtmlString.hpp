@@ -4,21 +4,6 @@ using namespace std;
 
 class HtmlString {	
 	
-	static int my_progress_func(GtkWidget *bar,
-                     double t, /* dltotal */ 
-                     double d, /* dlnow */ 
-                     double ultotal,
-                     double ulnow)
-	{
-	    //printf("%d / %d (%g %%)\n", d, t, d*100.0/t);
-		gdk_threads_enter();
-		//gtk_progress_set_value(GTK_PROGRESS(bar), d*100.0/t);
-		gtk_progress_bar_pulse(GTK_PROGRESS_BAR(bar));
-		gdk_threads_leave();
-		return 0;
-	}
-	
-	
 	static int writer(char *data, size_t size, size_t nmemb,
 	                      string *writerData)
 	{
@@ -183,12 +168,6 @@ class HtmlString {
 			}
 			
 			curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &buffer);
-			
-			if(Bar != NULL) {
-				curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 0L);
-			    curl_easy_setopt(curl_handle, CURLOPT_PROGRESSFUNCTION, HtmlString::my_progress_func);
-                curl_easy_setopt(curl_handle, CURLOPT_PROGRESSDATA, Bar);
-			}
 
 			/* get it */
 			curl_easy_perform(curl_handle);
@@ -202,19 +181,6 @@ class HtmlString {
 	}
 
 public:
-    HtmlString() {
-		Bar = NULL;
-		mode = NONE;
-	}
-    
-    /*HtmlString(GtkWidget *bar) {
-		Bar = bar;
-		mode = NONE;
-	}*/
-	
-	void setProgressBar(GtkWidget *bar) {
-		Bar = bar;
-	}
     
     string get_string(string url) {
 		_referer_link = "";
@@ -231,6 +197,5 @@ public:
 	}
 private:
     string _referer_link;
-    GtkWidget *Bar;
     DisplayMode mode;
 };
