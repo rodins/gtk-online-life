@@ -383,9 +383,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 	}
     gdk_threads_leave();
     
-	HtmlString html_string;
-	html_string.setMode(RESULTS);
-	string page = html_string.get_string(link);
+	string page = HtmlString::getPage(link, "", RESULTS);
 	
     gdk_threads_enter();
 	if(!page.empty()) {
@@ -577,11 +575,10 @@ void playlistsTask(gpointer args, gpointer args2) {
 	showSpCenter();
 	gdk_threads_leave();
 	
-	HtmlString html_string;
-	string js = html_string.get_string(url, referer);
+	string js = HtmlString::getPage(url, referer);
 	string playlist_link = get_txt_link(js);
 	if(!playlist_link.empty()) { // Playlists found
-		string json = html_string.get_string(playlist_link);
+		string json = HtmlString::getPage(playlist_link);
 		gdk_threads_enter();
 		playlists.parse(json);
 		if(!playlists.getPlaylists().empty()) {
@@ -601,11 +598,11 @@ void playlistsTask(gpointer args, gpointer args2) {
 			if(results.getTitle().find("Трейлеры") != string::npos) {
 				gdk_threads_leave();
 				// Searching for alternative trailers links
-	            string infoHtml = html_string.get_string(result.get_href(), referer);
+	            string infoHtml = HtmlString::getPage(result.get_href(), referer);
 	            string trailerId = getTrailerId(infoHtml); 
 	            url = "http://dterod.com/js.php?id=" + trailerId + "&trailer=1";
 	            referer = "http://dterod.com/player.php?trailer_id=" + trailerId;
-	            string json = html_string.get_string(url, referer);
+	            string json = HtmlString::getPage(url, referer);
 				gdk_threads_enter();
 				processPlayItem(playlists.parse_play_item(json)); 
 			}else {
@@ -684,9 +681,7 @@ void actorsTask(gpointer args, gpointer args2) {
 	gdk_threads_enter();
 	showSpActors();
 	gdk_threads_leave();
-	HtmlString html_string;
-	html_string.setMode(ACTORS);
-	string page = html_string.get_string(link);
+	string page = HtmlString::getPage(link, "", ACTORS);
 	gdk_threads_enter();
 	if(!page.empty()) {
 		actors.parse(page);
@@ -870,9 +865,7 @@ gpointer categoriesTask(gpointer arg) {
 	showSpCategories();
 	gdk_threads_leave();
 	
-	HtmlString html_string;
-	html_string.setMode(CATEGORIES);
-	string page = html_string.get_string(DOMAIN);
+	string page = HtmlString::getPage(DOMAIN, "", CATEGORIES);
 	gdk_threads_enter();
 	categories.parse_categories(page);
 	if(!categories.getCategories().empty()) {

@@ -129,14 +129,15 @@ class HtmlString {
 	    return size *nmemb;
 	}
 	
+	public:
 	
 	// Получение html странице в виде строки
-	string url2string(const char *url)
+	static string getPage(string url, 
+	                      string referer_link = "", 
+	                      DisplayMode mode = NONE)
 	{
 		CURL *curl_handle;
 		string buffer;
-		
-		//curl_global_init(CURL_GLOBAL_ALL);
 		
 		/* init the curl session */
 		curl_handle = curl_easy_init();
@@ -146,7 +147,7 @@ class HtmlString {
 			curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1);
 		    
 		    /* set url to get here */
-			curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+			curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
 			
 			/* send all data to this function */
 			
@@ -163,8 +164,8 @@ class HtmlString {
 
 			curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
 			
-			if(_referer_link != "") {
-				curl_easy_setopt(curl_handle, CURLOPT_REFERER, _referer_link.c_str());
+			if(referer_link != "") {
+				curl_easy_setopt(curl_handle, CURLOPT_REFERER, referer_link.c_str());
 			}
 			
 			curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &buffer);
@@ -174,28 +175,7 @@ class HtmlString {
 			
 			/* cleanup curl stuff */
 			curl_easy_cleanup(curl_handle);
-		    	
 		}
-		
 		return buffer;
 	}
-
-public:
-    
-    string get_string(string url) {
-		_referer_link = "";
-		return url2string(url.c_str()); 
-	}
-	
-	string get_string(string url, string referer_link) {
-		_referer_link = referer_link;
-		return url2string(url.c_str());
-	}
-	
-	void setMode(DisplayMode m) {
-		mode = m;
-	}
-private:
-    string _referer_link;
-    DisplayMode mode;
 };
