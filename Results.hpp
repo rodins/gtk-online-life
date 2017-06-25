@@ -111,7 +111,7 @@ class Results {
 	
 	//Parse search results
 	void parse_results() {
-		string domain(WDOMAIN);
+		string domain("http://www.online-life.");
 		//results.clear();
 	    string begin = "<div class=\"custom-poster\"";
 		string end = "</a>";
@@ -143,6 +143,10 @@ class Results {
 					//cout << "Href: " << href << endl;
 					//Find id
 					size_t id_begin = href.find(domain);
+					// Make parser domain end independent
+					if(id_begin != string::npos) {
+						id_begin = href.find("/", id_begin+1);
+					}
 					size_t id_end = href.find("-", id_begin + domain.length());
 					if(id_begin != string::npos && id_end != string::npos) {
 						size_t id_length = id_end - id_begin - domain.length();
