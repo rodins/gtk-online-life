@@ -3,7 +3,7 @@ COMPLETED Used GThreadPools. Only one thread should run at the time. Start new a
     Check newer gtk threading on newer gtk.
 COMPLETED    Use GThreadPool for imageDownloadTask
     Fix threding for old gtk.
-Make pager like recyclerVeiw in android. Make endless scrolling like youtube app.
+COMPLETED Make pager like recyclerVeiw in android. Make endless scrolling like youtube app.
     Might need to think about if results history needed in this case.
 Implement bookmarking (saving) of results. Add and delete.
 Mark watched serial parts somehow, maybe with changed font color.
@@ -16,3 +16,9 @@ Fix domain in Results to WDOMAIN.
 Make terminal inside gui for download with wget or for players.
 Use embedded player, like ffmpeg.
 Make pager spinner and repeat button.
+Make stop button to stop fetching if bad network
+Make update button to refresh results
+COMPLETED Results parser domain end (.cc, .in, .club) independent
+Less global variables refactoring
+IconView results model do not accumulate all results, only partial results
+Make gui class with static methods
