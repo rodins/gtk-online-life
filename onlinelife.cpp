@@ -8,6 +8,8 @@
 #include <map>
 #include <set>
 
+bool curlCategoriesStop, curlResultsStop, curlActorsStop, curlStop;
+
 #include "Converter.hpp"
 #include "DisplayMode.hpp"
 #include "HtmlString.hpp"
@@ -373,7 +375,6 @@ void resultsTask(gpointer arg, gpointer arg1) {
 	gdk_threads_enter();
 	// Display spinner for new and paging results
     showSpCenter();
-	
 	if(!isPage) {
 		// Save position and copy to save variable
 		if(results.getResults().size() > 0) {
@@ -382,9 +383,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		}
 	}
     gdk_threads_leave();
-    
 	string page = HtmlString::getPage(link, "", RESULTS);
-	
     gdk_threads_enter();
 	if(!page.empty()) {
 		// add back results
@@ -916,7 +915,7 @@ static void btnUpClicked( GtkWidget *widget,
 {
 	if(displayMode == PLAYLISTS) {
 		switchToIconView();
-		setSensitiveItemsResults();
+		updateResults();
 	}
 }
 
@@ -1446,6 +1445,12 @@ int main( int   argc,
         
     // Initialize default pixbuf for iconView here
     defaultPixbuf = create_pixbuf("blank.png");
+    
+    // Initialize breaking thread variable
+    curlStop = FALSE;
+    curlCategoriesStop = FALSE;
+    curlResultsStop = FALSE;
+    curlActorsStop = FALSE;
     
     gtk_main();
     gdk_threads_leave ();
