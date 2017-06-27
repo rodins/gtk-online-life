@@ -9,6 +9,7 @@
 #include <set>
 
 bool curlCategoriesStop, curlResultsStop, curlActorsStop, curlStop;
+int taskCount = 0;
 
 #define DOMAIN "http://online-life.club"
 #define WDOMAIN "http://www.online-life.club/"
@@ -383,6 +384,8 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		    prevResults = results;
 		}
 	}
+	
+	taskCount++;
 	// Stop all other threads except results
 	curlActorsStop = TRUE;
 	curlCategoriesStop = TRUE;
@@ -427,6 +430,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		switchToIconView();
 		show_error_dialog();
 	}
+	taskCount--;
 	gdk_threads_leave();
 }
 
@@ -579,6 +583,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 	gdk_threads_enter();
 	showSpCenter();
 	
+	taskCount++;
 	// Stop others threads
 	curlActorsStop = TRUE;
 	curlCategoriesStop = TRUE;
@@ -622,6 +627,9 @@ void playlistsTask(gpointer args, gpointer args2) {
 		}
 		gdk_threads_leave();
 	}
+	gdk_threads_enter();
+	taskCount--;
+	gdk_threads_leave();
 }
 
 GtkTreeModel *getActorsModel() {
@@ -692,6 +700,9 @@ void actorsTask(gpointer args, gpointer args2) {
 	// On pre execute
 	gdk_threads_enter();
 	showSpActors();
+	
+	taskCount++;
+	
 	// Stop others threads
 	curlActorsStop = FALSE;
 	curlCategoriesStop = TRUE;
@@ -712,6 +723,7 @@ void actorsTask(gpointer args, gpointer args2) {
 	}else {
 	    showActorsError();
 	}
+	taskCount--;
 	gdk_threads_leave();
 }
 
@@ -880,6 +892,7 @@ gpointer categoriesTask(gpointer arg) {
 	gdk_threads_enter();
 	showSpCategories();
 	
+	taskCount++;
 	// Stop others threads
 	curlActorsStop = TRUE;
 	curlCategoriesStop = FALSE;
@@ -896,6 +909,7 @@ gpointer categoriesTask(gpointer arg) {
 	}else {
 		showCategoriesError();
 	}
+	taskCount--;
 	gdk_threads_leave();
 	return NULL;
 }
