@@ -984,7 +984,7 @@ static void btnPrevClicked( GtkWidget *widget,
 }
 
 static void btnNextClicked( GtkWidget *widget,
-                      gpointer   data )
+                      gpointer   data)
 {   
 	isPage = false;
     // Save current results to backResultsStack
@@ -1120,6 +1120,11 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 	}
 }
 
+static void btnStopTasksClicked(GtkWidget *widget, gpointer data) {
+	stopAllThreads();
+}
+
+
 int main( int   argc,
           char *argv[] )
 {
@@ -1134,6 +1139,7 @@ int main( int   argc,
 	GtkToolItem *btnCategories;
 	GtkToolItem *sep;
 	GtkToolItem *exit;
+	GtkToolItem *btnStopTasks;
 	
 	GdkPixbuf *icon;
 	
@@ -1192,6 +1198,15 @@ int main( int   argc,
 	    G_CALLBACK(btnHistoryClicked), NULL);
 	    
 	sep = gtk_separator_tool_item_new();
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
+    
+    btnStopTasks = gtk_tool_button_new_from_stock(GTK_STOCK_STOP);
+    gtk_tool_item_set_tooltip_text(btnStopTasks, "Stop tasks");
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnStopTasks, -1);
+    g_signal_connect(GTK_WIDGET(btnStopTasks), "clicked", 
+        G_CALLBACK(btnStopTasksClicked), NULL);
+        
+    sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
     
     btnUp = gtk_tool_button_new_from_stock(GTK_STOCK_GO_UP);
