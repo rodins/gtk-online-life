@@ -372,6 +372,7 @@ void show_error_dialog() {
 void resultsTask(gpointer arg, gpointer arg1) {
 	string link((char *)arg);
 	//cout << "Link: " << link << endl;
+	// On pre execute
 	gdk_threads_enter();
 	// Display spinner for new and paging results
     showSpCenter();
@@ -382,6 +383,11 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		    prevResults = results;
 		}
 	}
+	// Stop all other threads except results
+	curlActorsStop = TRUE;
+	curlCategoriesStop = TRUE;
+	curlStop = TRUE;
+	curlResultsStop = FALSE;
     gdk_threads_leave();
 	string page = HtmlString::getResultsPage(link);
     gdk_threads_enter();
@@ -569,9 +575,15 @@ void playlistsTask(gpointer args, gpointer args2) {
 	string id = result.get_id();
 	string url = "http://dterod.com/js.php?id=" + id;
 	string referer = "http://dterod.com/player.php?newsid=" + id;
-	
+	// On pre execute
 	gdk_threads_enter();
 	showSpCenter();
+	
+	// Stop others threads
+	curlActorsStop = TRUE;
+	curlCategoriesStop = TRUE;
+	curlStop = FALSE;
+	curlResultsStop = TRUE;
 	gdk_threads_leave();
 	
 	string js = HtmlString::getPage(url, referer);
@@ -677,8 +689,14 @@ void showActorsError() {
 
 void actorsTask(gpointer args, gpointer args2) {
 	string link((char*)args);
+	// On pre execute
 	gdk_threads_enter();
 	showSpActors();
+	// Stop others threads
+	curlActorsStop = FALSE;
+	curlCategoriesStop = TRUE;
+	curlStop = TRUE;
+	curlResultsStop = TRUE;
 	gdk_threads_leave();
 	string page = HtmlString::getActorsPage(link);
 	gdk_threads_enter();
@@ -858,8 +876,16 @@ void showCategoriesError() {
 }
 
 gpointer categoriesTask(gpointer arg) {
+	// On pre execute
 	gdk_threads_enter();
 	showSpCategories();
+	
+	// Stop others threads
+	curlActorsStop = TRUE;
+	curlCategoriesStop = FALSE;
+	curlStop = TRUE;
+	curlResultsStop = TRUE;
+	
 	gdk_threads_leave();
 	
 	string page = HtmlString::getCategoriesPage();

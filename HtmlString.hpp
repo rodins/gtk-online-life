@@ -24,7 +24,7 @@ class HtmlString {
 	                      string *writerData)
 	{
 		gdk_threads_enter();
-		if (curlStop) {
+		if (curlCategoriesStop) {
 			return CURL_READFUNC_ABORT;
 		}
 		gdk_threads_leave();
@@ -65,7 +65,7 @@ class HtmlString {
 	                      string *writerData)
 	{
 		gdk_threads_enter();
-		if (curlStop) {
+		if (curlResultsStop) {
 			return CURL_READFUNC_ABORT;
 		}
 		gdk_threads_leave();
@@ -107,7 +107,7 @@ class HtmlString {
 	                      string *writerData)
 	{
 		gdk_threads_enter();
-		if (curlStop) {
+		if (curlActorsStop) {
 			return CURL_READFUNC_ABORT;
 		}
 		gdk_threads_leave();
