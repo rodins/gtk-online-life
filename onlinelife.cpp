@@ -828,8 +828,6 @@ GtkTreeModel *getCategoriesModel() {
 }
 
 void updateCategories() {
-	//gtk_widget_set_visible(vbLeft, TRUE);
-	//gtk_widget_set_visible(frLeftTop, TRUE);
 	gtk_widget_set_visible(hbCategoriesError, FALSE);
 	gtk_widget_set_visible(spCategories, FALSE);
 	gtk_spinner_stop(GTK_SPINNER(spCategories));
