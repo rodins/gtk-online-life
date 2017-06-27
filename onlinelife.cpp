@@ -370,6 +370,24 @@ void show_error_dialog() {
 	gtk_widget_destroy(dialog);
 }
 
+void stopAllThreads() {
+	// Stop all threads before starting new on slow connections
+	// TODO: test on slow connections
+	while (taskCount > 0) {
+		curlActorsStop = TRUE;
+		curlCategoriesStop = TRUE;
+		curlStop = TRUE;
+		curlResultsStop = TRUE;
+		cout << "Task count: " << taskCount << endl;
+		sleep(500);
+	}
+	// Switch stopping off before starting new task
+	curlActorsStop = FALSE;
+	curlCategoriesStop = FALSE;
+	curlStop = FALSE;
+	curlResultsStop = FALSE;
+}
+
 void resultsTask(gpointer arg, gpointer arg1) {
 	string link((char *)arg);
 	//cout << "Link: " << link << endl;
@@ -384,13 +402,8 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		    prevResults = results;
 		}
 	}
-	
+	stopAllThreads();
 	taskCount++;
-	// Stop all other threads except results
-	curlActorsStop = TRUE;
-	curlCategoriesStop = TRUE;
-	curlStop = TRUE;
-	curlResultsStop = FALSE;
     gdk_threads_leave();
 	string page = HtmlString::getResultsPage(link);
     gdk_threads_enter();
@@ -583,12 +596,8 @@ void playlistsTask(gpointer args, gpointer args2) {
 	gdk_threads_enter();
 	showSpCenter();
 	
+	stopAllThreads();
 	taskCount++;
-	// Stop others threads
-	curlActorsStop = TRUE;
-	curlCategoriesStop = TRUE;
-	curlStop = FALSE;
-	curlResultsStop = TRUE;
 	gdk_threads_leave();
 	
 	string js = HtmlString::getPage(url, referer);
@@ -701,13 +710,8 @@ void actorsTask(gpointer args, gpointer args2) {
 	gdk_threads_enter();
 	showSpActors();
 	
+	stopAllThreads();
 	taskCount++;
-	
-	// Stop others threads
-	curlActorsStop = FALSE;
-	curlCategoriesStop = TRUE;
-	curlStop = TRUE;
-	curlResultsStop = TRUE;
 	gdk_threads_leave();
 	string page = HtmlString::getActorsPage(link);
 	gdk_threads_enter();
@@ -892,13 +896,8 @@ gpointer categoriesTask(gpointer arg) {
 	gdk_threads_enter();
 	showSpCategories();
 	
+	stopAllThreads();
 	taskCount++;
-	// Stop others threads
-	curlActorsStop = TRUE;
-	curlCategoriesStop = FALSE;
-	curlStop = TRUE;
-	curlResultsStop = TRUE;
-	
 	gdk_threads_leave();
 	
 	string page = HtmlString::getCategoriesPage();
