@@ -201,4 +201,16 @@ class HtmlString {
 		}
 		return buffer;
 	}
+	
+	static string getCategoriesPage() {
+		return getPage(DOMAIN, "", CATEGORIES);
+	}
+	
+	static string getResultsPage(string link) {
+		return getPage(link, "", RESULTS);
+	}
+	
+	static string getActorsPage(string link) {
+		return getPage(link, "", ACTORS);
+	}
 };

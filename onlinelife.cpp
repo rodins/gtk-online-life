@@ -10,14 +10,14 @@
 
 bool curlCategoriesStop, curlResultsStop, curlActorsStop, curlStop;
 
+#define DOMAIN "http://online-life.club"
+#define WDOMAIN "http://www.online-life.club/"
+
 #include "Converter.hpp"
 #include "DisplayMode.hpp"
 #include "HtmlString.hpp"
 #include "CreatePixbuf.hpp"
 #include "ColumnsEnum.hpp"
-
-#define DOMAIN "http://online-life.club"
-#define WDOMAIN "http://www.online-life.club/"
 
 GdkPixbuf *defaultPixbuf;
 map<string, GdkPixbuf*> imagesCache;
@@ -383,7 +383,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		}
 	}
     gdk_threads_leave();
-	string page = HtmlString::getPage(link, "", RESULTS);
+	string page = HtmlString::getResultsPage(link);
     gdk_threads_enter();
 	if(!page.empty()) {
 		// add back results
@@ -680,7 +680,7 @@ void actorsTask(gpointer args, gpointer args2) {
 	gdk_threads_enter();
 	showSpActors();
 	gdk_threads_leave();
-	string page = HtmlString::getPage(link, "", ACTORS);
+	string page = HtmlString::getActorsPage(link);
 	gdk_threads_enter();
 	if(!page.empty()) {
 		actors.parse(page);
@@ -862,7 +862,7 @@ gpointer categoriesTask(gpointer arg) {
 	showSpCategories();
 	gdk_threads_leave();
 	
-	string page = HtmlString::getPage(DOMAIN, "", CATEGORIES);
+	string page = HtmlString::getCategoriesPage();
 	gdk_threads_enter();
 	categories.parse_categories(page);
 	if(!categories.getCategories().empty()) {
