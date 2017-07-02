@@ -137,6 +137,7 @@ void disableAllItems() {
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
     
     gtk_widget_set_sensitive(GTK_WIDGET(btnStopTasks), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
 }
 
 void setSensitiveItemsPlaylists() {
@@ -147,6 +148,8 @@ void setSensitiveItemsPlaylists() {
 	gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
+    
+    gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
 }
 
 void setSensitiveItemsResults() {
@@ -171,6 +174,8 @@ void setSensitiveItemsResults() {
 	gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbActors), TRUE);
+    
+    gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
 }
 
 void setSensitiveItemsActors() {
