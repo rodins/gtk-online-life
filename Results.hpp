@@ -7,6 +7,7 @@ class Results {
 	string current_page;
 	string page;
 	string title;
+	string resultsUrl;
 	
 	GtkListStore *iconViewStore;
 	map<string, GtkTreeIter> iters;
@@ -38,6 +39,14 @@ class Results {
 	string getTitle() {
 		return title;
 	}
+	
+	void setResultsUrl(string url) {
+		resultsUrl = url;
+	}
+	
+	string getResultsUrl() {
+		return resultsUrl;
+	} 
 	
 	void getResultsPage(string p) {
 	    page = p;

@@ -66,6 +66,7 @@ GtkToolItem *rbPlay;
 GtkToolItem *rbDownload;
 
 GtkToolItem *btnStopTasks;
+GtkToolItem *btnRefresh;
 
 GtkWidget *window;
 GtkWidget *entry;
@@ -412,10 +413,14 @@ void resultsTask(gpointer arg, gpointer arg1) {
 	// Display spinner for new and paging results
     showSpCenter();
 	if(!isPage) {
-		// Save position and copy to save variable
-		if(results.getResults().size() > 0) {
-			saveResultsPostion();
-		    prevResults = results;
+		// If not refresh mode
+		if (results.getResultsUrl() != link) {
+			// Save position and copy to save variable
+			if(results.getResults().size() > 0) {
+				saveResultsPostion();
+			    prevResults = results;
+			}
+			results.setResultsUrl(link);
 		}
 	}
 	stopAllThreads();
@@ -1148,6 +1153,13 @@ static void btnStopTasksClicked(GtkWidget *widget, gpointer data) {
 	stopAllThreads();
 }
 
+static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
+	isPage = false;
+	g_thread_pool_push(resultsThreadPool,
+		     (gpointer) results.getResultsUrl().c_str(),
+		     NULL);
+}
+
 
 int main( int   argc,
           char *argv[] )
@@ -1228,6 +1240,15 @@ int main( int   argc,
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnStopTasks, -1);
     g_signal_connect(GTK_WIDGET(btnStopTasks), "clicked", 
         G_CALLBACK(btnStopTasksClicked), NULL);
+        
+    sep = gtk_separator_tool_item_new();
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
+	
+	btnRefresh = gtk_tool_button_new_from_stock(GTK_STOCK_REFRESH);
+    gtk_tool_item_set_tooltip_text(btnRefresh, "Update results");
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnRefresh, -1);
+    g_signal_connect(GTK_WIDGET(btnRefresh), "clicked", 
+        G_CALLBACK(btnRefreshClicked), NULL);
         
     sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
