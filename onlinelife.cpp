@@ -65,6 +65,8 @@ GtkToolItem *rbActors;
 GtkToolItem *rbPlay;
 GtkToolItem *rbDownload;
 
+GtkToolItem *btnStopTasks;
+
 GtkWidget *window;
 GtkWidget *entry;
 
@@ -132,6 +134,8 @@ void disableAllItems() {
 	gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
+    
+    gtk_widget_set_sensitive(GTK_WIDGET(btnStopTasks), FALSE);
 }
 
 void setSensitiveItemsPlaylists() {
@@ -388,6 +392,18 @@ void stopAllThreads() {
 	curlResultsStop = FALSE;
 }
 
+void enableBtnStopTasks() {
+	if(taskCount == 0) {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnStopTasks), TRUE);
+	}
+}
+
+void disableBtnStopTasks() {
+	if(taskCount == 0) {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnStopTasks), FALSE);
+	}
+}
+
 void resultsTask(gpointer arg, gpointer arg1) {
 	string link((char *)arg);
 	//cout << "Link: " << link << endl;
@@ -403,6 +419,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		}
 	}
 	stopAllThreads();
+	enableBtnStopTasks();
 	taskCount++;
     gdk_threads_leave();
 	string page = HtmlString::getResultsPage(link);
@@ -444,6 +461,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		show_error_dialog();
 	}
 	taskCount--;
+	disableBtnStopTasks();
 	gdk_threads_leave();
 }
 
@@ -595,8 +613,8 @@ void playlistsTask(gpointer args, gpointer args2) {
 	// On pre execute
 	gdk_threads_enter();
 	showSpCenter();
-	
 	stopAllThreads();
+	enableBtnStopTasks();
 	taskCount++;
 	gdk_threads_leave();
 	
@@ -638,6 +656,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 	}
 	gdk_threads_enter();
 	taskCount--;
+	disableBtnStopTasks();
 	gdk_threads_leave();
 }
 
@@ -703,17 +722,19 @@ void showActorsError() {
 	gtk_spinner_stop(GTK_SPINNER(spActors));
 }
 
-
 void actorsTask(gpointer args, gpointer args2) {
 	string link((char*)args);
 	// On pre execute
 	gdk_threads_enter();
 	showSpActors();
-	
 	stopAllThreads();
+	enableBtnStopTasks();
 	taskCount++;
 	gdk_threads_leave();
+	
 	string page = HtmlString::getActorsPage(link);
+	
+	// On post execute
 	gdk_threads_enter();
 	if(!page.empty()) {
 		actors.parse(page);
@@ -728,6 +749,7 @@ void actorsTask(gpointer args, gpointer args2) {
 	    showActorsError();
 	}
 	taskCount--;
+	disableBtnStopTasks();
 	gdk_threads_leave();
 }
 
@@ -897,6 +919,7 @@ gpointer categoriesTask(gpointer arg) {
 	showSpCategories();
 	
 	stopAllThreads();
+	enableBtnStopTasks();
 	taskCount++;
 	gdk_threads_leave();
 	
@@ -909,6 +932,7 @@ gpointer categoriesTask(gpointer arg) {
 		showCategoriesError();
 	}
 	taskCount--;
+	disableBtnStopTasks();
 	gdk_threads_leave();
 	return NULL;
 }
@@ -1139,7 +1163,6 @@ int main( int   argc,
 	GtkToolItem *btnCategories;
 	GtkToolItem *sep;
 	GtkToolItem *exit;
-	GtkToolItem *btnStopTasks;
 	
 	GdkPixbuf *icon;
 	
