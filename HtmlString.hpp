@@ -9,6 +9,7 @@ class HtmlString {
 	{
 		gdk_threads_enter();
 		if (curlStop) {
+			gdk_threads_leave();
 			return CURL_READFUNC_ABORT;
 		}
 		gdk_threads_leave();
@@ -25,6 +26,7 @@ class HtmlString {
 	{
 		gdk_threads_enter();
 		if (curlCategoriesStop) {
+			gdk_threads_leave();
 			return CURL_READFUNC_ABORT;
 		}
 		gdk_threads_leave();
@@ -66,6 +68,7 @@ class HtmlString {
 	{
 		gdk_threads_enter();
 		if (curlResultsStop) {
+			gdk_threads_leave();
 			return CURL_READFUNC_ABORT;
 		}
 		gdk_threads_leave();
@@ -108,6 +111,7 @@ class HtmlString {
 	{
 		gdk_threads_enter();
 		if (curlActorsStop) {
+			gdk_threads_leave();
 			return CURL_READFUNC_ABORT;
 		}
 		gdk_threads_leave();

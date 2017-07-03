@@ -380,22 +380,18 @@ void show_error_dialog() {
 	gtk_widget_destroy(dialog);
 }
 
-void stopAllThreads() {
+gpointer stopAllThreadsTask(gpointer data) {
 	// Stop all threads before starting new on slow connections
 	// TODO: test on slow connections
-	while (taskCount > 0) {
+	gdk_threads_enter();
+	if(taskCount > 0) {
 		curlActorsStop = TRUE;
 		curlCategoriesStop = TRUE;
 		curlStop = TRUE;
 		curlResultsStop = TRUE;
-		cout << "Task count: " << taskCount << endl;
-		sleep(500);
 	}
-	// Switch stopping off before starting new task
-	curlActorsStop = FALSE;
-	curlCategoriesStop = FALSE;
-	curlStop = FALSE;
-	curlResultsStop = FALSE;
+	gdk_threads_leave();
+	return NULL;
 }
 
 void enableBtnStopTasks() {
@@ -428,7 +424,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 			results.setResultsUrl(link);
 		}
 	}
-	stopAllThreads();
+	curlResultsStop = FALSE;
 	enableBtnStopTasks();
 	taskCount++;
     gdk_threads_leave();
@@ -623,7 +619,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 	// On pre execute
 	gdk_threads_enter();
 	showSpCenter();
-	stopAllThreads();
+	curlStop = FALSE;
 	enableBtnStopTasks();
 	taskCount++;
 	gdk_threads_leave();
@@ -737,7 +733,7 @@ void actorsTask(gpointer args, gpointer args2) {
 	// On pre execute
 	gdk_threads_enter();
 	showSpActors();
-	stopAllThreads();
+	curlActorsStop = FALSE;
 	enableBtnStopTasks();
 	taskCount++;
 	gdk_threads_leave();
@@ -927,8 +923,7 @@ gpointer categoriesTask(gpointer arg) {
 	// On pre execute
 	gdk_threads_enter();
 	showSpCategories();
-	
-	stopAllThreads();
+	curlCategoriesStop = FALSE;
 	enableBtnStopTasks();
 	taskCount++;
 	gdk_threads_leave();
@@ -1155,7 +1150,7 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 }
 
 static void btnStopTasksClicked(GtkWidget *widget, gpointer data) {
-	stopAllThreads();
+	g_thread_new(NULL, stopAllThreadsTask, NULL);
 }
 
 static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
