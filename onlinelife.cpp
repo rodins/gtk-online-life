@@ -192,8 +192,6 @@ void setSensitiveItemsActors() {
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
 }
 
-set<int> imageIndexes;
-
 struct ArgsStruct {
 	GdkPixbufLoader* loader;
 	GtkTreeIter iter;
@@ -318,28 +316,30 @@ void saveResultsPostion() {
 
 void displayRange() {
 	GtkTreePath *path1, *path2;
+	static gint prevIndexDisplayFirst = -1, prevIndexDisplayLast = -1;
 	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(iconView), &path1, &path2)) {
 		gint *indices1 = gtk_tree_path_get_indices(path1);
 		gint *indices2 = gtk_tree_path_get_indices(path2);
-		gint index1 = indices1[0];
-		gint index2 = indices2[0];
-		for(int i = index1; i <= index2; i++) {
-			if(imageIndexes.count(i) == 0) {
-				imageIndexes.insert(i);
+		gint indexDisplayFirst = indices1[0];
+		gint indexDisplayLast = indices2[0];
+		
+		if (prevIndexDisplayFirst != indexDisplayFirst &&
+		    prevIndexDisplayLast != indexDisplayLast) {
+		    
+		    // Downloading images for displayed items
+			for(int i = indexDisplayFirst; i <= indexDisplayLast; i++) {
 				g_thread_pool_push(imagesThreadPool, 
 				    (gpointer) (i+1),
 				     NULL);
-			}
+			}		
 		}
+		
 		gtk_tree_path_free(path1);
 		gtk_tree_path_free(path2);
 	}
 }
 
 void updateResults() {
-	if (!isPage) {
-		imageIndexes.clear();
-	}
 	if(displayMode != RESULTS) {
 		displayMode = RESULTS;
 	}
