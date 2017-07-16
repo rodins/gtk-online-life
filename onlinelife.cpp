@@ -7,6 +7,10 @@
 #include <string.h>
 #include <map>
 #include <set>
+#include <sstream>
+
+#define SSTR( x ) static_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
 
 bool curlCategoriesStop, curlResultsStop, curlActorsStop, curlStop;
 int taskCount = 0;
@@ -281,18 +285,24 @@ void getPixbufFromUrl(string url, GtkTreeIter iter) {
 }
 
 void imageDownloadTask(gpointer arg, gpointer arg1) {
-	string link((char*)arg);
+	gint index = (gint)arg;
+	index--;
 	
 	gdk_threads_enter();
+	string link = results.getResults()[index].get_image_link();
 	int count = imagesCache.count(link);
-	int itersCount = results.getIters().count(link);
-	
-	// get stored iter by link in iconView
-	GtkTreeIter iter = results.getIters()[link];
+	GtkTreeModel* model = gtk_icon_view_get_model(GTK_ICON_VIEW(iconView));
 	gdk_threads_leave();
-	//if map does not have pixbuf and has iter with link
-	if(count == 0 && itersCount > 0) { 
-		getPixbufFromUrl(link, iter);
+	
+	string strIndex = SSTR(index);
+	GtkTreeIter iter;
+	if(gtk_tree_model_get_iter_from_string (
+	    model,
+	    &iter,
+	    strIndex.c_str())) {
+	    if(count == 0) { 
+			getPixbufFromUrl(link, iter);
+		}
 	}
 }
 
@@ -317,7 +327,7 @@ void displayRange() {
 			if(imageIndexes.count(i) == 0) {
 				imageIndexes.insert(i);
 				g_thread_pool_push(imagesThreadPool, 
-				    (gpointer) results.getResults()[i].get_image_link().c_str(),
+				    (gpointer) (i+1),
 				     NULL);
 			}
 		}

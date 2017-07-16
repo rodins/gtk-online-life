@@ -10,7 +10,6 @@ class Results {
 	string resultsUrl;
 	
 	GtkListStore *iconViewStore;
-	map<string, GtkTreeIter> iters;
 	
 	string index; // save position of iconView
 	public:
@@ -27,7 +26,6 @@ class Results {
 		if(!isPage) {
 			getModelFromIconView();
 			results.clear();
-			iters.clear();
 			gtk_list_store_clear(iconViewStore);
 		}
 	}
@@ -78,14 +76,9 @@ class Results {
 		return current_page;
 	}
 	
-	map<string, GtkTreeIter> &getIters() {
-		return iters;
-	}
-	
 	void copyToModel() {
 		getModelFromIconView();
 		gtk_list_store_clear(iconViewStore);
-		iters.clear();
 		for (unsigned i = 0; i < results.size(); i++) {
 			appendToStore(results[i]);
 		}
@@ -104,14 +97,11 @@ class Results {
 		string link = item.get_image_link();
 		
 		gtk_list_store_append(iconViewStore, &iter);
-		// store iter by link in iters map
-		iters[link] = iter;
+		
 		if(imagesCache.count(link) > 0) {
 			pixbuf = imagesCache[link];
 		}else {
 			pixbuf = defaultPixbuf;
-			// store iter by link in iters map
-		    iters[link] = iter;
 		}
 		
         gtk_list_store_set(iconViewStore, &iter, IMAGE_COLUMN, pixbuf,
@@ -283,5 +273,4 @@ class Results {
 			}
 		}
 	}
-
 };
