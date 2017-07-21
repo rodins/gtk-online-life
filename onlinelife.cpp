@@ -619,57 +619,78 @@ string getTrailerId(string &page) {
 	return "";
 }
 
-void playlistsTask(gpointer args, gpointer args2) {
-	gint i = (gint)(glong)args;
-	i--; // decrement index to restore it's value
-	Item result = results.getResults()[i];
-	string id = result.get_id();
-	string url = "http://dterod.com/js.php?id=" + id;
-	string referer = "http://dterod.com/player.php?newsid=" + id;
-	// On pre execute
-	gdk_threads_enter();
-	showSpCenter();
-	curlStop = FALSE;
-	enableBtnStopTasks();
-	taskCount++;
-	gdk_threads_leave();
-	
-	string js = HtmlString::getPage(url, referer);
-	string playlist_link = get_txt_link(js);
-	if(!playlist_link.empty()) { // Playlists found
-		string json = HtmlString::getPage(playlist_link);
-		gdk_threads_enter();
-		playlists.parse(json);
-		if(!playlists.getPlaylists().empty()) {
-			displayPlaylists();
-		}else {
-			show_error_dialog();
-		}
-		gdk_threads_leave();
-	}else { //PlayItem found
-		gdk_threads_enter();
-		// get results list back
-		switchToIconView();
-		PlayItem playItem = playlists.parse_play_item(js);
-		if(!playItem.get_comment().empty()) {
-			processPlayItem(playItem); 
-		}else {
-			if(results.getTitle().find("Трейлеры") != string::npos) {
-				gdk_threads_leave();
-				// Searching for alternative trailers links
-	            string infoHtml = HtmlString::getPage(result.get_href(), referer);
-	            string trailerId = getTrailerId(infoHtml); 
-	            url = "http://dterod.com/js.php?id=" + trailerId + "&trailer=1";
-	            referer = "http://dterod.com/player.php?trailer_id=" + trailerId;
-	            string json = HtmlString::getPage(url, referer);
-				gdk_threads_enter();
-				processPlayItem(playlists.parse_play_item(json)); 
-			}else {
-			    show_error_dialog();
-			}
-		}
-		gdk_threads_leave();
+string getHrefId(string &href) {
+	//Find id
+	string domain("http://www.online-life.");
+	size_t id_begin = href.find(domain);
+	// Make parser domain end independent
+	if(id_begin != string::npos) {
+		id_begin = href.find("/", id_begin+1);
 	}
+	size_t id_end = href.find("-", id_begin + domain.length());
+	if(id_begin != string::npos && id_end != string::npos) {
+		size_t id_length = id_end - id_begin - domain.length();
+		string id_str = href.substr(id_begin + domain.length(), id_length);
+		//cout << "Id: " << id_str << endl;
+		return id_str;
+	}
+	return "";
+}
+
+void playlistsTask(gpointer args, gpointer args2) {
+	string href((char*)args);
+	g_free(args);
+    
+	string id = getHrefId(href);
+	if(id != "") {
+		string url = "http://dterod.com/js.php?id=" + id;
+		string referer = "http://dterod.com/player.php?newsid=" + id;
+		// On pre execute
+		gdk_threads_enter();
+		showSpCenter();
+		curlStop = FALSE;
+		enableBtnStopTasks();
+		taskCount++;
+		gdk_threads_leave();
+		
+		string js = HtmlString::getPage(url, referer);
+		string playlist_link = get_txt_link(js);
+		if(!playlist_link.empty()) { // Playlists found
+			string json = HtmlString::getPage(playlist_link);
+			gdk_threads_enter();
+			playlists.parse(json);
+			if(!playlists.getPlaylists().empty()) {
+				displayPlaylists();
+			}else {
+				show_error_dialog();
+			}
+			gdk_threads_leave();
+		}else { //PlayItem found
+			gdk_threads_enter();
+			// get results list back
+			switchToIconView();
+			PlayItem playItem = playlists.parse_play_item(js);
+			if(!playItem.get_comment().empty()) {
+				processPlayItem(playItem); 
+			}else {
+				if(results.getTitle().find("Трейлеры") != string::npos) {
+					gdk_threads_leave();
+					// Searching for alternative trailers links
+		            string infoHtml = HtmlString::getPage(href, referer);
+		            string trailerId = getTrailerId(infoHtml); 
+		            url = "http://dterod.com/js.php?id=" + trailerId + "&trailer=1";
+		            referer = "http://dterod.com/player.php?trailer_id=" + trailerId;
+		            string json = HtmlString::getPage(url, referer);
+					gdk_threads_enter();
+					processPlayItem(playlists.parse_play_item(json)); 
+				}else {
+				    show_error_dialog();
+				}
+			}
+			gdk_threads_leave();
+		}
+	}
+	
 	gdk_threads_enter();
 	taskCount--;
 	disableBtnStopTasks();
@@ -855,29 +876,26 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	
 	title = PROG_NAME + " - " + resultTitle;
 	
+	// Get href value from iter
+    gchar *href = NULL;
+    gtk_tree_model_get(model, &iter, ICON_HREF, &href, -1);
+	
 	if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
-		// Get href value from iter
-	    gchar *href = NULL;
-	    gtk_tree_model_get(model, &iter, ICON_HREF, &href, -1);
-	    
 		lastActorsHref = string(href);
 		// Fetch actors
 		prevActors = actors;
 		actors.setTitle(string(resultTitle));
-        g_thread_pool_push(actorsThreadPool,
-            (gpointer) href,
-             NULL);
+        g_thread_pool_push(actorsThreadPool, (gpointer) href, NULL);
 	}else {
 		// Fetch playlists/playItem
-		/*playlists.setTitle(title);
-		i++; // increment index as cast 0 to pointer gives NULL and error at 0 index
-	    g_thread_pool_push(playlistsThreadPool, GINT_TO_POINTER(i), NULL);*/
+		playlists.setTitle(string(resultTitle));
+	    g_thread_pool_push(playlistsThreadPool, href, NULL);
 	    
-	    gint count;
+	    /*gint count;
 		gint *indices = gtk_tree_path_get_indices_with_depth(path, &count);
 		if(indices != NULL) {
 			processResult(indices, count);
-		}
+		}*/
 	}
 	
 	g_free(resultTitle);
