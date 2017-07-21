@@ -104,8 +104,13 @@ class Results {
 			pixbuf = defaultPixbuf;
 		}
 		
-        gtk_list_store_set(iconViewStore, &iter, IMAGE_COLUMN, pixbuf,
-            TITLE_COLUMN, item.get_title().c_str(), -1);
+        gtk_list_store_set(iconViewStore, &iter, 
+                           ICON_IMAGE_COLUMN, pixbuf,
+                           ICON_TITLE_COLUMN, item.get_title().c_str(),
+                           ICON_ID, item.get_id().c_str(),
+                           ICON_HREF, item.get_href().c_str(),
+                           ICON_IMAGE_LINK, item.get_image_link().c_str(), 
+                           -1);
 	}
 	
 	//Parse search results

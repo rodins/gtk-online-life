@@ -740,6 +740,7 @@ void showActorsError() {
 
 void actorsTask(gpointer args, gpointer args2) {
 	string link((char*)args);
+	g_free(args);
 	// On pre execute
 	gdk_threads_enter();
 	showSpActors();
@@ -780,7 +781,7 @@ void processResult(gint *indices, gint count) {//move to playlists
 			actors.setTitle(results.getResults()[i].get_title());
 	        g_thread_pool_push(actorsThreadPool,
 	            (gpointer) results.getResults()[i].get_href().c_str(),
-	            NULL);
+	             NULL);
 		}else {
 			// Fetch playlists/playItem
 			playlists.setTitle(title);
@@ -841,11 +842,45 @@ void on_changed(GtkWidget *widget, gpointer statusbar) {
 }
 
 void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
-	gint count;
-	gint *indices = gtk_tree_path_get_indices_with_depth(path, &count);
-	if(indices != NULL) {
-		processResult(indices, count);
+	// Get model from iconView
+	GtkTreeModel *model = gtk_icon_view_get_model(GTK_ICON_VIEW(iconView));
+	
+	// Get iter from path
+	GtkTreeIter iter;
+	gtk_tree_model_get_iter(model, &iter, path);
+	
+	// Get title value from iter
+	gchar *resultTitle = NULL;
+	gtk_tree_model_get(model, &iter, ICON_TITLE_COLUMN, &resultTitle, -1);
+	
+	title = PROG_NAME + " - " + resultTitle;
+	
+	if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
+		// Get href value from iter
+	    gchar *href = NULL;
+	    gtk_tree_model_get(model, &iter, ICON_HREF, &href, -1);
+	    
+		lastActorsHref = string(href);
+		// Fetch actors
+		prevActors = actors;
+		actors.setTitle(string(resultTitle));
+        g_thread_pool_push(actorsThreadPool,
+            (gpointer) href,
+             NULL);
+	}else {
+		// Fetch playlists/playItem
+		/*playlists.setTitle(title);
+		i++; // increment index as cast 0 to pointer gives NULL and error at 0 index
+	    g_thread_pool_push(playlistsThreadPool, GINT_TO_POINTER(i), NULL);*/
+	    
+	    gint count;
+		gint *indices = gtk_tree_path_get_indices_with_depth(path, &count);
+		if(indices != NULL) {
+			processResult(indices, count);
+		}
 	}
+	
+	g_free(resultTitle);
 }
 
 void resultActivated(GtkWidget *widget, gpointer statusbar) {
@@ -1218,7 +1253,14 @@ int main( int   argc,
     // set model to iconView
     GtkListStore *iconViewStore;
     GtkTreeModel *model;
-	iconViewStore = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);
+	iconViewStore = gtk_list_store_new(
+	     ICON_NUM_COLS,   // Number of columns
+	     GDK_TYPE_PIXBUF, // Image poster
+	     G_TYPE_STRING,   // Title
+	     G_TYPE_STRING,   // Id
+	     G_TYPE_STRING,   // Href
+	     G_TYPE_STRING    // Image link
+	);
 	model = GTK_TREE_MODEL(iconViewStore);
 	gtk_icon_view_set_model(GTK_ICON_VIEW(iconView), model);
 	g_object_unref(model);
