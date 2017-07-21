@@ -66,7 +66,7 @@ class Actors {
 				if(title_begin != string::npos) {
 					string title = anchor.substr(title_begin+1);
 					//cout << title << endl;
-					
+					unescape_html(title);
 					//Find href
 					size_t href_begin = anchor.find("href=");
 					size_t href_end = anchor.find(">", href_begin + 1);

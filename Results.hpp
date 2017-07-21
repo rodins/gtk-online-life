@@ -157,7 +157,7 @@ class Results {
 						if(image_begin != string::npos && image_end != string::npos) {
 							size_t image_length = image_end - image_begin;
 							string image = div.substr(image_begin+5, image_length-1);
-							
+							unescape_html(title);
 							Item item(title, id_str, href, image);
 						    results.push_back(item);
 						    appendToStore(item);

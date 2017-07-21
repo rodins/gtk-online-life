@@ -170,3 +170,14 @@ string to_utf8(string input) {
     }
     return output;
 }
+
+void unescape_html(string &title) {
+	//&#237;
+	string to_replace = "&#237;";
+	string replace_with = "í";
+    size_t entity_found = title.find(to_replace);
+	while(entity_found != string::npos){
+	    title.replace(entity_found, to_replace.length(),replace_with);
+		entity_found = title.find(to_replace, entity_found+1);// поиск следующего элемента в строке
+	}
+}
