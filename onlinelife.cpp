@@ -852,7 +852,7 @@ void resultActivated(GtkWidget *widget, gpointer statusbar) {
 	gtk_icon_view_selected_foreach(GTK_ICON_VIEW(widget), resultFunc, NULL);
 }
 
-GtkWidget *create_view_and_model(void) {
+GtkWidget *createTreeView(void) {
 	GtkTreeViewColumn *col;
 	GtkCellRenderer *renderer;
 	GtkWidget *view;
@@ -1208,7 +1208,7 @@ int main( int   argc,
     
     vbox = gtk_vbox_new(FALSE, 1);
     
-    treeView = create_view_and_model();
+    treeView = createTreeView();
     
     iconView = gtk_icon_view_new();
     gtk_icon_view_set_pixbuf_column(GTK_ICON_VIEW(iconView), IMAGE_COLUMN);                                                  
@@ -1341,7 +1341,7 @@ int main( int   argc,
     gtk_container_add(GTK_CONTAINER(swTree), treeView);
     gtk_container_add(GTK_CONTAINER(swIcon), iconView);
     
-    tvBackResults = create_view_and_model();
+    tvBackResults = createTreeView();
     // Set up store2
     GtkListStore *store2 
         = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);    
@@ -1354,7 +1354,7 @@ int main( int   argc,
 	g_signal_connect(selection2, "changed", 
 	  G_CALLBACK(backResultsChanged), NULL);
     
-    tvBackActors = create_view_and_model();
+    tvBackActors = createTreeView();
     // Set up store
     GtkListStore *store 
         = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);    
@@ -1367,8 +1367,8 @@ int main( int   argc,
 	g_signal_connect(selection, "changed", 
 	  G_CALLBACK(backActorsChanged), NULL);
     
-    tvCategories = create_view_and_model();
-    tvActors = create_view_and_model();
+    tvCategories = createTreeView();
+    tvActors = createTreeView();
     
     swLeftTop = gtk_scrolled_window_new(NULL, NULL);
     swLeftBottom = gtk_scrolled_window_new(NULL, NULL);
