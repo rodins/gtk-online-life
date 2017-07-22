@@ -799,27 +799,6 @@ void actorsTask(gpointer args, gpointer args2) {
 	gdk_threads_leave();
 }
 
-void processResult(gint *indices, gint count) {//move to playlists
-	if(count == 1) { //Node
-		gint i = indices[0];
-		title = PROG_NAME + " - " + results.getResults()[i].get_title();
-		if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
-			lastActorsHref = results.getResults()[i].get_href();
-			// Fetch actors
-			prevActors = actors;
-			actors.setTitle(results.getResults()[i].get_title());
-	        g_thread_pool_push(actorsThreadPool,
-	            (gpointer) results.getResults()[i].get_href().c_str(),
-	             NULL);
-		}else {
-			// Fetch playlists/playItem
-			playlists.setTitle(title);
-			i++; // increment index as cast 0 to pointer gives NULL and error at 0 index
-		    g_thread_pool_push(playlistsThreadPool, GINT_TO_POINTER(i), NULL);	
-		}
-	}
-}
-
 void processActor(gint *indices, gint count) {
 	if(count == 1) { //Node
 	    isPage = false;
