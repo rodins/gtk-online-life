@@ -435,7 +435,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		// If not refresh mode
 		if (results.getResultsUrl() != link) {
 			// Save position and copy to save variable
-			if(results.getResults().size() > 0) {
+			if(!results.isEmpty()) {
 				saveResultsPostion();
 			    prevResults = results;
 			}
@@ -452,7 +452,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		// add back results
 		// save prev results to map
 		// add title to tvBackResults
-		if(prevResults.getResults().size() > 0 && !isPage) {
+		if(!prevResults.isEmpty() && !isPage) {
 			// Add first time to map, add to listView
 			if(backResults.count(prevResults.getTitle()) == 0) { 
 				backResultsListAdd(prevResults.getTitle());
@@ -472,7 +472,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		    resultsThreadsLinks.clear();
 		    results.setTitle(title);
 		}
-		results.clearResultsAndModel(isPage);
+		results.clearResultsAndCreateNewModel(isPage);
 		results.getResultsPage(page);
 		
 		updateResults();
@@ -1041,7 +1041,8 @@ void savedRecovery() {
     resultsThreadsLinks.clear(); 
     
 	// Update iconView with history results
-	results.copyToModel();
+	//results.copyToModel();
+	results.setModel();
 	// Scroll to saved position after updating model
 	string index = results.getIndex();
 	GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
@@ -1129,7 +1130,7 @@ static void backResultsChanged(GtkWidget *widget, gpointer data) {
 		gtk_tree_model_get(model, &iter, TITLE_COLUMN, &value,  -1);
 		
 		// Save or resave displayed results
-		if(results.getResults().size() > 0) {
+		if(!results.isEmpty()) {
 			// Add first time to map, add to listView
 			if(backResults.count(results.getTitle()) == 0) {
 				backResultsListAdd(results.getTitle());
@@ -1251,12 +1252,12 @@ int main( int   argc,
     treeView = createTreeView();
     
     iconView = gtk_icon_view_new();
-    gtk_icon_view_set_pixbuf_column(GTK_ICON_VIEW(iconView), IMAGE_COLUMN);                                                  
-    gtk_icon_view_set_text_column(GTK_ICON_VIEW(iconView), TITLE_COLUMN);
+    gtk_icon_view_set_pixbuf_column(GTK_ICON_VIEW(iconView), ICON_IMAGE_COLUMN);                                                  
+    gtk_icon_view_set_text_column(GTK_ICON_VIEW(iconView), ICON_TITLE_COLUMN);
     gtk_icon_view_set_item_width(GTK_ICON_VIEW(iconView), 180);
     
     // set model to iconView
-    GtkListStore *iconViewStore;
+    /*GtkListStore *iconViewStore;
     GtkTreeModel *model;
 	iconViewStore = gtk_list_store_new(
 	     ICON_NUM_COLS,   // Number of columns
@@ -1267,7 +1268,7 @@ int main( int   argc,
 	);
 	model = GTK_TREE_MODEL(iconViewStore);
 	gtk_icon_view_set_model(GTK_ICON_VIEW(iconView), model);
-	g_object_unref(model);
+	g_object_unref(model);*/
     
     toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);

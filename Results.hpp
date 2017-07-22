@@ -3,11 +3,11 @@
 class Results {
     string prev_link, next_link;
 	string base_url;
-	vector<Item> results;
 	string current_page;
 	string page;
 	string title;
 	string resultsUrl;
+	bool empty;
 	
 	GtkListStore *iconViewStore;
 	
@@ -22,11 +22,10 @@ class Results {
 		index = i;
 	}
 	
-	void clearResultsAndModel(bool isPage) {
+	void clearResultsAndCreateNewModel(bool isPage) {
 		if(!isPage) {
-			getModelFromIconView();
-			results.clear();
-			gtk_list_store_clear(iconViewStore);
+			createNewModel();
+			empty = true;
 		}
 	}
 	
@@ -60,10 +59,6 @@ class Results {
 		return base_url;
 	}
 	
-	vector<Item> &getResults() {
-	    return results;	
-	}
-	
 	string& getPrevLink() {
 		return prev_link;
 	}
@@ -76,19 +71,32 @@ class Results {
 		return current_page;
 	}
 	
-	void copyToModel() {
-		getModelFromIconView();
-		gtk_list_store_clear(iconViewStore);
-		for (unsigned i = 0; i < results.size(); i++) {
-			appendToStore(results[i]);
-		}
+	void setModel() {
+		gtk_icon_view_set_model(
+		    GTK_ICON_VIEW(iconView),
+		    GTK_TREE_MODEL(iconViewStore)
+		);
+	}
+	
+	bool isEmpty() {
+		return empty;
 	}
 	
 	private:
 	
-	void getModelFromIconView() {
-		iconViewStore = GTK_LIST_STORE(gtk_icon_view_get_model
-				(GTK_ICON_VIEW(iconView))); 
+	void createNewModel() {
+		iconViewStore = gtk_list_store_new(
+		     ICON_NUM_COLS,   // Number of columns
+		     GDK_TYPE_PIXBUF, // Image poster
+		     G_TYPE_STRING,   // Title
+		     G_TYPE_STRING,   // Href
+		     G_TYPE_STRING    // Image link
+		);
+		
+		setModel();
+		
+		// Want to keep my copy of model
+		//g_object_unref(iconViewStore);
 	}
 	
 	void appendToStore(Item item) {
@@ -110,11 +118,13 @@ class Results {
                            ICON_HREF, item.get_href().c_str(),
                            ICON_IMAGE_LINK, item.get_image_link().c_str(), 
                            -1);
+        if(empty) {
+			empty = false;
+		}
 	}
 	
 	//Parse search results
 	void parse_results() {
-		//results.clear();
 	    string begin = "<div class=\"custom-poster\"";
 		string end = "</a>";
 		size_t div_begin = page.find(begin);
@@ -151,7 +161,6 @@ class Results {
 						string image = div.substr(image_begin+5, image_length-1);
 						unescape_html(title);
 						Item item(title, href, image);
-					    results.push_back(item);
 					    appendToStore(item);
 					}
 				}
