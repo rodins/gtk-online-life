@@ -287,8 +287,6 @@ void imageDownloadTask(gpointer arg, gpointer arg1) {
 	index--;
 	
 	gdk_threads_enter();
-	string link = results.getResults()[index].get_image_link();
-	int count = imagesCache.count(link);
 	GtkTreeModel* model = gtk_icon_view_get_model(GTK_ICON_VIEW(iconView));
 	gdk_threads_leave();
 	
@@ -298,6 +296,16 @@ void imageDownloadTask(gpointer arg, gpointer arg1) {
 	    model,
 	    &iter,
 	    strIndex.c_str())) {
+		// Get image link value from iter
+        gchar *imageLink = NULL;
+        gtk_tree_model_get(model, &iter, ICON_IMAGE_LINK, &imageLink, -1);
+        string link(imageLink);
+        g_free(imageLink);
+        
+        gdk_threads_enter();
+        int count = imagesCache.count(link);
+        gdk_threads_leave();
+        
 	    if(count == 0) { 
 			getPixbufFromUrl(link, iter);
 		}
