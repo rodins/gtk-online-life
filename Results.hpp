@@ -107,7 +107,6 @@ class Results {
         gtk_list_store_set(iconViewStore, &iter, 
                            ICON_IMAGE_COLUMN, pixbuf,
                            ICON_TITLE_COLUMN, item.get_title().c_str(),
-                           ICON_ID, item.get_id().c_str(),
                            ICON_HREF, item.get_href().c_str(),
                            ICON_IMAGE_LINK, item.get_image_link().c_str(), 
                            -1);
@@ -115,7 +114,6 @@ class Results {
 	
 	//Parse search results
 	void parse_results() {
-		string domain("http://www.online-life.");
 		//results.clear();
 	    string begin = "<div class=\"custom-poster\"";
 		string end = "</a>";
@@ -145,28 +143,16 @@ class Results {
 					size_t href_length = href_end - href_begin; 
 					string href = div.substr(href_begin+6, href_length-1);
 					//cout << "Href: " << href << endl;
-					//Find id
-					size_t id_begin = href.find(domain);
-					// Make parser domain end independent
-					if(id_begin != string::npos) {
-						id_begin = href.find("/", id_begin+1);
-					}
-					size_t id_end = href.find("-", id_begin + domain.length());
-					if(id_begin != string::npos && id_end != string::npos) {
-						size_t id_length = id_end - id_begin - domain.length();
-						string id_str = href.substr(id_begin + domain.length(), id_length);
-						//cout << "Id: " << id_str << endl;
-						//Find image
-						size_t image_begin = div.find("src=");
-						size_t image_end = div.find(".jpg", image_begin + 1);
-						if(image_begin != string::npos && image_end != string::npos) {
-							size_t image_length = image_end - image_begin;
-							string image = div.substr(image_begin+5, image_length-1);
-							unescape_html(title);
-							Item item(title, id_str, href, image);
-						    results.push_back(item);
-						    appendToStore(item);
-						}
+					//Find image
+					size_t image_begin = div.find("src=");
+					size_t image_end = div.find(".jpg", image_begin + 1);
+					if(image_begin != string::npos && image_end != string::npos) {
+						size_t image_length = image_end - image_begin;
+						string image = div.substr(image_begin+5, image_length-1);
+						unescape_html(title);
+						Item item(title, href, image);
+					    results.push_back(item);
+					    appendToStore(item);
 					}
 				}
 			}

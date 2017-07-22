@@ -1,16 +1,14 @@
 class Item {
 	string _title;
-	string _id;
 	string _href;
 	string _image_link;
 	public:
 	Item() {
-		_title = _id = _href = "";
+		_title = _href = "";
 	}
 	
-	Item(string title, string id, string href, string image) {
+	Item(string title, string href, string image) {
 		_title = to_utf8(title);
-		_id = id;
 		_href = href;
 		_image_link = image + "&w=165&h=236&zc=1"; //set size of image
 		//"&w=41&h=59&zc=1"  "&w=82&h=118&zc=1"
@@ -27,10 +25,6 @@ class Item {
 	
 	string& get_title() {
 		return _title;
-	}
-	
-	string& get_id() {
-		return _id;
 	}
 	
 	string& get_image_link() {

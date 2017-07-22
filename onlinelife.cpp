@@ -1275,7 +1275,6 @@ int main( int   argc,
 	     ICON_NUM_COLS,   // Number of columns
 	     GDK_TYPE_PIXBUF, // Image poster
 	     G_TYPE_STRING,   // Title
-	     G_TYPE_STRING,   // Id
 	     G_TYPE_STRING,   // Href
 	     G_TYPE_STRING    // Image link
 	);
