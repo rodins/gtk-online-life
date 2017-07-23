@@ -7,7 +7,6 @@ class Results {
 	string page;
 	string title;
 	string resultsUrl;
-	bool empty;
 	
 	GtkListStore *iconViewStore;
 	
@@ -25,7 +24,6 @@ class Results {
 	void clearResultsAndCreateNewModel(bool isPage) {
 		if(!isPage) {
 			createNewModel();
-			empty = true;
 		}
 	}
 	
@@ -78,10 +76,6 @@ class Results {
 		);
 	}
 	
-	bool isEmpty() {
-		return empty;
-	}
-	
 	private:
 	
 	void createNewModel() {
@@ -118,9 +112,6 @@ class Results {
                            ICON_HREF, item.get_href().c_str(),
                            ICON_IMAGE_LINK, item.get_image_link().c_str(), 
                            -1);
-        if(empty) {
-			empty = false;
-		}
 	}
 	
 	//Parse search results
