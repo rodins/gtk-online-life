@@ -1041,8 +1041,8 @@ void savedRecovery() {
     resultsThreadsLinks.clear(); 
     
 	// Update iconView with history results
-	//results.copyToModel();
 	results.setModel();
+	title = results.getTitle();
 	// Scroll to saved position after updating model
 	string index = results.getIndex();
 	GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
@@ -1210,7 +1210,6 @@ static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
 		     (gpointer) results.getResultsUrl().c_str(),
 		     NULL);
 }
-
 
 int main( int   argc,
           char *argv[] )
