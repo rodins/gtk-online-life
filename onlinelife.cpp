@@ -44,12 +44,11 @@ Playlists playlists;
 //Actors
 Actors actors, prevActors;
 
-map <string, Results> backResults;
 map <string, Actors> backActors;
 
 vector<Results> backResultsStack, forwardResultsStack;
 
-GtkWidget *frRightBottom, *frLeftTop, *frLeftBottom;
+GtkWidget *frRightBottom, *frLeftTop;
 GtkWidget *lbInfo;
 GtkWidget *frRightTop, *frInfo;
 
@@ -63,7 +62,6 @@ GtkWidget *treeView;
 GtkToolItem *btnUp;
 GtkToolItem *btnPrev;
 GtkToolItem *btnNext;
-GtkToolItem *btnHistory;
 
 GtkToolItem *rbActors;
 GtkToolItem *rbPlay;
@@ -76,7 +74,7 @@ GtkWidget *window;
 GtkWidget *entry;
 
 GtkWidget *swTree, *swIcon;
-GtkWidget *tvBackResults, *tvCategories, *tvActors, *tvBackActors;
+GtkWidget *tvCategories, *tvActors, *tvBackActors;
 GtkWidget *vbLeft, *vbRight;
 
 GtkWidget *spCenter;
@@ -134,7 +132,6 @@ void disableAllItems() {
 	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
-	gtk_widget_set_sensitive(GTK_WIDGET(btnHistory), FALSE);
 	
 	gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
@@ -157,10 +154,6 @@ void setSensitiveItemsPlaylists() {
 }
 
 void setSensitiveItemsResults() {
-	if(backResults.size() > 0) {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnHistory), TRUE);
-	}
-	
 	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 
 	if(backResultsStack.empty()) {
@@ -359,17 +352,6 @@ void updateResults() {
 	setSensitiveItemsResults();
 }
 
-void backResultsListAdd(string title) {
-	GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(
-	    GTK_TREE_VIEW(tvBackResults)));
-	GtkTreeIter iter;
-	GdkPixbuf *icon = create_pixbuf("link_16.png");
-	
-	gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter, IMAGE_COLUMN, icon,
-           TITLE_COLUMN, title.c_str(), -1);
-}
-
 void showSpCenter() {
 	gtk_widget_set_visible(swTree, FALSE);
 	// Show and hide of iconView depends on isPage
@@ -449,16 +431,8 @@ void resultsTask(gpointer arg, gpointer arg1) {
 	string page = HtmlString::getResultsPage(link);
     gdk_threads_enter();
 	if(!page.empty()) {
-		// add back results
-		// save prev results to map
-		// add title to tvBackResults
+		// save results to back stack
 		if(!prevResults.getTitle().empty() && !isPage) {
-			// Add first time to map, add to listView
-			if(backResults.count(prevResults.getTitle()) == 0) { 
-				backResultsListAdd(prevResults.getTitle());
-			}
-			backResults[prevResults.getTitle()] = prevResults;
-			// also save prevResults to backResultsStack
 			backResultsStack.push_back(prevResults);
 			// clear forward results stack on fetching new results
 			forwardResultsStack.clear();
@@ -1006,22 +980,6 @@ static void btnCategoriesClicked( GtkWidget *widget,
 		}else {
 			gtk_widget_set_visible(vbLeft, TRUE);
 			gtk_widget_set_visible(frLeftTop, TRUE);
-			gtk_widget_set_visible(frLeftBottom, FALSE);
-		}
-	}else {
-		if(!gtk_widget_get_visible(frLeftBottom)) {
-			gtk_widget_set_visible(vbLeft, FALSE);
-			gtk_widget_set_visible(frLeftTop, FALSE);
-		}else {
-		    if(gtk_widget_get_visible(frLeftTop)) {
-				gtk_widget_set_visible(frLeftTop, FALSE);
-			}else {
-				if(categories.getCategories().empty()) {
-					processCategories();
-				}else {
-					gtk_widget_set_visible(frLeftTop, TRUE);
-				}
-			}	
 		}
 	}	
 }
@@ -1055,6 +1013,7 @@ static void btnPrevClicked( GtkWidget *widget,
 {   
 	isPage = false;
 	// Save current results to forwardResultsStack
+	saveResultsPostion();
 	forwardResultsStack.push_back(results);  
 	// Display top results from backResultsStack
 	results = backResultsStack.back();
@@ -1119,34 +1078,6 @@ static void backActorsChanged(GtkWidget *widget, gpointer data) {
     }
 }
 
-static void backResultsChanged(GtkWidget *widget, gpointer data) {
-	GtkTreeIter iter;
-	GtkTreeModel *model;
-	gchar *value;
-	
-	if (gtk_tree_selection_get_selected(
-	    GTK_TREE_SELECTION(widget), &model, &iter)) {
-	    isPage = false;
-		gtk_tree_model_get(model, &iter, TITLE_COLUMN, &value,  -1);
-		
-		// Save or resave displayed results
-		if(!results.getTitle().empty()) {
-			// Add first time to map, add to listView
-			if(backResults.count(results.getTitle()) == 0) {
-				backResultsListAdd(results.getTitle());
-			}
-			saveResultsPostion();
-			backResults[results.getTitle()] = results;
-		}
-	    
-	    // Set back results as results
-		results = backResults[string(value)];
-	    savedRecovery();
-		updateResults();
-		g_free(value);
-    }
-}
-
 static void btnCategoriesRepeatClicked(GtkWidget *widget, gpointer data) {
 	processCategories();
 }
@@ -1155,25 +1086,6 @@ static void btnActorsRepeatClicked(GtkWidget *widget, gpointer data) {
 	g_thread_pool_push(actorsThreadPool, 
 		(gpointer) lastActorsHref.c_str(),
 		NULL);
-}
-
-static void btnHistoryClicked(GtkWidget *widget, gpointer data) {
-	if(!gtk_widget_get_visible(vbLeft)) { // left vbox is hidden
-		gtk_widget_set_visible(vbLeft, TRUE);
-		gtk_widget_set_visible(frLeftBottom, TRUE);
-		gtk_widget_set_visible(frLeftTop, FALSE); // hide categories
-	}else { //left vbox is visible
-		if(!gtk_widget_get_visible(frLeftTop)) { // hide left vbox if no categories
-			gtk_widget_set_visible(frLeftBottom, FALSE);
-			gtk_widget_set_visible(vbLeft, FALSE);
-		}else {
-			if(gtk_widget_get_visible(frLeftBottom)) { // show or hide history if categories present
-				gtk_widget_set_visible(frLeftBottom, FALSE);
-			}else {
-				gtk_widget_set_visible(frLeftBottom, TRUE);
-			}
-		}
-	}
 }
 
 gboolean iconViewExposed(GtkWidget *widget, GdkEvent *event, gpointer data) {
@@ -1217,7 +1129,7 @@ int main( int   argc,
     GtkWidget *vbox;
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
-    GtkWidget *swRightTop, *swRightBottom, *swLeftBottom;;
+    GtkWidget *swRightTop, *swRightBottom;
     GtkWidget *vbLeftTop;
     GtkWidget *btnCategoriesError;
     GtkWidget *btnActorsError;
@@ -1228,7 +1140,7 @@ int main( int   argc,
 	
 	GdkPixbuf *icon;
 	
-	GtkTreeSelection *selection, *selection2; 
+	GtkTreeSelection *selection; 
 	
 	 /* Must initialize libcurl before any threads are started */ 
     curl_global_init(CURL_GLOBAL_ALL);
@@ -1275,16 +1187,6 @@ int main( int   argc,
     gtk_tool_item_set_tooltip_text(btnCategories, "Display categories");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnCategories, -1);
     g_signal_connect(GTK_WIDGET(btnCategories), "clicked", G_CALLBACK(btnCategoriesClicked), NULL);
-    
-    sep = gtk_separator_tool_item_new();
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
-	
-	GtkWidget *historyIcon = gtk_image_new_from_file("history_24.png");
-	btnHistory = gtk_tool_button_new(historyIcon, "History");
-	gtk_tool_item_set_tooltip_text(btnHistory, "Results history");
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnHistory, -1);
-	g_signal_connect(GTK_WIDGET(btnHistory), "clicked",
-	    G_CALLBACK(btnHistoryClicked), NULL);
 	    
 	sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
@@ -1385,19 +1287,6 @@ int main( int   argc,
     gtk_container_add(GTK_CONTAINER(swTree), treeView);
     gtk_container_add(GTK_CONTAINER(swIcon), iconView);
     
-    tvBackResults = createTreeView();
-    // Set up store2
-    GtkListStore *store2 
-        = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);    
-    gtk_tree_view_set_model(GTK_TREE_VIEW(tvBackResults), 
-        GTK_TREE_MODEL(store2));
-	g_object_unref(store2);
-	
-	selection2 = gtk_tree_view_get_selection(GTK_TREE_VIEW(tvBackResults));
-
-	g_signal_connect(selection2, "changed", 
-	  G_CALLBACK(backResultsChanged), NULL);
-    
     tvBackActors = createTreeView();
     // Set up store
     GtkListStore *store 
@@ -1415,17 +1304,12 @@ int main( int   argc,
     tvActors = createTreeView();
     
     swLeftTop = gtk_scrolled_window_new(NULL, NULL);
-    swLeftBottom = gtk_scrolled_window_new(NULL, NULL);
     swRightTop = gtk_scrolled_window_new(NULL, NULL);
     swRightBottom = gtk_scrolled_window_new(NULL, NULL);
     
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swLeftTop),
             GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swLeftTop),
-            GTK_SHADOW_ETCHED_IN);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swLeftBottom),
-            GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swLeftBottom),
             GTK_SHADOW_ETCHED_IN);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swRightTop),
             GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
@@ -1446,13 +1330,11 @@ int main( int   argc,
     
     // Scroll containers
     gtk_container_add(GTK_CONTAINER(swLeftTop), tvCategories);
-    gtk_container_add(GTK_CONTAINER(swLeftBottom), tvBackResults);
     gtk_container_add(GTK_CONTAINER(swRightTop), tvActors);
     gtk_container_add(GTK_CONTAINER(swRightBottom), tvBackActors);
     
     // Frames
     frLeftTop = gtk_frame_new("Categories");
-    frLeftBottom = gtk_frame_new("Results history");
     frRightTop = gtk_frame_new("Actors");
     frRightBottom = gtk_frame_new("Actors history");
     
@@ -1469,7 +1351,6 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbLeftTop), hbCategoriesError, TRUE, FALSE, 1);
     
     gtk_container_add(GTK_CONTAINER(frLeftTop), vbLeftTop);
-    gtk_container_add(GTK_CONTAINER(frLeftBottom), swLeftBottom);
     gtk_container_add(GTK_CONTAINER(frRightTop), swRightTop);
     gtk_container_add(GTK_CONTAINER(frRightBottom), swRightBottom);
     
@@ -1495,7 +1376,6 @@ int main( int   argc,
     
     //vbLeft
     gtk_box_pack_start(GTK_BOX(vbLeft), frLeftTop, TRUE, TRUE, 1);
-    gtk_box_pack_start(GTK_BOX(vbLeft), frLeftBottom, TRUE, TRUE, 1);
     
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
@@ -1546,7 +1426,6 @@ int main( int   argc,
     
     gtk_widget_set_visible(swTree, FALSE);
     gtk_widget_set_visible(frLeftTop, FALSE);
-    gtk_widget_set_visible(frLeftBottom, FALSE);
     gtk_widget_set_visible(frRightBottom, FALSE);
     
     gtk_widget_set_visible(spCenter, FALSE);
