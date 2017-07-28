@@ -430,7 +430,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		    results.setTitle(title);
 		}
 		results.clearResultsAndCreateNewModel(isPage);
-		results.getResultsPage(page);
+		results.show(page);
 		
 		switchToIconView();
 		updateTitle();

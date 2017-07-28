@@ -56,7 +56,7 @@ class Results {
 		return resultsUrl;
 	} 
 	
-	void getResultsPage(string p) {
+	void show(string p) {
 	    page = p;
 	    parse_results();
 	    parse_pager();         	
