@@ -436,8 +436,8 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		updateTitle();
 	}else {
 		// Remove link from set on results error
-		if(resultsThreadsLinks.count(results.getNextLink()) > 0) {
-			resultsThreadsLinks.erase(results.getNextLink());
+		if(resultsThreadsLinks.count(link) > 0 && isPage) {
+			resultsThreadsLinks.erase(link);
 		}
 		switchToIconView();
 		// TODO: replace this with repeat button
