@@ -175,16 +175,6 @@ void setSensitiveItemsResults() {
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
 }
 
-void setSensitiveItemsActors() {
-	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), TRUE);
-	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
-	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
-	
-	gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
-}
-
 struct ArgsStruct {
 	GdkPixbufLoader* loader;
 	GtkTreeIter iter;
@@ -340,11 +330,7 @@ void displayRange() {
 	}
 }
 
-void updateResults() {
-	if(displayMode != RESULTS) {
-		displayMode = RESULTS;
-	}
-	switchToIconView();
+void updateTitle() {
 	string title = PROG_NAME + " - " + results.getTitle();
 	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 	gtk_entry_set_text(GTK_ENTRY(entry), "");
@@ -446,8 +432,8 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		results.clearResultsAndCreateNewModel(isPage);
 		results.getResultsPage(page);
 		
-		// TODO: maybe remove this function
-		updateResults();
+		switchToIconView();
+		updateTitle();
 	}else {
 		// Remove link from set on results error
 		if(resultsThreadsLinks.count(results.getNextLink()) > 0) {
@@ -561,7 +547,6 @@ GtkTreeModel *getPlaylistsModel() {
 
 void displayPlaylists() {
 	switchToTreeView();
-	displayMode = PLAYLISTS;
 	gtk_window_set_title(GTK_WINDOW(window), playlists.getTitle().c_str());
 	
 	GtkTreeModel *model;
@@ -1003,10 +988,8 @@ static void btnCategoriesClicked( GtkWidget *widget,
 static void btnUpClicked( GtkWidget *widget,
                       gpointer   data )
 {
-	if(displayMode == PLAYLISTS) {
-		switchToIconView();
-		updateResults();
-	}
+	switchToIconView();
+	updateTitle();
 }
 
 void savedRecovery() {
@@ -1034,7 +1017,7 @@ static void btnPrevClicked( GtkWidget *widget,
 	results = backResultsStack.back();
 	backResultsStack.pop_back();
 	savedRecovery();
-	updateResults();		  
+	updateTitle();		  
 }
 
 static void btnNextClicked( GtkWidget *widget,
@@ -1047,7 +1030,7 @@ static void btnNextClicked( GtkWidget *widget,
     results = forwardResultsStack.back();
     forwardResultsStack.pop_back();
     savedRecovery();
-    updateResults(); 
+    updateTitle(); 
 }
 
 static void entryActivated( GtkWidget *widget, 
