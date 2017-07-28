@@ -15,10 +15,12 @@ resultsTask updateResults optimization.
 Fix domain in Results to WDOMAIN.
 Make terminal inside gui for download with wget or for players.
 Use embedded player, like ffmpeg.
-Make pager spinner and repeat button.
-Make stop button to stop fetching if bad network
-Make update button to refresh results
+COMPLETED Make pager spinner and repeat button.
+COMPLETED Make stop button to stop fetching if bad network
+COMPLETED Make update button to refresh results
 COMPLETED Results parser domain end (.cc, .in, .club) independent
 Less global variables refactoring
 IconView results model do not accumulate all results, only partial results
 Make gui class with static methods
+Wrong iter problems
+Repeat on network problems on pager results
