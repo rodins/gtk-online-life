@@ -96,7 +96,7 @@ GThreadPool *playlistsThreadPool;
 
 string lastActorsHref;
 
-bool isPage;
+bool isPage = FALSE;
 set<string> resultsThreadsLinks;
 
 /*string readFromFile(string filename) {
@@ -462,13 +462,16 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		results.setRefresh(FALSE);
 	}
 	
+	if(isPage) {
+		isPage = FALSE;
+	}
+	
 	taskCount--;
 	disableBtnStopTasks();
 	gdk_threads_leave();
 }
 
 void processCategory(gint *indices, gint count) {//move to results
-    isPage = false;
     // Save position and copy to save variable
 	if(!results.getTitle().empty()) {
 		saveResultsPostion();
@@ -785,7 +788,6 @@ void actorsTask(gpointer args, gpointer args2) {
 
 void processActor(gint *indices, gint count) {
 	if(count == 1) { //Node
-	    isPage = false;
 	    // Save position and copy to save variable
 		if(!results.getTitle().empty()) {
 			saveResultsPostion();
@@ -1025,7 +1027,6 @@ void savedRecovery() {
 static void btnPrevClicked( GtkWidget *widget,
                       gpointer   data )
 {   
-	isPage = false;
 	// Save current results to forwardResultsStack
 	saveResultsPostion();
 	forwardResultsStack.push_back(results); 
@@ -1039,7 +1040,6 @@ static void btnPrevClicked( GtkWidget *widget,
 static void btnNextClicked( GtkWidget *widget,
                       gpointer   data)
 {   
-	isPage = false;
     // Save current results to backResultsStack
     saveResultsPostion();
     backResultsStack.push_back(results);
@@ -1057,7 +1057,6 @@ static void entryActivated( GtkWidget *widget,
     string base_url = string(DOMAIN) + 
          "/?do=search&subaction=search&mode=simple&story=" + 
          to_cp1251(query);
-	isPage = false;
 	// Save position and copy to save variable
 	if(!results.getTitle().empty()) {
 		saveResultsPostion();
@@ -1123,7 +1122,7 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 		if(!results.getNextLink().empty()) {
 			// Search for the same link only once if it's not saved in set.
 			if(resultsThreadsLinks.count(results.getNextLink()) == 0) {
-				isPage = true;
+				isPage = TRUE;
 				resultsThreadsLinks.insert(results.getNextLink());
 				g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);
 			}
@@ -1136,7 +1135,6 @@ static void btnStopTasksClicked(GtkWidget *widget, gpointer data) {
 }
 
 static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
-	isPage = false;
 	title = results.getTitle();
 	results.setRefresh(TRUE);
 	g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);
