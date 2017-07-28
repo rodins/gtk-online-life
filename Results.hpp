@@ -7,11 +7,24 @@ class Results {
 	string page;
 	string title;
 	string resultsUrl;
+	bool refresh;
 	
 	GtkListStore *iconViewStore;
 	
 	string index; // save position of iconView
 	public:
+	
+	Results() {
+		refresh = false;
+	}
+	
+	bool isRefresh() {
+		return refresh;
+	}
+	
+	void setRefresh(bool r) {
+		refresh = r;
+	}
 	
 	string getIndex() {
 		return index;

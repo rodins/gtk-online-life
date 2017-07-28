@@ -407,32 +407,29 @@ void disableBtnStopTasks() {
 }
 
 void resultsTask(gpointer arg, gpointer arg1) {
-	string link((char *)arg);
-	//cout << "Link: " << link << endl;
+	string link;
 	// On pre execute
 	gdk_threads_enter();
+	if(isPage) {
+		link = results.getNextLink();
+	}else {
+		link = results.getResultsUrl();
+	}
+	//cout << "Link: " << link << endl;
 	// Display spinner for new and paging results
     showSpCenter();
-	if(!isPage) {
-		// If not refresh mode
-		if (results.getResultsUrl() != link) {
-			// Save position and copy to save variable
-			if(!results.getTitle().empty()) {
-				saveResultsPostion();
-			    prevResults = results;
-			}
-			results.setResultsUrl(link);
-		}
-	}
 	curlResultsStop = FALSE;
 	enableBtnStopTasks();
 	taskCount++;
     gdk_threads_leave();
+    // async part
+    // TODO: maybe only this part should be in task
 	string page = HtmlString::getResultsPage(link);
     gdk_threads_enter();
 	if(!page.empty()) {
-		// save results to back stack
-		if(!prevResults.getTitle().empty() && !isPage) {
+		// save results to back stack on success
+		//TODO: save results to back stack anyway and earlier
+		if(!prevResults.getTitle().empty() && !isPage && !results.isRefresh()) {
 			backResultsStack.push_back(prevResults);
 			// clear forward results stack on fetching new results
 			forwardResultsStack.clear();
@@ -449,6 +446,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 		results.clearResultsAndCreateNewModel(isPage);
 		results.getResultsPage(page);
 		
+		// TODO: maybe remove this function
 		updateResults();
 	}else {
 		// Remove link from set on results error
@@ -456,8 +454,14 @@ void resultsTask(gpointer arg, gpointer arg1) {
 			resultsThreadsLinks.erase(results.getNextLink());
 		}
 		switchToIconView();
+		// TODO: replace this with repeat button
 		show_error_dialog();
 	}
+	
+	if(results.isRefresh()) {
+		results.setRefresh(FALSE);
+	}
+	
 	taskCount--;
 	disableBtnStopTasks();
 	gdk_threads_leave();
@@ -465,20 +469,26 @@ void resultsTask(gpointer arg, gpointer arg1) {
 
 void processCategory(gint *indices, gint count) {//move to results
     isPage = false;
+    // Save position and copy to save variable
+	if(!results.getTitle().empty()) {
+		saveResultsPostion();
+	    prevResults = results;
+	}
 	if(count == 1) { //Node
 		gint i = indices[0];
 		title = categories.getCategories()[i].get_title();
-		g_thread_pool_push(resultsThreadPool,
-		     (gpointer) categories.getCategories()[i].get_link().c_str(),
-		     NULL);
+		// set results url
+		results.setResultsUrl(categories.getCategories()[i].get_link());
+		g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);
 	}else if(count == 2) { //Leaf
 		gint i = indices[0];
 		gint j = indices[1];
 		title = categories.getCategories()[i].get_title() + " - " 
 		      + categories.getCategories()[i].get_subctgs()[j].get_title();
-		g_thread_pool_push(resultsThreadPool,
-		     (gpointer) categories.getCategories()[i].get_subctgs()[j].get_link().c_str(),
-		     NULL);
+		results.setResultsUrl(
+		    categories.getCategories()[i].get_subctgs()[j].get_link()
+		);
+		g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);
 	}
 	
 }
@@ -776,11 +786,15 @@ void actorsTask(gpointer args, gpointer args2) {
 void processActor(gint *indices, gint count) {
 	if(count == 1) { //Node
 	    isPage = false;
+	    // Save position and copy to save variable
+		if(!results.getTitle().empty()) {
+			saveResultsPostion();
+		    prevResults = results;
+		}
 		gint i = indices[0];
 		title = actors.getActors()[i].get_title();
-	    g_thread_pool_push(resultsThreadPool,
-	        (gpointer) actors.getActors()[i].get_href().c_str(),
-	        NULL);	  	
+		results.setResultsUrl(actors.getActors()[i].get_href());
+	    g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);	  	
 	}
 }
 
@@ -1014,7 +1028,7 @@ static void btnPrevClicked( GtkWidget *widget,
 	isPage = false;
 	// Save current results to forwardResultsStack
 	saveResultsPostion();
-	forwardResultsStack.push_back(results);  
+	forwardResultsStack.push_back(results); 
 	// Display top results from backResultsStack
 	results = backResultsStack.back();
 	backResultsStack.pop_back();
@@ -1027,6 +1041,7 @@ static void btnNextClicked( GtkWidget *widget,
 {   
 	isPage = false;
     // Save current results to backResultsStack
+    saveResultsPostion();
     backResultsStack.push_back(results);
     // Display top result from forwardResultsStack
     results = forwardResultsStack.back();
@@ -1039,12 +1054,18 @@ static void entryActivated( GtkWidget *widget,
                       gpointer data) {
     string query(gtk_entry_get_text(GTK_ENTRY(widget)));
     title = "Search: " + query;
-    string base_url = string(DOMAIN) + "/?do=search&subaction=search&mode=simple&story=" + to_cp1251(query);
-    results.setBaseUrl(base_url);
+    string base_url = string(DOMAIN) + 
+         "/?do=search&subaction=search&mode=simple&story=" + 
+         to_cp1251(query);
 	isPage = false;
-    g_thread_pool_push(resultsThreadPool,
-        (gpointer) results.getBaseUrl().c_str(),
-        NULL);		  						  
+	// Save position and copy to save variable
+	if(!results.getTitle().empty()) {
+		saveResultsPostion();
+	    prevResults = results;
+	}
+	results.setBaseUrl(base_url);
+	results.setResultsUrl(base_url);
+    g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);		  						  
 }
 
 static void rbActorsClicked(GtkWidget *widget, gpointer data) {
@@ -1104,9 +1125,7 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 			if(resultsThreadsLinks.count(results.getNextLink()) == 0) {
 				isPage = true;
 				resultsThreadsLinks.insert(results.getNextLink());
-				g_thread_pool_push(resultsThreadPool,
-	                (gpointer)results.getNextLink().c_str(),
-	                NULL);
+				g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);
 			}
 		}
 	}
@@ -1118,9 +1137,9 @@ static void btnStopTasksClicked(GtkWidget *widget, gpointer data) {
 
 static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
 	isPage = false;
-	g_thread_pool_push(resultsThreadPool,
-		     (gpointer) results.getResultsUrl().c_str(),
-		     NULL);
+	title = results.getTitle();
+	results.setRefresh(TRUE);
+	g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);
 }
 
 int main( int   argc,
