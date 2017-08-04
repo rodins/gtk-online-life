@@ -34,10 +34,19 @@ class Results {
 		index = i;
 	}
 	
-	void clearResultsAndCreateNewModel(bool isPage) {
-		if(!isPage) {
-			createNewModel();
-		}
+	void createNewModel() {
+		iconViewStore = gtk_list_store_new(
+		     ICON_NUM_COLS,   // Number of columns
+		     GDK_TYPE_PIXBUF, // Image poster
+		     G_TYPE_STRING,   // Title
+		     G_TYPE_STRING,   // Href
+		     G_TYPE_STRING    // Image link
+		);
+		
+		setModel();
+		
+		// Want to keep my copy of model
+		//g_object_unref(iconViewStore);
 	}
 	
 	void setTitle(string t) {
@@ -90,21 +99,6 @@ class Results {
 	}
 	
 	private:
-	
-	void createNewModel() {
-		iconViewStore = gtk_list_store_new(
-		     ICON_NUM_COLS,   // Number of columns
-		     GDK_TYPE_PIXBUF, // Image poster
-		     G_TYPE_STRING,   // Title
-		     G_TYPE_STRING,   // Href
-		     G_TYPE_STRING    // Image link
-		);
-		
-		setModel();
-		
-		// Want to keep my copy of model
-		//g_object_unref(iconViewStore);
-	}
 	
 	void appendToStore(Item item) {
 		static GtkTreeIter iter;

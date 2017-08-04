@@ -90,7 +90,8 @@ GtkWidget *hbActorsError;
 GtkWidget *vbCenter;
 
 GThreadPool *imagesThreadPool;
-GThreadPool *resultsThreadPool;
+GThreadPool *resultsNewThreadPool;
+GThreadPool *resultsAppendThreadPool;
 GThreadPool *actorsThreadPool;
 GThreadPool *playlistsThreadPool;
 
@@ -392,53 +393,77 @@ void disableBtnStopTasks() {
 	}
 }
 
-void resultsTask(gpointer arg, gpointer arg1) {
-	string link;
+void resultsAppendTask(gpointer arg, gpointer arg1) {
 	// On pre execute
 	gdk_threads_enter();
-	if(isPage) {
-		link = results.getNextLink();
-	}else {
-		link = results.getResultsUrl();
-	}
-	//cout << "Link: " << link << endl;
-	// Display spinner for new and paging results
+	string link = results.getNextLink();
+	// Display spinner
     showSpCenter();
+    // For stopping threads
+    curlResultsStop = FALSE;
+	enableBtnStopTasks();
+	taskCount++;
+	gdk_threads_leave();
+	// async part
+	string page = HtmlString::getResultsPage(link);
+	// On post execute
+	gdk_threads_enter();
+	if(!page.empty()) {
+		results.show(page);
+		switchToIconView();
+	}else { // error
+		if(resultsThreadsLinks.count(link) > 0) {
+			resultsThreadsLinks.erase(link);
+		}
+		switchToIconView();
+		// TODO: replace this with repeat button
+		show_error_dialog();
+	}
+	
+	isPage = FALSE;
+	
+	taskCount--;
+	disableBtnStopTasks();
+	gdk_threads_leave();
+}
+
+void resultsNewTask(gpointer arg, gpointer arg1) {
+	// On pre execute
+	gdk_threads_enter();
+	// Display spinner for new results
+    showSpCenter();
+    // Thread stopping functionality
 	curlResultsStop = FALSE;
 	enableBtnStopTasks();
 	taskCount++;
     gdk_threads_leave();
     // async part
-    // TODO: maybe only this part should be in task
-	string page = HtmlString::getResultsPage(link);
+	string page = HtmlString::getResultsPage(results.getResultsUrl());
     gdk_threads_enter();
 	if(!page.empty()) {
 		// save results to back stack on success
 		//TODO: save results to back stack anyway and earlier
-		if(!prevResults.getTitle().empty() && !isPage && !results.isRefresh()) {
+		if(!prevResults.getTitle().empty() && !results.isRefresh()) {
 			backResultsStack.push_back(prevResults);
 			// clear forward results stack on fetching new results
 			forwardResultsStack.clear();
 		}
-		if (!isPage) {
-			// Scroll to the top of the list
-		    GtkTreePath *path = gtk_tree_path_new_first();
-		    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path, FALSE, 0, 0);
-		    
-		    // Clear results links set if not paging
-		    resultsThreadsLinks.clear();
-		    results.setTitle(title);
-		}
-		results.clearResultsAndCreateNewModel(isPage);
+		
+		// Scroll to the top of the list
+	    GtkTreePath *path = gtk_tree_path_new_first();
+	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path, FALSE, 0, 0);
+	    
+	    // Clear results links set if not paging
+	    resultsThreadsLinks.clear();
+	    // TODO: clean up mess with title
+	    results.setTitle(title);
+		
+		results.createNewModel();
 		results.show(page);
 		
 		switchToIconView();
 		updateTitle();
 	}else {
-		// Remove link from set on results error
-		if(resultsThreadsLinks.count(link) > 0 && isPage) {
-			resultsThreadsLinks.erase(link);
-		}
 		switchToIconView();
 		// TODO: replace this with repeat button
 		show_error_dialog();
@@ -447,11 +472,7 @@ void resultsTask(gpointer arg, gpointer arg1) {
 	if(results.isRefresh()) {
 		results.setRefresh(FALSE);
 	}
-	
-	if(isPage) {
-		isPage = FALSE;
-	}
-	
+		
 	taskCount--;
 	disableBtnStopTasks();
 	gdk_threads_leave();
@@ -468,7 +489,7 @@ void processCategory(gint *indices, gint count) {//move to results
 		title = categories.getCategories()[i].get_title();
 		// set results url
 		results.setResultsUrl(categories.getCategories()[i].get_link());
-		g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);
+		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 	}else if(count == 2) { //Leaf
 		gint i = indices[0];
 		gint j = indices[1];
@@ -477,7 +498,7 @@ void processCategory(gint *indices, gint count) {//move to results
 		results.setResultsUrl(
 		    categories.getCategories()[i].get_subctgs()[j].get_link()
 		);
-		g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);
+		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 	}
 	
 }
@@ -781,7 +802,7 @@ void processActor(gint *indices, gint count) {
 		gint i = indices[0];
 		title = actors.getActors()[i].get_title();
 		results.setResultsUrl(actors.getActors()[i].get_href());
-	    g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);	  	
+	    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);	  	
 	}
 }
 
@@ -1047,7 +1068,7 @@ static void entryActivated( GtkWidget *widget,
 	}
 	results.setBaseUrl(base_url);
 	results.setResultsUrl(base_url);
-    g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);		  						  
+    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);		  						  
 }
 
 static void rbActorsClicked(GtkWidget *widget, gpointer data) {
@@ -1107,7 +1128,7 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 			if(resultsThreadsLinks.count(results.getNextLink()) == 0) {
 				isPage = TRUE;
 				resultsThreadsLinks.insert(results.getNextLink());
-				g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);
+				g_thread_pool_push(resultsAppendThreadPool, (gpointer)1, NULL);
 			}
 		}
 	}
@@ -1120,7 +1141,7 @@ static void btnStopTasksClicked(GtkWidget *widget, gpointer data) {
 static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
 	title = results.getTitle();
 	results.setRefresh(TRUE);
-	g_thread_pool_push(resultsThreadPool, (gpointer)1, NULL);
+	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 }
 
 int main( int   argc,
@@ -1445,8 +1466,15 @@ int main( int   argc,
                                    FALSE,
                                    NULL);
                                    
-    // GThreadPool for results
-    resultsThreadPool = g_thread_pool_new(resultsTask,
+    // GThreadPool for new results
+    resultsNewThreadPool = g_thread_pool_new(resultsNewTask,
+                                   NULL,
+                                   1, // Run one thread at the time
+                                   FALSE,
+                                   NULL);
+                                   
+    // GThreadPool for results pages
+    resultsAppendThreadPool = g_thread_pool_new(resultsAppendTask,
                                    NULL,
                                    1, // Run one thread at the time
                                    FALSE,
