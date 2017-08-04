@@ -24,3 +24,4 @@ IconView results model do not accumulate all results, only partial results
 Make gui class with static methods
 Wrong iter problems
 Repeat on network problems on pager results
+Add play, download or open buttons on info.
