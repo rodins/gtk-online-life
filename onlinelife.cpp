@@ -96,8 +96,6 @@ GThreadPool *actorsThreadPool;
 GThreadPool *playlistsThreadPool;
 
 string lastActorsHref;
-
-bool isPage = FALSE;
 set<string> resultsThreadsLinks;
 
 /*string readFromFile(string filename) {
@@ -339,7 +337,7 @@ void updateTitle() {
 	setSensitiveItemsResults();
 }
 
-void showSpCenter() {
+void showSpCenter(bool isPage) {
 	gtk_widget_set_visible(swTree, FALSE);
 	// Show and hide of iconView depends on isPage
 	gtk_widget_set_visible(swIcon, isPage);
@@ -354,6 +352,7 @@ void showSpCenter() {
 	gtk_widget_set_visible(spCenter, TRUE);
 	gtk_spinner_start(GTK_SPINNER(spCenter));
 }
+
 
 void show_error_dialog() {
 	GtkWidget *dialog;
@@ -397,8 +396,8 @@ void resultsAppendTask(gpointer arg, gpointer arg1) {
 	// On pre execute
 	gdk_threads_enter();
 	string link = results.getNextLink();
-	// Display spinner
-    showSpCenter();
+	// Display spinner at the bottom of list
+    showSpCenter(TRUE);
     // For stopping threads
     curlResultsStop = FALSE;
 	enableBtnStopTasks();
@@ -419,9 +418,7 @@ void resultsAppendTask(gpointer arg, gpointer arg1) {
 		// TODO: replace this with repeat button
 		show_error_dialog();
 	}
-	
-	isPage = FALSE;
-	
+
 	taskCount--;
 	disableBtnStopTasks();
 	gdk_threads_leave();
@@ -431,7 +428,7 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	// On pre execute
 	gdk_threads_enter();
 	// Display spinner for new results
-    showSpCenter();
+    showSpCenter(FALSE);
     // Thread stopping functionality
 	curlResultsStop = FALSE;
 	enableBtnStopTasks();
@@ -648,7 +645,8 @@ void playlistsTask(gpointer args, gpointer args2) {
 		string referer = "http://dterod.com/player.php?newsid=" + id;
 		// On pre execute
 		gdk_threads_enter();
-		showSpCenter();
+		// Show spinner fullscreen
+		showSpCenter(FALSE);
 		curlStop = FALSE;
 		enableBtnStopTasks();
 		taskCount++;
@@ -1126,7 +1124,6 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 		if(!results.getNextLink().empty()) {
 			// Search for the same link only once if it's not saved in set.
 			if(resultsThreadsLinks.count(results.getNextLink()) == 0) {
-				isPage = TRUE;
 				resultsThreadsLinks.insert(results.getNextLink());
 				g_thread_pool_push(resultsAppendThreadPool, (gpointer)1, NULL);
 			}
