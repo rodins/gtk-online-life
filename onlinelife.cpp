@@ -88,6 +88,7 @@ GtkWidget *spActors;
 GtkWidget *hbActorsError;
 
 GtkWidget *vbCenter;
+GtkWidget *hbResultsError;
 
 GThreadPool *imagesThreadPool;
 GThreadPool *resultsNewThreadPool;
@@ -117,6 +118,7 @@ void switchToTreeView() {
 	gtk_widget_set_visible(swTree, TRUE);
 	gtk_widget_set_visible(swIcon, FALSE);
 	gtk_widget_set_visible(spCenter, FALSE);
+	gtk_widget_set_visible(hbResultsError, FALSE);
 	gtk_spinner_stop(GTK_SPINNER(spCenter));
 }
 
@@ -124,6 +126,7 @@ void switchToIconView() {
 	gtk_widget_set_visible(swTree, FALSE);
 	gtk_widget_set_visible(swIcon, TRUE);
 	gtk_widget_set_visible(spCenter, FALSE);
+	gtk_widget_set_visible(hbResultsError, FALSE);
 	gtk_spinner_stop(GTK_SPINNER(spCenter));
 }
 
@@ -350,9 +353,26 @@ void showSpCenter(bool isPage) {
 	    1,
 	    GTK_PACK_START);
 	gtk_widget_set_visible(spCenter, TRUE);
+	gtk_widget_set_visible(hbResultsError, FALSE);
 	gtk_spinner_start(GTK_SPINNER(spCenter));
 }
 
+void showResultsRepeat(bool isPage) {
+	gtk_widget_set_visible(swTree, FALSE);
+	// Show and hide of iconView depends on isPage
+	gtk_widget_set_visible(swIcon, isPage);
+	// Change packing params of spCenter
+	gtk_box_set_child_packing(
+	    GTK_BOX(vbCenter),
+	    hbResultsError,
+	    !isPage,
+	    FALSE,
+	    1,
+	    GTK_PACK_START);
+	gtk_widget_set_visible(spCenter, FALSE);
+	gtk_spinner_stop(GTK_SPINNER(spCenter));
+	gtk_widget_set_visible(hbResultsError, TRUE);
+}
 
 void show_error_dialog() {
 	GtkWidget *dialog;
@@ -415,8 +435,7 @@ void resultsAppendTask(gpointer arg, gpointer arg1) {
 			resultsThreadsLinks.erase(link);
 		}
 		switchToIconView();
-		// TODO: replace this with repeat button
-		show_error_dialog();
+		showResultsRepeat(TRUE);
 	}
 
 	taskCount--;
@@ -462,8 +481,7 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 		updateTitle();
 	}else {
 		switchToIconView();
-		// TODO: replace this with repeat button
-		show_error_dialog();
+		showResultsRepeat(FALSE);
 	}
 	
 	if(results.isRefresh()) {
@@ -1141,6 +1159,10 @@ static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
 	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 }
 
+static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
+	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+}
+
 int main( int   argc,
           char *argv[] )
 {
@@ -1151,6 +1173,7 @@ int main( int   argc,
     GtkWidget *vbLeftTop;
     GtkWidget *btnCategoriesError;
     GtkWidget *btnActorsError;
+    GtkWidget *btnResultsError;
     
 	GtkToolItem *btnCategories;
 	GtkToolItem *sep;
@@ -1401,12 +1424,28 @@ int main( int   argc,
     // Add center spinner
     spCenter = gtk_spinner_new();
     
+    // Add results repeat button
+    hbResultsError = gtk_hbox_new(FALSE, 1);
+    btnResultsError = gtk_button_new_with_label("Repeat");
+    gtk_box_pack_start(
+        GTK_BOX(hbResultsError), 
+        btnResultsError, 
+        TRUE, 
+        FALSE, 
+        10);
+    g_signal_connect(
+        btnResultsError,
+        "clicked",
+        G_CALLBACK(btnResultsRepeatClicked),
+        NULL);
+    
     // add vbox center
     vbCenter = gtk_vbox_new(FALSE, 1);
     // add items to vbCenter
     gtk_box_pack_start(GTK_BOX(vbCenter), swTree, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbCenter), swIcon, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbCenter), spCenter, TRUE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbCenter), hbResultsError, TRUE, FALSE, 1);
     
     //hbCenter
     gtk_box_pack_start(GTK_BOX(hbCenter), vbLeft, FALSE, FALSE, 1);
@@ -1455,6 +1494,8 @@ int main( int   argc,
     
     gtk_widget_set_visible(spActors, FALSE);
     gtk_widget_set_visible(hbActorsError, FALSE);
+    
+    gtk_widget_set_visible(hbResultsError, FALSE);
     
     // GThreadPool for downloading images
     imagesThreadPool = g_thread_pool_new(imageDownloadTask,
