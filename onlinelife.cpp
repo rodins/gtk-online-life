@@ -448,22 +448,21 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	gdk_threads_enter();
 	// Display spinner for new results
     showSpCenter(FALSE);
+    string link = results.getResultsUrl();
     // Thread stopping functionality
 	curlResultsStop = FALSE;
 	enableBtnStopTasks();
 	taskCount++;
     gdk_threads_leave();
     // async part
-	string page = HtmlString::getResultsPage(results.getResultsUrl());
+	string page = HtmlString::getResultsPage(link);
     gdk_threads_enter();
 	if(!page.empty()) {
-		// save results to back stack on success
-		//TODO: save results to back stack anyway and earlier
-		if(!prevResults.getTitle().empty() && !results.isRefresh()) {
-			backResultsStack.push_back(prevResults);
-			// clear forward results stack on fetching new results
-			forwardResultsStack.clear();
-		}
+		// clear forward results stack on fetching new results
+		forwardResultsStack.clear();
+		
+		// replace default url with link
+		results.setResultsUrl(link);
 		
 		// Scroll to the top of the list
 	    GtkTreePath *path = gtk_tree_path_new_first();
@@ -493,17 +492,22 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	gdk_threads_leave();
 }
 
-void processCategory(gint *indices, gint count) {//move to results
-    // Save position and copy to save variable
+void saveResultsToBackStack() {
+	// Save position and copy to save variable
 	if(!results.getTitle().empty()) {
 		saveResultsPostion();
-	    prevResults = results;
+	    backResultsStack.push_back(results);
 	}
+}
+
+void processCategory(gint *indices, gint count) {//move to results
+    saveResultsToBackStack();
 	if(count == 1) { //Node
 		gint i = indices[0];
 		title = categories.getCategories()[i].get_title();
-		// set results url
-		results.setResultsUrl(categories.getCategories()[i].get_link());
+		results.setResultsUrl(
+		    categories.getCategories()[i].get_link()
+		);
 		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 	}else if(count == 2) { //Leaf
 		gint i = indices[0];
@@ -810,11 +814,7 @@ void actorsTask(gpointer args, gpointer args2) {
 
 void processActor(gint *indices, gint count) {
 	if(count == 1) { //Node
-	    // Save position and copy to save variable
-		if(!results.getTitle().empty()) {
-			saveResultsPostion();
-		    prevResults = results;
-		}
+		saveResultsToBackStack();
 		gint i = indices[0];
 		title = actors.getActors()[i].get_title();
 		results.setResultsUrl(actors.getActors()[i].get_href());
@@ -1077,11 +1077,7 @@ static void entryActivated( GtkWidget *widget,
     string base_url = string(DOMAIN) + 
          "/?do=search&subaction=search&mode=simple&story=" + 
          to_cp1251(query);
-	// Save position and copy to save variable
-	if(!results.getTitle().empty()) {
-		saveResultsPostion();
-	    prevResults = results;
-	}
+	saveResultsToBackStack();
 	results.setBaseUrl(base_url);
 	results.setResultsUrl(base_url);
     g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);		  						  
