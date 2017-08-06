@@ -54,7 +54,6 @@ GtkWidget *frRightTop, *frInfo;
 
 DisplayMode displayMode;
 
-string title;
 const string PROG_NAME("Online life");
 
 GtkWidget *treeView;
@@ -589,7 +588,8 @@ GtkTreeModel *getPlaylistsModel() {
 
 void displayPlaylists() {
 	switchToTreeView();
-	gtk_window_set_title(GTK_WINDOW(window), playlists.getTitle().c_str());
+	string title = PROG_NAME + " - " + playlists.getTitle();
+	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 	
 	GtkTreeModel *model;
 	if(playlists.getPlaylists().size() == 1 && playlists.getPlaylists()[0].get_title().empty()) {
@@ -877,8 +877,6 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	gchar *resultTitle = NULL;
 	gtk_tree_model_get(model, &iter, ICON_TITLE_COLUMN, &resultTitle, -1);
 	
-	title = PROG_NAME + " - " + resultTitle;
-	
 	// Get href value from iter
     gchar *href = NULL;
     gtk_tree_model_get(model, &iter, ICON_HREF, &href, -1);
@@ -904,7 +902,7 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	g_free(resultTitle);
 }
 
-void resultActivated(GtkWidget *widget, gpointer statusbar) {
+void resultActivated(GtkWidget *widget, gpointer data) {
 	gtk_icon_view_selected_foreach(GTK_ICON_VIEW(widget), resultFunc, NULL);
 }
 
@@ -1041,7 +1039,6 @@ void savedRecovery() {
     
 	// Update iconView with history results
 	results.setModel();
-	title = results.getTitle();
 	// Scroll to saved position after updating model
 	string index = results.getIndex();
 	GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
@@ -1161,7 +1158,6 @@ static void btnStopTasksClicked(GtkWidget *widget, gpointer data) {
 }
 
 static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
-	title = results.getTitle();
 	results.setRefresh(TRUE);
 	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 }
