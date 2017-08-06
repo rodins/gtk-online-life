@@ -175,6 +175,8 @@ void setSensitiveItemsResults() {
     gtk_widget_set_sensitive(GTK_WIDGET(rbActors), TRUE);
     
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
+    
+    //gtk_entry_set_text(GTK_ENTRY(entry), "");
 }
 
 struct ArgsStruct {
@@ -335,9 +337,6 @@ void displayRange() {
 void updateTitle() {
 	string title = PROG_NAME + " - " + results.getTitle();
 	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-	gtk_entry_set_text(GTK_ENTRY(entry), "");
-	
-	setSensitiveItemsResults();
 }
 
 void showSpCenter(bool isPage) {
@@ -458,6 +457,7 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	string page = HtmlString::getResultsPage(link);
     gdk_threads_enter();
 	if(!page.empty()) {
+		//TODO: maybe I need to clear it while saving....
 		// clear forward results stack on fetching new results
 		forwardResultsStack.clear();
 		
@@ -470,14 +470,12 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	    
 	    // Clear results links set if not paging
 	    resultsThreadsLinks.clear();
-	    // TODO: clean up mess with title
-	    results.setTitle(title);
 		
 		results.createNewModel();
 		results.show(page);
 		
 		switchToIconView();
-		updateTitle();
+		setSensitiveItemsResults();
 	}else {
 		switchToIconView();
 		showResultsRepeat(FALSE);
@@ -504,7 +502,9 @@ void processCategory(gint *indices, gint count) {//move to results
     saveResultsToBackStack();
 	if(count == 1) { //Node
 		gint i = indices[0];
-		title = categories.getCategories()[i].get_title();
+		string title = categories.getCategories()[i].get_title();
+		results.setTitle(title);
+		updateTitle();
 		results.setResultsUrl(
 		    categories.getCategories()[i].get_link()
 		);
@@ -512,8 +512,10 @@ void processCategory(gint *indices, gint count) {//move to results
 	}else if(count == 2) { //Leaf
 		gint i = indices[0];
 		gint j = indices[1];
-		title = categories.getCategories()[i].get_title() + " - " 
+		string title = categories.getCategories()[i].get_title() + " - " 
 		      + categories.getCategories()[i].get_subctgs()[j].get_title();
+		results.setTitle(title);
+		updateTitle();
 		results.setResultsUrl(
 		    categories.getCategories()[i].get_subctgs()[j].get_link()
 		);
@@ -816,7 +818,9 @@ void processActor(gint *indices, gint count) {
 	if(count == 1) { //Node
 		saveResultsToBackStack();
 		gint i = indices[0];
-		title = actors.getActors()[i].get_title();
+		string title = actors.getActors()[i].get_title();
+		results.setTitle(title);
+		updateTitle();
 		results.setResultsUrl(actors.getActors()[i].get_href());
 	    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);	  	
 	}
@@ -1027,6 +1031,7 @@ static void btnUpClicked( GtkWidget *widget,
 {
 	switchToIconView();
 	updateTitle();
+	setSensitiveItemsResults();
 }
 
 void savedRecovery() {
@@ -1054,7 +1059,8 @@ static void btnPrevClicked( GtkWidget *widget,
 	results = backResultsStack.back();
 	backResultsStack.pop_back();
 	savedRecovery();
-	updateTitle();		  
+	updateTitle();
+	setSensitiveItemsResults();		  
 }
 
 static void btnNextClicked( GtkWidget *widget,
@@ -1068,19 +1074,24 @@ static void btnNextClicked( GtkWidget *widget,
     forwardResultsStack.pop_back();
     savedRecovery();
     updateTitle(); 
+    setSensitiveItemsResults();
 }
 
 static void entryActivated( GtkWidget *widget, 
                       gpointer data) {
     string query(gtk_entry_get_text(GTK_ENTRY(widget)));
-    title = "Search: " + query;
-    string base_url = string(DOMAIN) + 
-         "/?do=search&subaction=search&mode=simple&story=" + 
-         to_cp1251(query);
-	saveResultsToBackStack();
-	results.setBaseUrl(base_url);
-	results.setResultsUrl(base_url);
-    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);		  						  
+    if(!query.empty()) {
+		saveResultsToBackStack();
+	    string title = "Search: " + query;
+	    results.setTitle(title);
+	    updateTitle();
+	    string base_url = string(DOMAIN) + 
+	         "/?do=search&subaction=search&mode=simple&story=" + 
+	         to_cp1251(query);
+		results.setBaseUrl(base_url);
+		results.setResultsUrl(base_url);
+	    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	}		  						  
 }
 
 static void rbActorsClicked(GtkWidget *widget, gpointer data) {
