@@ -38,7 +38,7 @@ using namespace std;
 //Categories
 Categories categories;
 //Results
-Results results, prevResults;
+Results results;
 //Playlists
 Playlists playlists;
 //Actors
