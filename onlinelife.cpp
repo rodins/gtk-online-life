@@ -1049,9 +1049,15 @@ void savedRecovery() {
 static void btnPrevClicked( GtkWidget *widget,
                       gpointer   data )
 {   
-	// Save current results to forwardResultsStack
-	saveResultsPostion();
-	forwardResultsStack.push_back(results); 
+	// If results repeat button not displayed
+	if(!gtk_widget_get_visible(hbResultsError)) {
+		// Save current results to forwardResultsStack
+		saveResultsPostion();
+		forwardResultsStack.push_back(results); 
+	}else {
+		switchToIconView();
+	}
+	
 	// Display top results from backResultsStack
 	results = backResultsStack.back();
 	backResultsStack.pop_back();
@@ -1063,9 +1069,16 @@ static void btnPrevClicked( GtkWidget *widget,
 static void btnNextClicked( GtkWidget *widget,
                       gpointer   data)
 {   
-    // Save current results to backResultsStack
-    saveResultsPostion();
-    backResultsStack.push_back(results);
+	// If results repeat button not displayed
+	if(!gtk_widget_get_visible(hbResultsError)) {
+		// Save current results to backResultsStack
+        saveResultsPostion();
+        backResultsStack.push_back(results);
+	}else {
+		// If repeat button displayed
+	    switchToIconView();
+	}
+	
     // Display top result from forwardResultsStack
     results = forwardResultsStack.back();
     forwardResultsStack.pop_back();
