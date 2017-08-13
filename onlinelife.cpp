@@ -903,8 +903,6 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
         g_thread_pool_push(actorsThreadPool, (gpointer) href, NULL);
 	}else {
 		// Fetch playlists/playItem
-		//TODO: whether playlists title is used anywhere else
-		playlists.setTitle(string(resultTitle));
 		
 		// Set playlists title before playlists task
 		string title = PROG_NAME + " - " + string(resultTitle);

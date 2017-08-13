@@ -4,19 +4,10 @@
 
 class Playlists {
 	vector<Playlist> playlists;
-	string title;
 	public:
 	
 	vector<Playlist>& getPlaylists() {
 		return playlists;
-	}
-	
-	void setTitle(string t) {
-		title = t;
-	}
-	
-	string getTitle() {
-		return title;
 	}
 	
 	void parse(string json) {
