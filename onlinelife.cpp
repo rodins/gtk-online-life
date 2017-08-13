@@ -590,9 +590,7 @@ GtkTreeModel *getPlaylistsModel() {
 
 void displayPlaylists() {
 	switchToTreeView();
-	string title = PROG_NAME + " - " + playlists.getTitle();
-	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-	
+
 	GtkTreeModel *model;
 	if(playlists.getPlaylists().size() == 1 && playlists.getPlaylists()[0].get_title().empty()) {
 		//Display single playlist
@@ -697,7 +695,6 @@ void playlistsTask(gpointer args, gpointer args2) {
 			}else {
 				showResultsRepeat(FALSE);
 				setSensitiveItemsPlaylists();
-				//show_error_dialog();
 			}
 			gdk_threads_leave();
 		}else { //PlayItem found or nothing found
@@ -706,6 +703,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 			if(!playItem.get_comment().empty()) { // PlayItem found
 			    // get results list back
 			    switchToIconView();
+			    updateTitle();
 				processPlayItem(playItem); 
 			}else {
 				if(results.getTitle().find("Трейлеры") != string::npos) {
@@ -719,11 +717,11 @@ void playlistsTask(gpointer args, gpointer args2) {
 					gdk_threads_enter();
 					// get results list back
 			        switchToIconView();
+			        updateTitle();
 					processPlayItem(playlists.parse_play_item(json)); 
 				}else {
 					showResultsRepeat(FALSE);
 				    setSensitiveItemsPlaylists();
-				    //show_error_dialog();
 				}
 			}
 			gdk_threads_leave();
@@ -905,14 +903,13 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
         g_thread_pool_push(actorsThreadPool, (gpointer) href, NULL);
 	}else {
 		// Fetch playlists/playItem
+		//TODO: whether playlists title is used anywhere else
 		playlists.setTitle(string(resultTitle));
+		
+		// Set playlists title before playlists task
+		string title = PROG_NAME + " - " + string(resultTitle);
+	    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 	    g_thread_pool_push(playlistsThreadPool, href, NULL);
-	    
-	    /*gint count;
-		gint *indices = gtk_tree_path_get_indices_with_depth(path, &count);
-		if(indices != NULL) {
-			processResult(indices, count);
-		}*/
 	}
 	
 	g_free(resultTitle);
