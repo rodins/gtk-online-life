@@ -96,6 +96,7 @@ GThreadPool *actorsThreadPool;
 GThreadPool *playlistsThreadPool;
 
 string lastActorsHref;
+string lastPlaylistsHref;
 set<string> resultsThreadsLinks;
 
 /*string readFromFile(string filename) {
@@ -444,6 +445,7 @@ void resultsAppendTask(gpointer arg, gpointer arg1) {
 void resultsNewTask(gpointer arg, gpointer arg1) {
 	// On pre execute
 	gdk_threads_enter();
+	lastPlaylistsHref = "";
 	// Display spinner for new results
     showSpCenter(FALSE);
     string link = results.getResultsUrl();
@@ -661,8 +663,15 @@ string getHrefId(string &href) {
 
 void playlistsTask(gpointer args, gpointer args2) {
 	string href((char*)args);
-	g_free(args);
-    
+    gdk_threads_enter();
+    // Use lastPlaylistHref on repeat button click
+    if(href.empty()) { // repeat button
+		href = lastPlaylistsHref; //TODO: do not use global variable
+	}else { // click on results item
+		lastPlaylistsHref = href;
+		g_free(args); // free pointer memory only in this case
+	}
+    gdk_threads_leave();
 	string id = getHrefId(href);
 	if(id != "") {
 		string url = "http://dterod.com/js.php?id=" + id;
@@ -677,6 +686,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 		gdk_threads_leave();
 		
 		string js = HtmlString::getPage(url, referer);
+		//TODO Remove spaghetti code somehow (get_txt_link helper function)
 		string playlist_link = get_txt_link(js);
 		if(!playlist_link.empty()) { // Playlists found
 			string json = HtmlString::getPage(playlist_link);
@@ -685,15 +695,17 @@ void playlistsTask(gpointer args, gpointer args2) {
 			if(!playlists.getPlaylists().empty()) {
 				displayPlaylists();
 			}else {
-				show_error_dialog();
+				showResultsRepeat(FALSE);
+				setSensitiveItemsPlaylists();
+				//show_error_dialog();
 			}
 			gdk_threads_leave();
-		}else { //PlayItem found
+		}else { //PlayItem found or nothing found
 			gdk_threads_enter();
-			// get results list back
-			switchToIconView();
 			PlayItem playItem = playlists.parse_play_item(js);
-			if(!playItem.get_comment().empty()) {
+			if(!playItem.get_comment().empty()) { // PlayItem found
+			    // get results list back
+			    switchToIconView();
 				processPlayItem(playItem); 
 			}else {
 				if(results.getTitle().find("Трейлеры") != string::npos) {
@@ -705,9 +717,13 @@ void playlistsTask(gpointer args, gpointer args2) {
 		            referer = "http://dterod.com/player.php?trailer_id=" + trailerId;
 		            string json = HtmlString::getPage(url, referer);
 					gdk_threads_enter();
+					// get results list back
+			        switchToIconView();
 					processPlayItem(playlists.parse_play_item(json)); 
 				}else {
-				    show_error_dialog();
+					showResultsRepeat(FALSE);
+				    setSensitiveItemsPlaylists();
+				    //show_error_dialog();
 				}
 			}
 			gdk_threads_leave();
@@ -1176,7 +1192,14 @@ static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
 }
 
 static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
-	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	if(lastPlaylistsHref.empty()) {
+		// Update results
+		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	}else {
+		// Update playlists
+		// if sending empty string use global lastPlaylistHref
+		g_thread_pool_push(playlistsThreadPool, (gpointer)"", NULL);
+	}
 }
 
 int main( int   argc,
