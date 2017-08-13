@@ -1025,13 +1025,15 @@ void processCategories() {
 static void btnCategoriesClicked( GtkWidget *widget,
                       gpointer   data)
 {
-	if(!gtk_widget_get_visible(vbLeft)) {
+	if(!gtk_widget_get_visible(vbLeft)) { // Categories hidden
 		if(categories.getCategories().empty()) {
 			processCategories();
 		}else {
 			gtk_widget_set_visible(vbLeft, TRUE);
 			gtk_widget_set_visible(frLeftTop, TRUE);
 		}
+	}else { // Categories visible
+		gtk_widget_set_visible(vbLeft, FALSE);
 	}	
 }
 
