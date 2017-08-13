@@ -48,7 +48,7 @@ map <string, Actors> backActors;
 
 vector<Results> backResultsStack, forwardResultsStack;
 
-GtkWidget *frRightBottom, *frLeftTop;
+GtkWidget *frRightBottom;
 GtkWidget *lbInfo;
 GtkWidget *frRightTop, *frInfo;
 
@@ -978,7 +978,6 @@ void updateCategories() {
 
 void showSpCategories() {
 	gtk_widget_set_visible(vbLeft, TRUE);
-	gtk_widget_set_visible(frLeftTop, TRUE);
 	gtk_widget_set_visible(swLeftTop, FALSE);
 	gtk_widget_set_visible(hbCategoriesError, FALSE);
 	gtk_widget_set_visible(spCategories, TRUE);
@@ -987,7 +986,6 @@ void showSpCategories() {
 
 void showCategoriesError() {
 	gtk_widget_set_visible(vbLeft, TRUE);
-	gtk_widget_set_visible(frLeftTop, TRUE);
 	gtk_widget_set_visible(swLeftTop, FALSE);
 	gtk_widget_set_visible(hbCategoriesError, TRUE);
 	gtk_widget_set_visible(spCategories, FALSE);
@@ -1030,7 +1028,6 @@ static void btnCategoriesClicked( GtkWidget *widget,
 			processCategories();
 		}else {
 			gtk_widget_set_visible(vbLeft, TRUE);
-			gtk_widget_set_visible(frLeftTop, TRUE);
 		}
 	}else { // Categories visible
 		gtk_widget_set_visible(vbLeft, FALSE);
@@ -1206,7 +1203,6 @@ int main( int   argc,
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
     GtkWidget *swRightTop, *swRightBottom;
-    GtkWidget *vbLeftTop;
     GtkWidget *btnCategoriesError;
     GtkWidget *btnActorsError;
     GtkWidget *btnResultsError;
@@ -1397,7 +1393,7 @@ int main( int   argc,
     gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swRightBottom),
             GTK_SHADOW_ETCHED_IN);
     
-    vbLeft = gtk_vbox_new(TRUE, 1);
+    vbLeft = gtk_vbox_new(FALSE, 1);
     vbRight = gtk_vbox_new(FALSE, 1);
     hbCenter = gtk_hbox_new(FALSE, 1);
     
@@ -1411,23 +1407,21 @@ int main( int   argc,
     gtk_container_add(GTK_CONTAINER(swRightBottom), tvBackActors);
     
     // Frames
-    frLeftTop = gtk_frame_new("Categories");
     frRightTop = gtk_frame_new("Actors");
     frRightBottom = gtk_frame_new("Actors history");
     
     // Add categories spinner and error
-    vbLeftTop = gtk_vbox_new(FALSE, 1);
+    //vbLeft = gtk_vbox_new(FALSE, 1);
     hbCategoriesError = gtk_hbox_new(FALSE, 1); // for Repeat button normal size
     spCategories = gtk_spinner_new();
     btnCategoriesError = gtk_button_new_with_label("Repeat");
     g_signal_connect(btnCategoriesError, "clicked", 
         G_CALLBACK(btnCategoriesRepeatClicked), NULL);
     gtk_box_pack_start(GTK_BOX(hbCategoriesError), btnCategoriesError, TRUE, FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(vbLeftTop), swLeftTop, TRUE, TRUE, 1);
-    gtk_box_pack_start(GTK_BOX(vbLeftTop), spCategories, TRUE, FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(vbLeftTop), hbCategoriesError, TRUE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbLeft), swLeftTop, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbLeft), spCategories, TRUE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbLeft), hbCategoriesError, TRUE, FALSE, 1);
     
-    gtk_container_add(GTK_CONTAINER(frLeftTop), vbLeftTop);
     gtk_container_add(GTK_CONTAINER(frRightTop), swRightTop);
     gtk_container_add(GTK_CONTAINER(frRightBottom), swRightBottom);
     
@@ -1450,10 +1444,7 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbRight), spActors, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), hbActorsError, TRUE, FALSE, 1);
     gtk_widget_set_size_request(spActors, 32, 32);
-    
-    //vbLeft
-    gtk_box_pack_start(GTK_BOX(vbLeft), frLeftTop, TRUE, TRUE, 1);
-    
+        
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
     
@@ -1518,7 +1509,6 @@ int main( int   argc,
     gtk_widget_set_visible(vbRight, FALSE);
     
     gtk_widget_set_visible(swTree, FALSE);
-    gtk_widget_set_visible(frLeftTop, FALSE);
     gtk_widget_set_visible(frRightBottom, FALSE);
     
     gtk_widget_set_visible(spCenter, FALSE);
