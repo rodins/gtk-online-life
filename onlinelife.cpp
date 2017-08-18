@@ -442,6 +442,22 @@ void resultsAppendTask(gpointer arg, gpointer arg1) {
 	gdk_threads_leave();
 }
 
+void removeBackStackDuplicate() {
+	// Linear search for title
+	int eraseIndex = -1;
+	// If back stack has title, remove results with it.
+	for(unsigned i = 0; i < backResultsStack.size(); i++) {
+		if(backResultsStack[i].getTitle() == results.getTitle()) {
+			eraseIndex = i;
+			break;
+		}
+	}
+	
+	if(eraseIndex != -1) {
+		backResultsStack.erase(backResultsStack.begin() + eraseIndex);
+	}
+}
+
 void resultsNewTask(gpointer arg, gpointer arg1) {
 	// On pre execute
 	gdk_threads_enter();
@@ -461,6 +477,8 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 		//TODO: maybe I need to clear it while saving....
 		// clear forward results stack on fetching new results
 		forwardResultsStack.clear();
+		
+		removeBackStackDuplicate();
 		
 		// replace default url with link
 		results.setResultsUrl(link);
@@ -491,29 +509,11 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	gdk_threads_leave();
 }
 
-void removeBackDuplicate() {
-	// Linear search for title
-	int eraseIndex = -1;
-	// If back stack has title, remove results with it.
-	for(unsigned i = 0; i < backResultsStack.size(); i++) {
-		if(backResultsStack[i].getTitle() == results.getTitle()) {
-			eraseIndex = i;
-			break;
-		}
-	}
-	
-	if(eraseIndex != -1) {
-		backResultsStack.erase(backResultsStack.begin() + eraseIndex);
-	}
-}
-
 void saveResultsToBackStack() {
 	// Save position and copy to save variable
 	if(!results.getTitle().empty()) {
-		removeBackDuplicate();
-		
 		saveResultsPostion();
-	    backResultsStack.push_back(results);
+        backResultsStack.push_back(results);
 	}
 }
 
