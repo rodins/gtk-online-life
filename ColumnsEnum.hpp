@@ -5,6 +5,7 @@ enum {
 	TITLE_COLUMN,
 	NUM_COLS
 };
+
 // For iconView and results model
 enum {
 	ICON_IMAGE_COLUMN,
@@ -12,4 +13,12 @@ enum {
 	ICON_HREF,
 	ICON_IMAGE_LINK,
 	ICON_NUM_COLS
+};
+
+// For categories model
+enum {
+	CATEGORY_IMAGE_COLUMN,
+	CATEGORY_TITLE_COLUMN,
+	CATEGORY_HREF_COLUMN,
+	CATEGORY_NUM_COLS
 };
