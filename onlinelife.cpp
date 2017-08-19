@@ -876,7 +876,31 @@ IndicesCount getIndicesCount(GtkWidget *widget) {
 	return inCount;
 }
 
-void categoriesClicked(GtkWidget *widget, gpointer data) {
+void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
+	// Get model from tree view
+	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
+	
+	// Get iter from path
+	GtkTreeIter iter;
+	gtk_tree_model_get_iter(model, &iter, path);
+	
+	// Get title and link values from iter
+	gchar *title = NULL;
+	gchar *link = NULL;
+	gtk_tree_model_get(model,
+	                   &iter, 
+	                   CATEGORY_TITLE_COLUMN, 
+	                   &title,
+	                   CATEGORY_HREF_COLUMN,
+	                   &link, 
+	                   -1);
+	
+	g_print("Title: %s\n", title);
+	g_print("Link: %s\n", link);
+	
+	g_free(title);
+	g_free(link);
+	
 	IndicesCount inCount = getIndicesCount(widget);
 	if(inCount.indices != NULL) {
 		processCategory(inCount.indices, inCount.count);
