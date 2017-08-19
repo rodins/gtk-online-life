@@ -516,32 +516,6 @@ void saveResultsToBackStack() {
 	}
 }
 
-void processCategory(gint *indices, gint count) {//move to results
-    saveResultsToBackStack();
-	if(count == 1) { //Node
-		gint i = indices[0];
-		string title = categories.getCategories()[i].get_title();
-		results.setTitle(title);
-		updateTitle();
-		results.setResultsUrl(
-		    categories.getCategories()[i].get_link()
-		);
-		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
-	}else if(count == 2) { //Leaf
-		gint i = indices[0];
-		gint j = indices[1];
-		string title = categories.getCategories()[i].get_title() + " - " 
-		      + categories.getCategories()[i].get_subctgs()[j].get_title();
-		results.setTitle(title);
-		updateTitle();
-		results.setResultsUrl(
-		    categories.getCategories()[i].get_subctgs()[j].get_link()
-		);
-		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
-	}
-	
-}
-
 string get_txt_link(string page) {
 	string begin = " {";
 	string end = "\"};";
@@ -894,16 +868,14 @@ void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
 	                   &link, 
 	                   -1);
 	
-	g_print("Title: %s\n", title);
-	g_print("Link: %s\n", link);
+	saveResultsToBackStack();
+	results.setTitle(title);
+	updateTitle();
+	results.setResultsUrl(link);
+	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 	
 	g_free(title);
 	g_free(link);
-	
-	IndicesCount inCount = getIndicesCount(widget);
-	if(inCount.indices != NULL) {
-		processCategory(inCount.indices, inCount.count);
-	}
 }
 
 void actorsClicked(GtkWidget *widget, gpointer data) {
