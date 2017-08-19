@@ -13,8 +13,9 @@ class CategoryItem {
 	}
 	
 	void set_link(string link) {
-		if(link.find(WDOMAIN) == string::npos) {
-			_link = WDOMAIN + link;
+		string domain = "http://www.online-life.club";
+		if(link.find(domain) == string::npos) {
+			_link = domain + link;
 		}else {
 			_link = link;
 		}

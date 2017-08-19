@@ -16,7 +16,6 @@ bool curlCategoriesStop, curlResultsStop, curlActorsStop, curlStop;
 int taskCount = 0;
 
 #define DOMAIN "http://online-life.club"
-#define WDOMAIN "http://www.online-life.club/"
 
 #include "Converter.hpp"
 #include "DisplayMode.hpp"
