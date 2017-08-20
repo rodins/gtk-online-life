@@ -3,7 +3,28 @@
 
 class Categories {
 	vector<CategoryItem> results;
+	
+	GdkPixbuf *categoryIcon;
+	GdkPixbuf *itemIcon;
+	
+	GtkTreeStore *treestore;
+	GtkTreeIter topLevel, child;
+	
+	string domain;
 	public:
+	
+	void init() {
+		categoryIcon = create_pixbuf("folder_16.png");
+	    itemIcon = create_pixbuf("link_16.png");
+	    
+	    treestore = gtk_tree_store_new(
+	              CATEGORY_NUM_COLS, 
+	              GDK_TYPE_PIXBUF,
+				  G_TYPE_STRING, 
+				  G_TYPE_STRING);
+				  
+	    domain = "http://www.online-life.club"; 
+	}
 	
 	string getTitle() {
 		return string("Online Life - Categories");
@@ -11,6 +32,10 @@ class Categories {
 	
 	vector<CategoryItem>& getCategories() {
 		return results;
+	}
+	
+	GtkTreeModel *getModel() {
+		return GTK_TREE_MODEL(treestore);		
 	}
 	
 	void parse_categories(string page) {
@@ -24,13 +49,22 @@ class Categories {
 			main.set_link("");
 			main.set_title("Главная");
 			
+			// Add to top level
+			addToTopLevel("Главная", domain);
+			
 			// Find nodrop items
+			// Find new, popular, best
 			size_t nodrop_begin = nav.find("<li class=\"pull-right");
 			size_t nodrop_end = nav.find("</li>", nodrop_begin+1);
 			while(nodrop_begin != string::npos && nodrop_end != string::npos) {
 				size_t nodrop_length = nodrop_end - nodrop_begin;
 				string nodrop = nav.substr(nodrop_begin, nodrop_length);
 				main.push_back(parse_anchor(nodrop));
+				
+				// Add to child
+				parseAnchorToChild(nodrop);
+				
+				// Increment
 				nodrop_begin = nav.find("<li class=\"pull-right", nodrop_end+1);
 			    nodrop_end = nav.find("</li>", nodrop_begin+1);
 			}
@@ -40,9 +74,14 @@ class Categories {
 			if(trailer_begin != string::npos && trailer_end != string::npos) {
 			    size_t trailer_length = trailer_end - trailer_begin;
 			    string trailer = nav.substr(trailer_begin, trailer_length+4);
-			    main.push_back(parse_anchor(trailer));	
+			    main.push_back(parse_anchor(trailer));
+			    
+			    // Add to child
+			    parseAnchorToChild(trailer);	
 			}
 			results.push_back(main);
+			
+			
 			// Find drop items
 			size_t drop_begin = nav.find("<li class=\"drop\">");
 			size_t drop_end = nav.find("</ul>", drop_begin+1);
@@ -76,14 +115,21 @@ class Categories {
 							string title = anchor.substr(title_begin+1);
 							if(first) {
 								categoryItem.set_title(to_utf8(title));
+								
+								// Add to top level
+				                addToTopLevel(to_utf8(title), addDomainTo(link));
+				
 								first = false;
 							}else {
 								subcategoryItem.set_title(to_utf8(title));
 								categoryItem.push_back(subcategoryItem);
+								
+								// Add to child
+								addToChild(to_utf8(title), addDomainTo(link));
 							}
 						}
 					}
-					
+					// increment
 					anchor_begin = drop.find(begin, anchor_end+1);
 			        anchor_end = drop.find(end, anchor_begin+1);
 				}
@@ -96,6 +142,32 @@ class Categories {
 	}
 	
 	private:
+	
+	void addToChild(string title, string link) {
+		gtk_tree_store_append(treestore, &child, &topLevel);
+		gtk_tree_store_set(treestore,
+		                   &child,
+		                   CATEGORY_IMAGE_COLUMN, 
+		                   itemIcon, 
+		                   CATEGORY_TITLE_COLUMN, 
+		                   title.c_str(),
+		                   CATEGORY_HREF_COLUMN,
+		                   link.c_str(),
+		                   -1);
+	}
+	
+	void addToTopLevel(string title, string link) {
+		gtk_tree_store_append(treestore, &topLevel, NULL);
+		gtk_tree_store_set(treestore,
+		                   &topLevel,
+		                   CATEGORY_IMAGE_COLUMN,
+		                   categoryIcon,
+		                   CATEGORY_TITLE_COLUMN,
+		                   title.c_str(),
+		                   CATEGORY_HREF_COLUMN,
+		                   link.c_str(),
+		                    -1);
+	}
 	
 	CategoryItem parse_anchor(string anchor) {
 		CategoryItem item;
@@ -114,5 +186,31 @@ class Categories {
 			}
 		}
 		return item;
+	}
+	
+	void parseAnchorToChild(string anchor) {
+		// Parse link
+		size_t link_begin = anchor.find("<a href=");
+		size_t link_end = anchor.find("\"", link_begin+10);
+		if(link_begin != string::npos && link_end != string::npos) {
+			size_t link_length = link_end - link_begin;
+			string link = anchor.substr(link_begin+9, link_length-9);
+			// Parse title
+			size_t title_begin = anchor.find(">", link_end);
+			size_t title_end = anchor.find("</a>");
+			if(title_end != string::npos) {
+				size_t title_length = title_end - title_begin;
+				string title = anchor.substr(title_begin+1, title_length-1);
+				addToChild(to_utf8(title), addDomainTo(link));
+			}
+		}
+	}
+	
+	string addDomainTo(string link) {
+		if(link.find(domain) == string::npos) {
+			return domain + link;
+		}else {
+			return link;
+		}
 	}
 };

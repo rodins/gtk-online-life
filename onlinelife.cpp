@@ -1061,6 +1061,7 @@ static void btnCategoriesClicked( GtkWidget *widget,
 {
 	if(!gtk_widget_get_visible(vbLeft)) { // Categories hidden
 		if(categories.getCategories().empty()) {
+			categories.init();
 			processCategories();
 		}else {
 			gtk_widget_set_visible(vbLeft, TRUE);
