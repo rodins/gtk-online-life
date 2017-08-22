@@ -2,8 +2,6 @@
 #include "CategoryItem.hpp"
 
 class Categories {
-	vector<CategoryItem> results;
-	
 	GdkPixbuf *categoryIcon;
 	GdkPixbuf *itemIcon;
 	
@@ -11,7 +9,12 @@ class Categories {
 	GtkTreeIter topLevel, child;
 	
 	string domain;
+	int count;
 	public:
+	
+	Categories() {
+		count = 0;
+	}
 	
 	void init() {
 		categoryIcon = create_pixbuf("folder_16.png");
@@ -26,12 +29,12 @@ class Categories {
 	    domain = "http://www.online-life.club"; 
 	}
 	
-	string getTitle() {
-		return string("Online Life - Categories");
+	int getCount() {
+		return count;
 	}
 	
-	vector<CategoryItem>& getCategories() {
-		return results;
+	string getTitle() {
+		return string("Online Life - Categories");
 	}
 	
 	GtkTreeModel *getModel() {
@@ -39,15 +42,11 @@ class Categories {
 	}
 	
 	void parse_categories(string page) {
-		results.clear();
 		size_t nav_begin = page.find("<div class=\"nav\">");
 		size_t nav_end = page.find("</div>", nav_begin+1);
 		if(nav_begin != string::npos && nav_end != string::npos) {
 			size_t nav_length = nav_end - nav_begin + 6; 
 			string nav = page.substr(nav_begin, nav_length);
-			CategoryItem main;
-			main.set_link("");
-			main.set_title("Главная");
 			
 			// Add to top level
 			addToTopLevel("Главная", domain);
@@ -59,7 +58,6 @@ class Categories {
 			while(nodrop_begin != string::npos && nodrop_end != string::npos) {
 				size_t nodrop_length = nodrop_end - nodrop_begin;
 				string nodrop = nav.substr(nodrop_begin, nodrop_length);
-				main.push_back(parse_anchor(nodrop));
 				
 				// Add to child
 				parseAnchorToChild(nodrop);
@@ -74,13 +72,10 @@ class Categories {
 			if(trailer_begin != string::npos && trailer_end != string::npos) {
 			    size_t trailer_length = trailer_end - trailer_begin;
 			    string trailer = nav.substr(trailer_begin, trailer_length+4);
-			    main.push_back(parse_anchor(trailer));
 			    
 			    // Add to child
 			    parseAnchorToChild(trailer);	
 			}
-			results.push_back(main);
-			
 			
 			// Find drop items
 			size_t drop_begin = nav.find("<li class=\"drop\">");
@@ -93,37 +88,25 @@ class Categories {
 				size_t anchor_begin = drop.find(begin);
 				size_t anchor_end = drop.find(end, anchor_begin+1);
 				bool first = true;
-				CategoryItem categoryItem;
 				while(anchor_begin != string::npos && anchor_end != string::npos) {
 					size_t anchor_length = anchor_end - anchor_begin;
 					string anchor = drop.substr(anchor_begin, anchor_length);
 					
 					size_t link_begin = anchor.find("\"");
 					size_t link_end = anchor.find("\"", link_begin+1);
-					CategoryItem subcategoryItem;
 					if(link_begin != string::npos && link_end != string::npos) {
 						size_t link_length = link_end - link_begin;
 						string link = anchor.substr(link_begin+1, link_length-1);
-						if(first) {
-							categoryItem.set_link(link);
-						}else {
-							subcategoryItem.set_link(link);
-						}
 						
 						size_t title_begin = anchor.find(">");
 						if(title_begin != string::npos) {
 							string title = anchor.substr(title_begin+1);
 							if(first) {
-								categoryItem.set_title(to_utf8(title));
-								
 								// Add to top level
 				                addToTopLevel(to_utf8(title), addDomainTo(link));
 				
 								first = false;
 							}else {
-								subcategoryItem.set_title(to_utf8(title));
-								categoryItem.push_back(subcategoryItem);
-								
 								// Add to child
 								addToChild(to_utf8(title), addDomainTo(link));
 							}
@@ -133,7 +116,6 @@ class Categories {
 					anchor_begin = drop.find(begin, anchor_end+1);
 			        anchor_end = drop.find(end, anchor_begin+1);
 				}
-				results.push_back(categoryItem);
 				
 				drop_begin = nav.find("<li class=\"drop\">", drop_end+1);
 			    drop_end = nav.find("</ul>", drop_begin+1);
@@ -154,6 +136,7 @@ class Categories {
 		                   CATEGORY_HREF_COLUMN,
 		                   link.c_str(),
 		                   -1);
+		count++;
 	}
 	
 	void addToTopLevel(string title, string link) {
@@ -167,25 +150,6 @@ class Categories {
 		                   CATEGORY_HREF_COLUMN,
 		                   link.c_str(),
 		                    -1);
-	}
-	
-	CategoryItem parse_anchor(string anchor) {
-		CategoryItem item;
-		size_t link_begin = anchor.find("<a href=");
-		size_t link_end = anchor.find("\"", link_begin+10);
-		if(link_begin != string::npos && link_end != string::npos) {
-			size_t link_length = link_end - link_begin;
-			string link = anchor.substr(link_begin+9, link_length-9);
-			item.set_link(link);
-			size_t title_begin = anchor.find(">", link_end);
-			size_t title_end = anchor.find("</a>");
-			if(title_end != string::npos) {
-				size_t title_length = title_end - title_begin;
-				string title = anchor.substr(title_begin+1, title_length-1);
-				item.set_title(to_utf8(title));
-			}
-		}
-		return item;
 	}
 	
 	void parseAnchorToChild(string anchor) {

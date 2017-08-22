@@ -952,54 +952,6 @@ GtkWidget *createTreeView(void) {
 	return view;
 }
 
-GtkTreeModel *getCategoriesModel() {
-	GtkTreeStore *treestore;
-	GtkTreeIter topLevel, child;
-	
-	treestore = gtk_tree_store_new(
-	              CATEGORY_NUM_COLS, 
-	              GDK_TYPE_PIXBUF,
-				  G_TYPE_STRING, 
-				  G_TYPE_STRING);
-	
-	GdkPixbuf *categoryIcon = create_pixbuf("folder_16.png");
-	GdkPixbuf *itemIcon = create_pixbuf("link_16.png"); 
-	
-	for(unsigned i = 0; i < categories.getCategories().size(); i++) {
-		gtk_tree_store_append(treestore, &topLevel, NULL);
-		gtk_tree_store_set(treestore,
-		                   &topLevel,
-		                   CATEGORY_IMAGE_COLUMN,
-		                   categoryIcon,
-		                   CATEGORY_TITLE_COLUMN,
-		                   categories.getCategories()[i].get_title().c_str(),
-		                   CATEGORY_HREF_COLUMN,
-		                   categories.getCategories()[i].get_link().c_str(),
-		                    -1);
-		
-		for(unsigned j = 0; j < categories.getCategories()[i].get_subctgs().size(); j++) {
-			gtk_tree_store_append(treestore, &child, &topLevel);
-			gtk_tree_store_set(treestore,
-			                   &child,
-			                   CATEGORY_IMAGE_COLUMN, 
-			                   itemIcon, 
-			                   CATEGORY_TITLE_COLUMN, 
-			                   categories
-			                       .getCategories()[i]
-			                       .get_subctgs()[j]
-			                       .get_title().c_str(),
-			                   CATEGORY_HREF_COLUMN,
-			                   categories
-			                       .getCategories()[i]
-			                       .get_subctgs()[j]
-			                       .get_link().c_str(),
-			                   -1);
-		}
-	}
-	
-	return GTK_TREE_MODEL(treestore);
-}
-
 void displayCategories() {
 	gtk_widget_set_visible(hbCategoriesError, FALSE);
 	gtk_widget_set_visible(spCategories, FALSE);
@@ -1007,7 +959,7 @@ void displayCategories() {
 	gtk_widget_set_visible(swLeftTop, TRUE);
 	
 	GtkTreeModel *model;
-	model = getCategoriesModel();
+	model = categories.getModel();
     gtk_tree_view_set_model(GTK_TREE_VIEW(tvCategories), model);
 	g_object_unref(model);
 }
@@ -1040,7 +992,7 @@ gpointer categoriesTask(gpointer arg) {
 	string page = HtmlString::getCategoriesPage();
 	gdk_threads_enter();
 	categories.parse_categories(page);
-	if(!categories.getCategories().empty()) {
+	if(categories.getCount() > 0) {
 		displayCategories();
 	}else {
 		showCategoriesError();
@@ -1060,7 +1012,7 @@ static void btnCategoriesClicked( GtkWidget *widget,
                       gpointer   data)
 {
 	if(!gtk_widget_get_visible(vbLeft)) { // Categories hidden
-		if(categories.getCategories().empty()) {
+		if(categories.getCount() == 0) {
 			categories.init();
 			processCategories();
 		}else {
