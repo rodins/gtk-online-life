@@ -614,7 +614,7 @@ void processPlayItem(PlayItem item) {
 		    string command = "xterm -e wget -P ~/Download -c " + item.get_download() + " &";
 	        system(command.c_str());
 		}else if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay))) {
-		    string command = "xterm -e " + detectPlayer() + item.get_file() + " &";
+		    string command = detectPlayer() + item.get_file() + " &";
 	        system(command.c_str());
 		}	
 	}
