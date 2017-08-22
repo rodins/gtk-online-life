@@ -1,5 +1,4 @@
 //Categories.hpp
-#include "CategoryItem.hpp"
 
 class Categories {
 	GdkPixbuf *categoryIcon;
