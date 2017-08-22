@@ -97,6 +97,7 @@ GThreadPool *playlistsThreadPool;
 string lastActorsHref;
 string lastPlaylistsHref;
 set<string> resultsThreadsLinks;
+set<int> imageIndexes;
 
 /*string readFromFile(string filename) {
 	ifstream in(filename.c_str());
@@ -202,7 +203,7 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 	return realsize;
 }
 
-void getPixbufFromUrl(string url, GtkTreeIter iter) {
+void getPixbufFromUrl(string url, GtkTreeIter iter, int index) {
     
 	CURL *curl_handle;
 	CURLcode res;
@@ -240,11 +241,17 @@ void getPixbufFromUrl(string url, GtkTreeIter iter) {
 		gdk_pixbuf_loader_close(loader, NULL); //close in case of error
 		fprintf(stderr, "curl_easy_perform() failed: %s\n",
 				curl_easy_strerror(res));
+		// In case of error remove index from imageIndexes 
+        // to have a chance to reload image
+        imageIndexes.erase(index);
 	}else { 
         GError *error = NULL;
 		gboolean ok = gdk_pixbuf_loader_close(loader, &error);
 		if(!ok) {
 	        fprintf(stderr, "On close: %s\n", error->message);
+	        // In case of error remove index from imageIndexes 
+	        // to have a chance to reload image
+	        imageIndexes.erase(index);
             g_error_free(error);
 		}else {
 			// Setting new fully downloaded image here
@@ -293,7 +300,7 @@ void imageDownloadTask(gpointer arg, gpointer arg1) {
         gdk_threads_leave();
         
 	    if(count == 0) { 
-			getPixbufFromUrl(link, iter);
+			getPixbufFromUrl(link, iter, index);
 		}
 	}
 }
@@ -307,8 +314,6 @@ void saveResultsPostion() {
 	    gtk_tree_path_free(path2);
 	}
 }
-
-set<int> imageIndexes;
 
 void displayRange() {
 	GtkTreePath *path1, *path2;
