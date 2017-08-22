@@ -21,7 +21,7 @@ class Categories {
 	    itemIcon = create_pixbuf("link_16.png");
 	    
 	    treestore = gtk_tree_store_new(
-	              CATEGORY_NUM_COLS, 
+	              TREE_NUM_COLS, 
 	              GDK_TYPE_PIXBUF,
 				  G_TYPE_STRING, 
 				  G_TYPE_STRING);
@@ -129,11 +129,11 @@ class Categories {
 		gtk_tree_store_append(treestore, &child, &topLevel);
 		gtk_tree_store_set(treestore,
 		                   &child,
-		                   CATEGORY_IMAGE_COLUMN, 
+		                   TREE_IMAGE_COLUMN, 
 		                   itemIcon, 
-		                   CATEGORY_TITLE_COLUMN, 
+		                   TREE_TITLE_COLUMN, 
 		                   title.c_str(),
-		                   CATEGORY_HREF_COLUMN,
+		                   TREE_HREF_COLUMN,
 		                   link.c_str(),
 		                   -1);
 		count++;
@@ -143,11 +143,11 @@ class Categories {
 		gtk_tree_store_append(treestore, &topLevel, NULL);
 		gtk_tree_store_set(treestore,
 		                   &topLevel,
-		                   CATEGORY_IMAGE_COLUMN,
+		                   TREE_IMAGE_COLUMN,
 		                   categoryIcon,
-		                   CATEGORY_TITLE_COLUMN,
+		                   TREE_TITLE_COLUMN,
 		                   title.c_str(),
-		                   CATEGORY_HREF_COLUMN,
+		                   TREE_HREF_COLUMN,
 		                   link.c_str(),
 		                    -1);
 	}

@@ -891,9 +891,9 @@ void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
 	gchar *link = NULL;
 	gtk_tree_model_get(model,
 	                   &iter, 
-	                   CATEGORY_TITLE_COLUMN, 
+	                   TREE_TITLE_COLUMN, 
 	                   &title,
-	                   CATEGORY_HREF_COLUMN,
+	                   TREE_HREF_COLUMN,
 	                   &link, 
 	                   -1);
 	
