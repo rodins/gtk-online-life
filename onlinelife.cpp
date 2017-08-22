@@ -599,8 +599,6 @@ GtkTreeModel *getPlaylistsModel() {
 		                   playlists
 		                       .getPlaylists()[i]
 		                       .get_title().c_str(),
-		                   PLAYLIST_FILE_COLUMN,
-		                   "",// Empty link in a node 
 		                   -1);
 		for(unsigned j=0; j<playlists.getPlaylists()[i].get_items().size(); j++) {
 			gtk_tree_store_append(treestore, &child, &topLevel);
@@ -688,16 +686,13 @@ void processPlayItem(PlayItem item) {
 	}
 }
 
-void processPlayItem(gint *indices, gint count) {
-	if(count == 1) { //Node or List
-		gint i = indices[0];
-		if(playlists.getPlaylists().size() == 1) { //one playlist only
-		    processPlayItem(playlists.getPlaylists()[0].get_items()[i]);	
-		}
-	}else if(count == 2) { //Leaf
-		gint i = indices[0];
-		gint j = indices[1];
-		processPlayItem(playlists.getPlaylists()[i].get_items()[j]);
+void playOrDownload(string file, string download) {
+	if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
+	    string command = detectTerminal() + "wget -P ~/Download -c " + download + " &";
+        system(command.c_str());
+	}else if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay))) {
+	    string command = detectPlayer() + file + " &";
+        system(command.c_str());
 	}
 }
 
@@ -965,11 +960,35 @@ void actorsClicked(GtkWidget *widget, gpointer data) {
 	}
 }
 
-void playlistClicked(GtkWidget *widget, gpointer statusbar) {
-    IndicesCount inCount = getIndicesCount(widget);
-	if(inCount.indices != NULL) {
-		processPlayItem(inCount.indices, inCount.count);
+void playlistClicked(GtkWidget *widget, GtkTreePath *path, gpointer statusbar) {
+	// Get model from tree view
+	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
+	
+	// Get iter from path
+	GtkTreeIter iter;
+	gtk_tree_model_get_iter(model, &iter, path);
+	
+	// Get title and link values from iter
+	gchar *comment = NULL;
+	gchar *file = NULL;
+	gchar *download = NULL;
+	gtk_tree_model_get(model,
+	                   &iter, 
+	                   PLAYLIST_COMMENT_COLUMN, 
+	                   &comment,
+	                   PLAYLIST_FILE_COLUMN,
+	                   &file, 
+	                   PLAYLIST_DOWNLOAD_COLUMN,
+	                   &download,
+	                   -1);
+	
+	if(file != NULL) {
+		playOrDownload(file, download);
 	}
+	
+	g_free(comment);
+	g_free(file);
+	g_free(download);                   
 }
 
 void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
