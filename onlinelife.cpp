@@ -269,7 +269,7 @@ void getPixbufFromUrl(string url, GtkTreeIter iter) {
 }
 
 void imageDownloadTask(gpointer arg, gpointer arg1) {
-	gint index = (gint)arg;
+	gint index = (gint)(long)arg;
 	index--;
 	
 	gdk_threads_enter();
@@ -323,7 +323,7 @@ void displayRange() {
 		    // Downloading images for displayed items
 			for(int i = indexDisplayFirst; i <= indexDisplayLast; i++) {
 				g_thread_pool_push(imagesThreadPool, 
-				    (gpointer) (i+1),
+				    (gpointer)(long)(i+1),
 				     NULL);
 			}		
 		}
