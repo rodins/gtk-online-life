@@ -308,25 +308,25 @@ void saveResultsPostion() {
 	}
 }
 
+set<int> imageIndexes;
+
 void displayRange() {
 	GtkTreePath *path1, *path2;
-	static gint prevIndexDisplayFirst = -1, prevIndexDisplayLast = -1;
 	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(iconView), &path1, &path2)) {
 		gint *indices1 = gtk_tree_path_get_indices(path1);
 		gint *indices2 = gtk_tree_path_get_indices(path2);
 		gint indexDisplayFirst = indices1[0];
 		gint indexDisplayLast = indices2[0];
 		
-		if (prevIndexDisplayFirst != indexDisplayFirst &&
-		    prevIndexDisplayLast != indexDisplayLast) {
-		    
-		    // Downloading images for displayed items
-			for(int i = indexDisplayFirst; i <= indexDisplayLast; i++) {
+	    // Downloading images for displayed items
+		for(int i = indexDisplayFirst; i <= indexDisplayLast; i++) {
+			if(imageIndexes.count(i) == 0) {
+				imageIndexes.insert(i);
 				g_thread_pool_push(imagesThreadPool, 
 				    (gpointer)(long)(i+1),
 				     NULL);
-			}		
-		}
+			}	
+		}		
 		
 		gtk_tree_path_free(path1);
 		gtk_tree_path_free(path2);
@@ -460,6 +460,10 @@ void removeBackStackDuplicate() {
 void resultsNewTask(gpointer arg, gpointer arg1) {
 	// On pre execute
 	gdk_threads_enter();
+	
+	// New images for new indexes will be downloaded
+    imageIndexes.clear();
+    
 	lastPlaylistsHref = "";
 	// Display spinner for new results
     showSpCenter(FALSE);
@@ -1064,6 +1068,9 @@ void savedRecovery() {
 	// Clear results links set if not paging
     // (do not allow next page thread to be called twice)
     resultsThreadsLinks.clear(); 
+    
+    // New images for new indexes will be downloaded
+    imageIndexes.clear();
     
 	// Update iconView with history results
 	results.setModel();
