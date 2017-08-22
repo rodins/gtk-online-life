@@ -596,13 +596,25 @@ void displayPlaylists() {
 	setSensitiveItemsPlaylists();
 }
 
+string detectPlayer() {
+	// TODO: add other players
+	// TODO: add selection of players if few is installed
+	if(system("which mplayer") == 0) {
+		return "mplayer -cache 2048 ";
+	}
+	if(system("which mpv") == 0) {
+		return "mpv ";
+	}
+	return "";
+}
+
 void processPlayItem(PlayItem item) {
 	if(!item.get_comment().empty()) {
 	    if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
 		    string command = "xterm -e wget -P ~/Download -c " + item.get_download() + " &";
 	        system(command.c_str());
 		}else if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay))) {
-		    string command = "xterm -e mplayer -cache 2048 " + item.get_file() + " &";
+		    string command = "xterm -e " + detectPlayer() + item.get_file() + " &";
 	        system(command.c_str());
 		}	
 	}
