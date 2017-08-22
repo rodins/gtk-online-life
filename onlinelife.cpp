@@ -543,11 +543,34 @@ GtkTreeModel *getPlaylistModel() {
     
 	GdkPixbuf *item = create_pixbuf("link_16.png");
     
-    store = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);
+    store = gtk_list_store_new(PLAYLIST_NUM_COLS,
+                               GDK_TYPE_PIXBUF,
+                               G_TYPE_STRING,
+                               G_TYPE_STRING,
+                               G_TYPE_STRING);
+                               
     for(unsigned i=0; i<playlists.getPlaylists()[0].get_items().size(); i++) {
 		gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter, IMAGE_COLUMN, item, TITLE_COLUMN,
-             playlists.getPlaylists()[0].get_items()[i].get_comment().c_str(), -1);
+        gtk_list_store_set(store,
+                           &iter,
+                           PLAYLIST_IMAGE_COLUMN, 
+                           item, 
+                           PLAYLIST_COMMENT_COLUMN,
+                           playlists
+                               .getPlaylists()[0]
+                               .get_items()[i]
+                               .get_comment().c_str(), 
+                           PLAYLIST_FILE_COLUMN,
+                           playlists
+                               .getPlaylists()[0]
+                               .get_items()[i]
+                               .get_file().c_str(),
+                           PLAYLIST_DOWNLOAD_COLUMN,
+                           playlists
+                               .getPlaylists()[0]
+                               .get_items()[i]
+                               .get_download().c_str(),
+                           -1);
 	}
     
     return GTK_TREE_MODEL(store);
@@ -557,22 +580,50 @@ GtkTreeModel *getPlaylistsModel() {
 	GtkTreeStore *treestore;
 	GtkTreeIter topLevel, child;
 	
-	treestore = gtk_tree_store_new(NUM_COLS, GDK_TYPE_PIXBUF,
-				  G_TYPE_STRING);
+	treestore = gtk_tree_store_new(PLAYLIST_NUM_COLS, 
+	                               GDK_TYPE_PIXBUF,
+				                   G_TYPE_STRING,
+				                   G_TYPE_STRING,
+				                   G_TYPE_STRING);
     
     GdkPixbuf *category = create_pixbuf("folder_16.png");
 	GdkPixbuf *item = create_pixbuf("link_16.png");
 	
 	for(unsigned i=0; i<playlists.getPlaylists().size(); i++) {
 		gtk_tree_store_append(treestore, &topLevel, NULL);
-		gtk_tree_store_set(treestore, &topLevel,
-		    IMAGE_COLUMN, category, TITLE_COLUMN,
-		    playlists.getPlaylists()[i].get_title().c_str(), -1);
+		gtk_tree_store_set(treestore, 
+		                   &topLevel,
+		                   PLAYLIST_IMAGE_COLUMN, 
+		                   category, 
+		                   PLAYLIST_COMMENT_COLUMN,
+		                   playlists
+		                       .getPlaylists()[i]
+		                       .get_title().c_str(),
+		                   PLAYLIST_FILE_COLUMN,
+		                   "",// Empty link in a node 
+		                   -1);
 		for(unsigned j=0; j<playlists.getPlaylists()[i].get_items().size(); j++) {
 			gtk_tree_store_append(treestore, &child, &topLevel);
-			gtk_tree_store_set(treestore, &child,
-			    IMAGE_COLUMN, item, TITLE_COLUMN, 
-			    playlists.getPlaylists()[i].get_items()[j].get_comment().c_str(), -1);
+			gtk_tree_store_set(treestore, 
+			                   &child,
+			                   PLAYLIST_IMAGE_COLUMN, 
+			                   item, 
+			                   PLAYLIST_COMMENT_COLUMN, 
+			                   playlists
+			                       .getPlaylists()[i]
+			                       .get_items()[j]
+			                       .get_comment().c_str(),
+			                   PLAYLIST_FILE_COLUMN,
+			                   playlists
+			                       .getPlaylists()[i]
+			                       .get_items()[j]
+			                       .get_file().c_str(),
+			                   PLAYLIST_DOWNLOAD_COLUMN,
+			                   playlists
+			                       .getPlaylists()[i]
+			                       .get_items()[j]
+			                       .get_download().c_str(),
+			                  -1);
 		}
 	}
 	
