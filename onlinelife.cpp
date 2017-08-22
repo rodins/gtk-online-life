@@ -605,13 +605,30 @@ string detectPlayer() {
 	if(system("which mpv") == 0) {
 		return "mpv ";
 	}
+	if(system("which totem") == 0) {
+		return "totem ";
+	}
+	return "";
+}
+
+string detectTerminal() {
+	if(system("which xterm") == 0) {
+		return "xterm -e ";
+	}
+	if(system("which urxvt") == 0) {
+		return "urxvt -e ";
+	}
+	// Not tested!
+	if(system("which Terminal") == 0) {
+		return "Terminal -e ";
+	}
 	return "";
 }
 
 void processPlayItem(PlayItem item) {
 	if(!item.get_comment().empty()) {
 	    if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
-		    string command = "xterm -e wget -P ~/Download -c " + item.get_download() + " &";
+		    string command = detectTerminal() + "wget -P ~/Download -c " + item.get_download() + " &";
 	        system(command.c_str());
 		}else if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay))) {
 		    string command = detectPlayer() + item.get_file() + " &";
