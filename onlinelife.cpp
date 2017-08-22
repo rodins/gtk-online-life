@@ -965,7 +965,7 @@ void actorsClicked(GtkWidget *widget, gpointer data) {
 	}
 }
 
-void on_changed(GtkWidget *widget, gpointer statusbar) {
+void playlistClicked(GtkWidget *widget, gpointer statusbar) {
     IndicesCount inCount = getIndicesCount(widget);
 	if(inCount.indices != NULL) {
 		processPlayItem(inCount.indices, inCount.count);
@@ -1551,7 +1551,7 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbox), hbCenter, TRUE, TRUE, 1);
     
     g_signal_connect(treeView, "row-activated", 
-        G_CALLBACK(on_changed), NULL);
+        G_CALLBACK(playlistClicked), NULL);
         
     g_signal_connect(tvCategories, "row-activated",
         G_CALLBACK(categoriesClicked), NULL);
