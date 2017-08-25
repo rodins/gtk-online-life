@@ -539,11 +539,6 @@ string get_txt_link(string page) {
 
 void displayPlaylists() {
 	switchToTreeView();
-
-	GtkTreeModel *model = playlists.getModel();
-	gtk_tree_view_set_model(GTK_TREE_VIEW(treeView), model);
-	//g_object_unref(model);
-	
 	setSensitiveItemsPlaylists();
 }
 
@@ -1563,7 +1558,16 @@ int main( int   argc,
     curlResultsStop = FALSE;
     curlActorsStop = FALSE;
     
-    playlists.init();
+    GtkTreeStore *playlistsStore = gtk_tree_store_new(PLAYLIST_NUM_COLS, 
+						                              GDK_TYPE_PIXBUF,
+									                  G_TYPE_STRING,
+									                  G_TYPE_STRING,
+									                  G_TYPE_STRING);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(treeView),
+                            GTK_TREE_MODEL(playlistsStore));
+    g_object_unref(playlistsStore);
+                          
+    playlists.init(gtk_tree_view_get_model(GTK_TREE_VIEW(treeView)));
     
     gtk_main();
     gdk_threads_leave ();

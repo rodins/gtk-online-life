@@ -12,20 +12,10 @@ class Playlists {
 	int count;
 	public:
 	
-	void init() {
-		count = 0;
+	void init(GtkTreeModel *model) {
 		directory = create_pixbuf("folder_16.png");
 	    item = create_pixbuf("link_16.png");
-	    
-	    treestore = gtk_tree_store_new(PLAYLIST_NUM_COLS, 
-		                               GDK_TYPE_PIXBUF,
-					                   G_TYPE_STRING,
-					                   G_TYPE_STRING,
-					                   G_TYPE_STRING);
-	}
-	
-	GtkTreeModel *getModel() {
-		return GTK_TREE_MODEL(treestore);
+	    treestore = GTK_TREE_STORE(model);
 	}
 	
 	int getCount() {
