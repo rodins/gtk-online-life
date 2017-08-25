@@ -97,6 +97,7 @@ GThreadPool *playlistsThreadPool;
 string lastActorsHref;
 string lastPlaylistsHref;
 set<string> resultsThreadsLinks;
+set<int> imageIndexes;
 
 /*string readFromFile(string filename) {
 	ifstream in(filename.c_str());
@@ -202,7 +203,7 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 	return realsize;
 }
 
-void getPixbufFromUrl(string url, GtkTreeIter iter) {
+void getPixbufFromUrl(string url, GtkTreeIter iter, int index) {
     
 	CURL *curl_handle;
 	CURLcode res;
@@ -240,11 +241,17 @@ void getPixbufFromUrl(string url, GtkTreeIter iter) {
 		gdk_pixbuf_loader_close(loader, NULL); //close in case of error
 		fprintf(stderr, "curl_easy_perform() failed: %s\n",
 				curl_easy_strerror(res));
+		// In case of error remove index from imageIndexes 
+        // to have a chance to reload image
+        imageIndexes.erase(index);
 	}else { 
         GError *error = NULL;
 		gboolean ok = gdk_pixbuf_loader_close(loader, &error);
 		if(!ok) {
 	        fprintf(stderr, "On close: %s\n", error->message);
+	        // In case of error remove index from imageIndexes 
+	        // to have a chance to reload image
+	        imageIndexes.erase(index);
             g_error_free(error);
 		}else {
 			// Setting new fully downloaded image here
@@ -269,7 +276,7 @@ void getPixbufFromUrl(string url, GtkTreeIter iter) {
 }
 
 void imageDownloadTask(gpointer arg, gpointer arg1) {
-	gint index = (gint)arg;
+	gint index = (gint)(long)arg;
 	index--;
 	
 	gdk_threads_enter();
@@ -293,7 +300,7 @@ void imageDownloadTask(gpointer arg, gpointer arg1) {
         gdk_threads_leave();
         
 	    if(count == 0) { 
-			getPixbufFromUrl(link, iter);
+			getPixbufFromUrl(link, iter, index);
 		}
 	}
 }
@@ -310,23 +317,21 @@ void saveResultsPostion() {
 
 void displayRange() {
 	GtkTreePath *path1, *path2;
-	static gint prevIndexDisplayFirst = -1, prevIndexDisplayLast = -1;
 	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(iconView), &path1, &path2)) {
 		gint *indices1 = gtk_tree_path_get_indices(path1);
 		gint *indices2 = gtk_tree_path_get_indices(path2);
 		gint indexDisplayFirst = indices1[0];
 		gint indexDisplayLast = indices2[0];
 		
-		if (prevIndexDisplayFirst != indexDisplayFirst &&
-		    prevIndexDisplayLast != indexDisplayLast) {
-		    
-		    // Downloading images for displayed items
-			for(int i = indexDisplayFirst; i <= indexDisplayLast; i++) {
+	    // Downloading images for displayed items
+		for(int i = indexDisplayFirst; i <= indexDisplayLast; i++) {
+			if(imageIndexes.count(i) == 0) {
+				imageIndexes.insert(i);
 				g_thread_pool_push(imagesThreadPool, 
-				    (gpointer) (i+1),
+				    (gpointer)(long)(i+1),
 				     NULL);
-			}		
-		}
+			}	
+		}		
 		
 		gtk_tree_path_free(path1);
 		gtk_tree_path_free(path2);
@@ -460,6 +465,10 @@ void removeBackStackDuplicate() {
 void resultsNewTask(gpointer arg, gpointer arg1) {
 	// On pre execute
 	gdk_threads_enter();
+	
+	// New images for new indexes will be downloaded
+    imageIndexes.clear();
+    
 	lastPlaylistsHref = "";
 	// Display spinner for new results
     showSpCenter(FALSE);
@@ -1031,6 +1040,9 @@ void savedRecovery() {
 	// Clear results links set if not paging
     // (do not allow next page thread to be called twice)
     resultsThreadsLinks.clear(); 
+    
+    // New images for new indexes will be downloaded
+    imageIndexes.clear();
     
 	// Update iconView with history results
 	results.setModel();
