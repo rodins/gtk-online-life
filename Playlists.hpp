@@ -1,6 +1,5 @@
 //Playlists.hpp
 #include "PlayItem.hpp"
-#include "Playlist.hpp"
 
 class Playlists {
 	GdkPixbuf *directory;
