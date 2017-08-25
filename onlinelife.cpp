@@ -873,11 +873,39 @@ void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
 	g_free(link);
 }
 
-void actorsClicked(GtkWidget *widget, gpointer data) {
-	IndicesCount inCount = getIndicesCount(widget);
+void actorsClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
+	// Get model from tree view
+	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
+	
+	// Get iter from path
+	GtkTreeIter iter;
+	gtk_tree_model_get_iter(model, &iter, path);
+	
+	// Get title and link values from iter
+	gchar *title = NULL;
+	gchar *link = NULL;
+	gtk_tree_model_get(model,
+	                   &iter, 
+	                   TREE_TITLE_COLUMN, 
+	                   &title,
+	                   TREE_HREF_COLUMN,
+	                   &link, 
+	                   -1);
+	                   
+	saveResultsToBackStack();
+	results.setTitle(title);
+	updateTitle();
+	results.setResultsUrl(link);
+    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	                   
+	g_free(title);
+	g_free(link);
+	
+	/*IndicesCount inCount = getIndicesCount(widget);
 	if(inCount.indices != NULL) {
 		processActor(inCount.indices, inCount.count);
 	}
+	*/
 }
 
 void playlistClicked(GtkWidget *widget, GtkTreePath *path, gpointer statusbar) {
