@@ -814,36 +814,6 @@ void actorsTask(gpointer args, gpointer args2) {
 	gdk_threads_leave();
 }
 
-void processActor(gint *indices, gint count) {
-	if(count == 1) { //Node
-		saveResultsToBackStack();
-		gint i = indices[0];
-		string title = actors.getActors()[i].get_title();
-		results.setTitle(title);
-		updateTitle();
-		results.setResultsUrl(actors.getActors()[i].get_href());
-	    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);	  	
-	}
-}
-
-struct IndicesCount {
-	gint *indices;
-	gint count;
-};
-
-IndicesCount getIndicesCount(GtkWidget *widget) {
-	GtkTreeIter iter;
-	GtkTreeModel *model;
-	GtkTreePath *path;
-	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
-	IndicesCount inCount;
-	if (gtk_tree_selection_get_selected(GTK_TREE_SELECTION(selection), &model, &iter)) {
-        path = gtk_tree_model_get_path(model, &iter);
-		inCount.indices = gtk_tree_path_get_indices_with_depth(path, &inCount.count);
-	}
-	return inCount;
-}
-
 void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
@@ -900,12 +870,6 @@ void actorsClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
 	                   
 	g_free(title);
 	g_free(link);
-	
-	/*IndicesCount inCount = getIndicesCount(widget);
-	if(inCount.indices != NULL) {
-		processActor(inCount.indices, inCount.count);
-	}
-	*/
 }
 
 void playlistClicked(GtkWidget *widget, GtkTreePath *path, gpointer statusbar) {
