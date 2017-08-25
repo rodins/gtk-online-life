@@ -712,11 +712,25 @@ GtkTreeModel *getActorsModel() {
     
 	GdkPixbuf *item = create_pixbuf("link_16.png");
     
-    store = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);
+    store = gtk_list_store_new(TREE_NUM_COLS, 
+                               GDK_TYPE_PIXBUF,
+                               G_TYPE_STRING,
+                               G_TYPE_STRING);
     for(unsigned i=0; i < actors.getActors().size(); i++) {
 		gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter, IMAGE_COLUMN, item,
-           TITLE_COLUMN, actors.getActors()[i].get_title().c_str(), -1);
+        gtk_list_store_set(store,
+                           &iter,
+                           TREE_IMAGE_COLUMN,
+                           item,
+                           TREE_TITLE_COLUMN, 
+                           actors
+                               .getActors()[i]
+                               .get_title().c_str(),
+                           TREE_HREF_COLUMN,
+                           actors
+                               .getActors()[i]
+                               .get_href().c_str(),
+                           -1);
 	}
     
     return GTK_TREE_MODEL(store);
