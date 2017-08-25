@@ -572,12 +572,12 @@ string detectTerminal() {
 }
 
 void processPlayItem(PlayItem item) {
-	if(!item.get_comment().empty()) {
+	if(!item.comment.empty()) {
 	    if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
-		    string command = detectTerminal() + "wget -P ~/Download -c " + item.get_download() + " &";
+		    string command = detectTerminal() + "wget -P ~/Download -c " + item.download + " &";
 	        system(command.c_str());
 		}else if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay))) {
-		    string command = detectPlayer() + item.get_file() + " &";
+		    string command = detectPlayer() + item.file + " &";
 	        system(command.c_str());
 		}	
 	}
@@ -663,7 +663,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 		}else { //PlayItem found or nothing found
 			gdk_threads_enter();
 			PlayItem playItem = playlists.parse_play_item(js);
-			if(!playItem.get_comment().empty()) { // PlayItem found
+			if(!playItem.comment.empty()) { // PlayItem found
 			    // get results list back
 			    switchToIconView();
 			    updateTitle();

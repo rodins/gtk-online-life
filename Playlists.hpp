@@ -40,7 +40,7 @@ class Playlists {
 		if(file_begin != string::npos && file_end != string::npos) {
 		    size_t file_length = file_end - file_begin;
 		    file = page.substr(file_begin+8, file_length-8);
-		    play_item.set_file(file);
+		    play_item.file = file;
 		}
 		
 		//Search for download
@@ -49,7 +49,7 @@ class Playlists {
 		if(download_begin != string::npos && download_end != string::npos) {
 			size_t download_length = download_end - download_begin;
 			download = page.substr(download_begin+12, download_length-12);
-			play_item.set_download(download);
+			play_item.download = download;
 		}
 		
 		//Search for comment
@@ -58,7 +58,7 @@ class Playlists {
 		if(comment_begin != string::npos && comment_end != string::npos) {
 			size_t comment_length = comment_end - comment_begin;
 			comment = page.substr(comment_begin+11, comment_length-11);
-			play_item.set_comment(comment);
+			play_item.comment = comment;
 		}
 		
 		return play_item;
@@ -121,13 +121,13 @@ class Playlists {
 					
 			PlayItem playItem = parse_play_item(item);
 			if(comment.empty()) {
-				addItemToTopLevel(playItem.get_title(), 
-				                  playItem.get_file(), 
-				                  playItem.get_download());
+				addItemToTopLevel(playItem.comment, 
+				                  playItem.file, 
+				                  playItem.download);
 			}else {
-				addItemToChild(playItem.get_title(),
-				               playItem.get_file(), 
-				               playItem.get_download());
+				addItemToChild(playItem.comment,
+				               playItem.file, 
+				               playItem.download);
 			}
 					
 			item_start = items.find("{", item_end+1);
