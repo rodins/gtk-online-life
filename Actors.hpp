@@ -1,7 +1,6 @@
 //Actors.hpp
 
 class Actors {
-    vector<Item> items;
     string actorsTitle;
     
     GtkListStore *store;
@@ -12,13 +11,17 @@ class Actors {
     int count;
     public:
     
+    Actors() {
+	    count = 0;	
+	}
+    
 	GtkTreeModel *getModel() {
 		return GTK_TREE_MODEL(store);
 	}
-    
-    vector<Item>& getActors() {
-        return items;
-    }
+	
+	int getCount() {
+		return count;
+	}
     
     void setTitle(string t) {
 		actorsTitle = t;
@@ -36,7 +39,6 @@ class Actors {
                                    G_TYPE_STRING,
                                    G_TYPE_STRING);
 		
-		items.clear();
 		page = to_utf8(page);
 		string year = parse_simple_info(page, "Год: ");
 		string country = parse_simple_info(page, "Страна: ");
@@ -58,6 +60,7 @@ class Actors {
                            TREE_HREF_COLUMN,
                            link.c_str(),
                            -1);
+        count++;
 	}
 	
 	string parse_simple_info(string &page, string query) {
@@ -106,8 +109,6 @@ class Actors {
 						string href = anchor.substr(href_begin+6, href_length-7);
 						//cout << href << endl;
 						
-						Item item(title + director, href);
-					    items.push_back(item);
 					    addToStore(title + director, href);
 					}
 				}

@@ -706,42 +706,12 @@ void playlistsTask(gpointer args, gpointer args2) {
 	gdk_threads_leave();
 }
 
-GtkTreeModel *getActorsModel() {
-	GtkListStore *store;
-    GtkTreeIter iter;
-    
-	GdkPixbuf *item = create_pixbuf("link_16.png");
-    
-    store = gtk_list_store_new(TREE_NUM_COLS, 
-                               GDK_TYPE_PIXBUF,
-                               G_TYPE_STRING,
-                               G_TYPE_STRING);
-    for(unsigned i=0; i < actors.getActors().size(); i++) {
-		gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store,
-                           &iter,
-                           TREE_IMAGE_COLUMN,
-                           item,
-                           TREE_TITLE_COLUMN, 
-                           actors
-                               .getActors()[i]
-                               .get_title().c_str(),
-                           TREE_HREF_COLUMN,
-                           actors
-                               .getActors()[i]
-                               .get_href().c_str(),
-                           -1);
-	}
-    
-    return GTK_TREE_MODEL(store);
-}
-
 void updateActors() {
 	gtk_label_set_text(GTK_LABEL(lbInfo), actors.getTitle().c_str());
 	GtkTreeModel *model;
 	model = actors.getModel();
     gtk_tree_view_set_model(GTK_TREE_VIEW(tvActors), model);
-	g_object_unref(model);
+	//g_object_unref(model); // do not free, used for actors history
 }
 
 void backActorsListAdd(string title) {
@@ -800,7 +770,7 @@ void actorsTask(gpointer args, gpointer args2) {
 	if(!page.empty()) {
 		actors.parse(page);
 		if(backActors.count(prevActors.getTitle()) == 0 
-		        && prevActors.getActors().size() > 0) {
+		        && prevActors.getCount() > 0) {
 		    backActors[prevActors.getTitle()] = prevActors;
 		    backActorsListAdd(prevActors.getTitle());	
 		}
@@ -1120,7 +1090,7 @@ static void entryActivated( GtkWidget *widget,
 static void rbActorsClicked(GtkWidget *widget, gpointer data) {
 	//Toggle visibility of actors list (vbRight)
 	if(!gtk_widget_get_visible(vbRight)) {
-		if(!actors.getActors().empty() && 
+		if(actors.getCount() > 0 && 
 		  gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))) {
 			gtk_widget_set_visible(vbRight, TRUE);
 		}
