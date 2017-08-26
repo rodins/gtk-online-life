@@ -1,4 +1,3 @@
-#include "Item.hpp"
 
 class Results {
     string prev_link, next_link;
@@ -100,24 +99,28 @@ class Results {
 	
 	private:
 	
-	void appendToStore(Item item) {
+	void appendToStore(string title, string href, string image) {
 		static GtkTreeIter iter;
 		static GdkPixbuf *pixbuf;
-		string link = item.get_image_link();
 		
 		gtk_list_store_append(iconViewStore, &iter);
 		
-		if(imagesCache.count(link) > 0) {
-			pixbuf = imagesCache[link];
+		if(imagesCache.count(image) > 0) {
+			pixbuf = imagesCache[image];
 		}else {
 			pixbuf = defaultPixbuf;
 		}
 		
-        gtk_list_store_set(iconViewStore, &iter, 
-                           ICON_IMAGE_COLUMN, pixbuf,
-                           ICON_TITLE_COLUMN, item.get_title().c_str(),
-                           ICON_HREF, item.get_href().c_str(),
-                           ICON_IMAGE_LINK, item.get_image_link().c_str(), 
+        gtk_list_store_set(iconViewStore, 
+                           &iter,
+                           ICON_IMAGE_COLUMN, 
+                           pixbuf,
+                           ICON_TITLE_COLUMN, 
+                           title.c_str(),
+                           ICON_HREF, 
+                           href.c_str(),
+                           ICON_IMAGE_LINK, 
+                           image.c_str(), 
                            -1);
 	}
 	
@@ -158,8 +161,10 @@ class Results {
 						size_t image_length = image_end - image_begin;
 						string image = div.substr(image_begin+5, image_length-1);
 						unescape_html(title);
-						Item item(title, href, image);
-					    appendToStore(item);
+					    appendToStore(to_utf8(title),
+					                  href,
+					                  image + "&w=165&h=236&zc=1");
+					                  //       ^^^^^^^^^^^^   set size of image
 					}
 				}
 			}
