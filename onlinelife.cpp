@@ -770,7 +770,8 @@ void actorsTask(gpointer args, gpointer args2) {
 	if(!page.empty()) {
 		actors.parse(page);
 		if(backActors.count(prevActors.getTitle()) == 0 
-		        && prevActors.getCount() > 0) {
+		        && prevActors.getCount() > 0
+		        && prevActors.getTitle() != actors.getTitle()) {
 		    backActors[prevActors.getTitle()] = prevActors;
 		    backActorsListAdd(prevActors.getTitle());	
 		}
