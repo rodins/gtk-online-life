@@ -2,32 +2,63 @@
 
 class Actors {
     vector<Item> items;
-    string title;
+    string actorsTitle;
+    
+    GtkListStore *store;
+    GtkTreeIter iter;
+    
+    GdkPixbuf *item;
+    
+    int count;
     public:
+    
+	GtkTreeModel *getModel() {
+		return GTK_TREE_MODEL(store);
+	}
     
     vector<Item>& getActors() {
         return items;
     }
     
     void setTitle(string t) {
-		title = t;
+		actorsTitle = t;
 	}
 	
 	string& getTitle() {
-		return title;
+		return actorsTitle;
 	}
     
     void parse(string &page) {
+		count = 0;
+		item = create_pixbuf("link_16.png");
+		store = gtk_list_store_new(TREE_NUM_COLS, 
+                                   GDK_TYPE_PIXBUF,
+                                   G_TYPE_STRING,
+                                   G_TYPE_STRING);
+		
 		items.clear();
 		page = to_utf8(page);
 		string year = parse_simple_info(page, "Год: ");
 		string country = parse_simple_info(page, "Страна: ");
-		title = title + " - " + year + " - " + country;
+		actorsTitle = actorsTitle + " - " + year + " - " + country;
 		parse_info(page, "Режиссер:", " (режиссер)");
 		parse_info(page, "В ролях:", "");
 	}
 	
 	private:
+	
+	void addToStore(string title, string link) {
+		gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store,
+                           &iter,
+                           TREE_IMAGE_COLUMN,
+                           item,
+                           TREE_TITLE_COLUMN, 
+                           title.c_str(),
+                           TREE_HREF_COLUMN,
+                           link.c_str(),
+                           -1);
+	}
 	
 	string parse_simple_info(string &page, string query) {
 		string begin = query;
@@ -77,6 +108,7 @@ class Actors {
 						
 						Item item(title + director, href);
 					    items.push_back(item);
+					    addToStore(title + director, href);
 					}
 				}
 				
