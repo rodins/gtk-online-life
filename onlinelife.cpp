@@ -881,25 +881,27 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	GtkTreeIter iter;
 	gtk_tree_model_get_iter(model, &iter, path);
 	
-	// Get title value from iter
+	// Get title and href value from iter
 	gchar *resultTitle = NULL;
-	gtk_tree_model_get(model, &iter, ICON_TITLE_COLUMN, &resultTitle, -1);
-	
-	// Get href value from iter
-    gchar *href = NULL;
-    gtk_tree_model_get(model, &iter, ICON_HREF, &href, -1);
+	gchar *href = NULL;
+	gtk_tree_model_get(model,
+	                   &iter, 
+	                   ICON_TITLE_COLUMN,
+	                   &resultTitle,
+	                   ICON_HREF,
+	                   &href,
+	                   -1);
 	
 	if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
 		lastActorsHref = string(href);
 		// Fetch actors
 		prevActors = actors;
-		actors.setTitle(string(resultTitle));
-        g_thread_pool_push(actorsThreadPool, (gpointer) href, NULL);
+		actors.setTitle(resultTitle);
+        g_thread_pool_push(actorsThreadPool, href, NULL);
 	}else {
 		// Fetch playlists/playItem
-		
 		// Set playlists title before playlists task
-		string title = PROG_NAME + " - " + string(resultTitle);
+		string title = PROG_NAME + " - " + resultTitle;
 	    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 	    g_thread_pool_push(playlistsThreadPool, href, NULL);
 	}
