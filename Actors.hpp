@@ -9,10 +9,20 @@ class Actors {
     GdkPixbuf *item;
     
     int count;
+    
+    string url;
     public:
     
     Actors() {
 	    count = 0;	
+	}
+	
+	void setUrl(string u) {
+		url = u;
+	}
+	
+	string getUrl() {
+		return url;
 	}
     
 	GtkTreeModel *getModel() {

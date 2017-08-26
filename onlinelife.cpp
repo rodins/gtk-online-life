@@ -94,7 +94,6 @@ GThreadPool *resultsAppendThreadPool;
 GThreadPool *actorsThreadPool;
 GThreadPool *playlistsThreadPool;
 
-string lastActorsHref;
 string lastPlaylistsHref;
 set<string> resultsThreadsLinks;
 set<int> imageIndexes;
@@ -753,10 +752,9 @@ void showActorsError() {
 }
 
 void actorsTask(gpointer args, gpointer args2) {
-	string link((char*)args);
-	g_free(args);
 	// On pre execute
 	gdk_threads_enter();
+	string link = actors.getUrl();
 	showSpActors();
 	curlActorsStop = FALSE;
 	enableBtnStopTasks();
@@ -893,11 +891,11 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	                   -1);
 	
 	if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
-		lastActorsHref = string(href);
 		// Fetch actors
 		prevActors = actors;
 		actors.setTitle(resultTitle);
-        g_thread_pool_push(actorsThreadPool, href, NULL);
+		actors.setUrl(href); 
+        g_thread_pool_push(actorsThreadPool, (gpointer)1, NULL);
 	}else {
 		// Fetch playlists/playItem
 		// Set playlists title before playlists task
@@ -907,6 +905,7 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	}
 	
 	g_free(resultTitle);
+	g_free(href);
 }
 
 void resultActivated(GtkWidget *widget, gpointer data) {
@@ -1126,8 +1125,8 @@ static void btnCategoriesRepeatClicked(GtkWidget *widget, gpointer data) {
 
 static void btnActorsRepeatClicked(GtkWidget *widget, gpointer data) {
 	g_thread_pool_push(actorsThreadPool, 
-		(gpointer) lastActorsHref.c_str(),
-		NULL);
+		              (gpointer) 1,
+		               NULL);
 }
 
 gboolean iconViewExposed(GtkWidget *widget, GdkEvent *event, gpointer data) {
