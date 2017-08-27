@@ -482,6 +482,7 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 		//TODO: maybe I need to clear it while saving....
 		// clear forward results stack on fetching new results
 		forwardResultsStack.clear();
+	    gtk_tool_item_set_tooltip_text(btnNext, "Move forward in history");
 		
 		removeBackStackDuplicate();
 		
@@ -520,6 +521,8 @@ void saveResultsToBackStack() {
 	if(!results.getTitle().empty()) {
 		saveResultsPostion();
         backResultsStack.push_back(results);
+        // Set tooltip with results title
+        gtk_tool_item_set_tooltip_text(btnPrev, results.getTitle().c_str());
 	}
 }
 
@@ -760,7 +763,8 @@ void actorsTask(gpointer args, gpointer args2) {
 	if(!page.empty()) {
 		actors.parse(page);
 		if(backActors.count(prevActors.getTitle()) == 0 
-		        && prevActors.getCount() > 0) {
+		        && prevActors.getCount() > 0
+		        && prevActors.getTitle() != actors.getTitle()) {
 		    backActors[prevActors.getTitle()] = prevActors;
 		    backActorsListAdd(prevActors.getTitle());	
 		}
@@ -1031,6 +1035,8 @@ static void btnPrevClicked( GtkWidget *widget,
 		// Save current results to forwardResultsStack
 		saveResultsPostion();
 		forwardResultsStack.push_back(results); 
+		// Set tooltip with results title
+        gtk_tool_item_set_tooltip_text(btnNext, results.getTitle().c_str());
 	}else {
 		switchToIconView();
 	}
@@ -1038,6 +1044,17 @@ static void btnPrevClicked( GtkWidget *widget,
 	// Display top results from backResultsStack
 	results = backResultsStack.back();
 	backResultsStack.pop_back();
+	if(!backResultsStack.empty()) {
+		// Set tooltip with results title
+		gtk_tool_item_set_tooltip_text(btnPrev, 
+									   backResultsStack
+										   .back()
+										   .getTitle().c_str());
+	}else {
+		// Set tooltip with results title
+	    gtk_tool_item_set_tooltip_text(btnPrev, "Move back in history");
+	}
+	
 	savedRecovery();
 	updateTitle();
 	setSensitiveItemsResults();		  
@@ -1051,6 +1068,8 @@ static void btnNextClicked( GtkWidget *widget,
 		// Save current results to backResultsStack
         saveResultsPostion();
         backResultsStack.push_back(results);
+        // Set tooltip with results title
+        gtk_tool_item_set_tooltip_text(btnPrev, results.getTitle().c_str());
 	}else {
 		// If repeat button displayed
 	    switchToIconView();
@@ -1059,6 +1078,17 @@ static void btnNextClicked( GtkWidget *widget,
     // Display top result from forwardResultsStack
     results = forwardResultsStack.back();
     forwardResultsStack.pop_back();
+    if(!forwardResultsStack.empty()) {
+		// Set tooltip with results title
+	    gtk_tool_item_set_tooltip_text(btnNext, 
+	                                   forwardResultsStack
+	                                       .back()
+	                                       .getTitle().c_str());
+	}else {
+		// Set tooltip with results title
+	    gtk_tool_item_set_tooltip_text(btnNext, "Move forward in history");
+	}
+    
     savedRecovery();
     updateTitle(); 
     setSensitiveItemsResults();
