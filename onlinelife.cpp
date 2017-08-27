@@ -94,7 +94,6 @@ GThreadPool *resultsAppendThreadPool;
 GThreadPool *actorsThreadPool;
 GThreadPool *playlistsThreadPool;
 
-string lastPlaylistsHref;
 set<string> resultsThreadsLinks;
 set<int> imageIndexes;
 
@@ -468,7 +467,6 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	// New images for new indexes will be downloaded
     imageIndexes.clear();
     
-	lastPlaylistsHref = "";
 	// Display spinner for new results
     showSpCenter(FALSE);
     string link = results.getResultsUrl();
@@ -505,6 +503,7 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	}else {
 		switchToIconView();
 		showResultsRepeat(FALSE);
+		results.setError(TRUE);
 	}
 	
 	if(results.isRefresh()) {
@@ -631,15 +630,8 @@ string getHrefId(string &href) {
 }
 
 void playlistsTask(gpointer args, gpointer args2) {
-	string href((char*)args);
     gdk_threads_enter();
-    // Use lastPlaylistHref on repeat button click
-    if(href.empty()) { // repeat button
-		href = lastPlaylistsHref; //TODO: do not use global variable
-	}else { // click on results item
-		lastPlaylistsHref = href;
-		g_free(args); // free pointer memory only in this case
-	}
+    string href = playlists.getUrl();
     gdk_threads_leave();
 	string id = getHrefId(href);
 	if(id != "") {
@@ -901,7 +893,8 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 		// Set playlists title before playlists task
 		string title = PROG_NAME + " - " + resultTitle;
 	    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-	    g_thread_pool_push(playlistsThreadPool, href, NULL);
+	    playlists.setUrl(href);
+	    g_thread_pool_push(playlistsThreadPool, (gpointer)1, NULL);
 	}
 	
 	g_free(resultTitle);
@@ -1155,18 +1148,18 @@ static void btnStopTasksClicked(GtkWidget *widget, gpointer data) {
 }
 
 static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
-	results.setRefresh(TRUE);
+	results.setRefresh(TRUE); //TODO: Do I really need this now?
 	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 }
 
 static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
-	if(lastPlaylistsHref.empty()) {
+	if(results.isError()) {
 		// Update results
 		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+		results.setError(FALSE);
 	}else {
 		// Update playlists
-		// if sending empty string use global lastPlaylistHref
-		g_thread_pool_push(playlistsThreadPool, (gpointer)"", NULL);
+		g_thread_pool_push(playlistsThreadPool, (gpointer)1, NULL);
 	}
 }
 

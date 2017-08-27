@@ -9,12 +9,21 @@ class Playlists {
 	GtkTreeIter topLevel, child;
 	
 	int count;
+	string url;
 	public:
 	
 	void init(GtkTreeModel *model) {
 		directory = create_pixbuf("folder_16.png");
 	    item = create_pixbuf("link_16.png");
 	    treestore = GTK_TREE_STORE(model);
+	}
+	
+	string getUrl() {
+		return url;
+	}
+	
+	void setUrl(string u) {
+		url = u;
 	}
 	
 	int getCount() {
