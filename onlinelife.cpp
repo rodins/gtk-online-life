@@ -18,7 +18,6 @@ int taskCount = 0;
 #define DOMAIN "http://online-life.club"
 
 #include "Converter.hpp"
-#include "DisplayMode.hpp"
 #include "HtmlString.hpp"
 #include "CreatePixbuf.hpp"
 #include "ColumnsEnum.hpp"
@@ -50,8 +49,6 @@ vector<Results> backResultsStack, forwardResultsStack;
 GtkWidget *frRightBottom;
 GtkWidget *lbInfo;
 GtkWidget *frRightTop, *frInfo;
-
-DisplayMode displayMode;
 
 const string PROG_NAME("Online life");
 

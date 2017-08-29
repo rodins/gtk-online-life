@@ -1,4 +1,5 @@
 #include <curl/curl.h>
+#include "DisplayMode.hpp"
 
 using namespace std;
 
