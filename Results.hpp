@@ -15,7 +15,7 @@ class Results {
 	public:
 	
 	Results() {
-		refresh = false;
+		refresh = FALSE;
 	}
 	
 	bool isError() {

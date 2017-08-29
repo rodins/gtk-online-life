@@ -481,13 +481,13 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	if(!page.empty()) {
 		//TODO: maybe I need to clear it while saving....
 		// clear forward results stack on fetching new results
-		forwardResultsStack.clear();
-	    gtk_tool_item_set_tooltip_text(btnNext, "Move forward in history");
-		
+		// Do not clear if refresh button clicked
+		if(!results.isRefresh()) {
+			forwardResultsStack.clear();
+	        gtk_tool_item_set_tooltip_text(btnNext, "Move forward in history");
+		}
+
 		removeBackStackDuplicate();
-		
-		// replace default url with link
-		results.setResultsUrl(link);
 		
 		// Scroll to the top of the list
 	    GtkTreePath *path = gtk_tree_path_new_first();
@@ -1192,7 +1192,7 @@ static void btnStopTasksClicked(GtkWidget *widget, gpointer data) {
 }
 
 static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
-	results.setRefresh(TRUE); //TODO: Do I really need this now?
+	results.setRefresh(TRUE);
 	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 }
 
