@@ -469,7 +469,7 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
     
 	// Display spinner for new results
     showSpCenter(FALSE);
-    string link = results.getResultsUrl();
+    string link = results.getUrl();
     // Thread stopping functionality
 	curlResultsStop = FALSE;
 	enableBtnStopTasks();
@@ -814,7 +814,7 @@ void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
 	}
 	
 	updateTitle();
-	results.setResultsUrl(link);
+	results.setUrl(link);
 	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 	
 	g_free(title);
@@ -843,7 +843,7 @@ void actorsClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
 	saveResultsToBackStack();
 	results.setTitle(title);
 	updateTitle();
-	results.setResultsUrl(link);
+	results.setUrl(link);
     g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 	                   
 	g_free(title);
@@ -1120,7 +1120,7 @@ static void entryActivated( GtkWidget *widget,
 	         "/?do=search&subaction=search&mode=simple&story=" + 
 	         to_cp1251(query);
 		results.setBaseUrl(base_url);
-		results.setResultsUrl(base_url);
+		results.setUrl(base_url);
 	    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 	}		  						  
 }

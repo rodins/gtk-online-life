@@ -5,7 +5,7 @@ class Results {
 	string current_page;
 	string page;
 	string title;
-	string resultsUrl;
+	string url;
 	bool error; //TODO: maybe not the best solution to use this boolean
 	bool refresh;
 	
@@ -65,12 +65,12 @@ class Results {
 		return title;
 	}
 	
-	void setResultsUrl(string url) {
-		resultsUrl = url;
+	void setUrl(string u) {
+		url = u;
 	}
 	
-	string getResultsUrl() {
-		return resultsUrl;
+	string getUrl() {
+		return url;
 	} 
 	
 	void show(string p) {
