@@ -19,11 +19,10 @@ class Categories {
 		categoryIcon = create_pixbuf("folder_16.png");
 	    itemIcon = create_pixbuf("link_16.png");
 	    
-	    treestore = gtk_tree_store_new(
-	              TREE_NUM_COLS, 
-	              GDK_TYPE_PIXBUF,
-				  G_TYPE_STRING, 
-				  G_TYPE_STRING);
+	    treestore = gtk_tree_store_new(TREE_NUM_COLS, 
+		                               GDK_TYPE_PIXBUF,
+					                   G_TYPE_STRING, 
+					                   G_TYPE_STRING);
 				  
 	    domain = "http://www.online-life.club"; 
 	}
