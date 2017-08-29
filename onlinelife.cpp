@@ -779,26 +779,40 @@ void actorsTask(gpointer args, gpointer args2) {
 }
 
 void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
+	saveResultsToBackStack();
+	
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
 	
 	// Get iter from path
-	GtkTreeIter iter;
+	GtkTreeIter iter, parent;
 	gtk_tree_model_get_iter(model, &iter, path);
 	
 	// Get title and link values from iter
 	gchar *title = NULL;
 	gchar *link = NULL;
 	gtk_tree_model_get(model,
-	                   &iter, 
-	                   TREE_TITLE_COLUMN, 
+	                   &iter,
+	                   TREE_TITLE_COLUMN,
 	                   &title,
 	                   TREE_HREF_COLUMN,
-	                   &link, 
+	                   &link,
 	                   -1);
 	
-	saveResultsToBackStack();
-	results.setTitle(title);
+	// Get parent (category) of iter
+	if(gtk_tree_model_iter_parent(model, &parent, &iter)) {
+		gchar *parentTitle = NULL;
+		gtk_tree_model_get(model,
+		                   &parent,
+		                   TREE_TITLE_COLUMN,
+		                   &parentTitle,
+		                   -1);
+	    results.setTitle(string(parentTitle) + " - " + title);
+		g_free(parentTitle);
+	}else {
+		results.setTitle(title);
+	}
+	
 	updateTitle();
 	results.setResultsUrl(link);
 	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
