@@ -8,12 +8,6 @@ class HtmlString {
 	static int writer(char *data, size_t size, size_t nmemb,
 	                      string *writerData)
 	{
-		gdk_threads_enter();
-		if (curlStop) {
-			gdk_threads_leave();
-			return CURL_READFUNC_ABORT;
-		}
-		gdk_threads_leave();
 	    if (writerData == NULL)
 	       return 0;
 	
@@ -25,13 +19,6 @@ class HtmlString {
 	static int categories_writer(char *data, size_t size, size_t nmemb,
 	                      string *writerData)
 	{
-		gdk_threads_enter();
-		if (curlCategoriesStop) {
-			gdk_threads_leave();
-			return CURL_READFUNC_ABORT;
-		}
-		gdk_threads_leave();
-		
 	    if (writerData == NULL)
 	       return 0;
 	       
@@ -67,13 +54,6 @@ class HtmlString {
 	static int results_writer(char *data, size_t size, size_t nmemb,
 	                      string *writerData)
 	{
-		gdk_threads_enter();
-		if (curlResultsStop) {
-			gdk_threads_leave();
-			return CURL_READFUNC_ABORT;
-		}
-		gdk_threads_leave();
-		
 	    if (writerData == NULL)
 	       return 0;    
 	       
@@ -110,13 +90,6 @@ class HtmlString {
 	static int actors_writer(char *data, size_t size, size_t nmemb,
 	                      string *writerData)
 	{
-		gdk_threads_enter();
-		if (curlActorsStop) {
-			gdk_threads_leave();
-			return CURL_READFUNC_ABORT;
-		}
-		gdk_threads_leave();
-		
 	    if (writerData == NULL)
 	       return 0;
 	

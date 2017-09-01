@@ -12,9 +12,6 @@
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
-bool curlCategoriesStop, curlResultsStop, curlActorsStop, curlStop;
-int taskCount = 0;
-
 #define DOMAIN "http://online-life.club"
 
 #include "Converter.hpp"
@@ -60,7 +57,6 @@ GtkToolItem *rbActors;
 GtkToolItem *rbPlay;
 GtkToolItem *rbDownload;
 
-GtkToolItem *btnStopTasks;
 GtkToolItem *btnRefresh;
 
 GtkWidget *window;
@@ -132,7 +128,6 @@ void disableAllItems() {
     gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
     
-    gtk_widget_set_sensitive(GTK_WIDGET(btnStopTasks), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
 }
 
@@ -382,42 +377,12 @@ void show_error_dialog() {
 	gtk_widget_destroy(dialog);
 }
 
-gpointer stopAllThreadsTask(gpointer data) {
-	// Stop all threads before starting new on slow connections
-	// TODO: test on slow connections
-	gdk_threads_enter();
-	if(taskCount > 0) {
-		curlActorsStop = TRUE;
-		curlCategoriesStop = TRUE;
-		curlStop = TRUE;
-		curlResultsStop = TRUE;
-	}
-	gdk_threads_leave();
-	return NULL;
-}
-
-void enableBtnStopTasks() {
-	if(taskCount == 0) {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnStopTasks), TRUE);
-	}
-}
-
-void disableBtnStopTasks() {
-	if(taskCount == 0) {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnStopTasks), FALSE);
-	}
-}
-
 void resultsAppendTask(gpointer arg, gpointer arg1) {
 	// On pre execute
 	gdk_threads_enter();
 	string link = results.getNextLink();
 	// Display spinner at the bottom of list
     showSpCenter(TRUE);
-    // For stopping threads
-    curlResultsStop = FALSE;
-	enableBtnStopTasks();
-	taskCount++;
 	gdk_threads_leave();
 	// async part
 	string page = HtmlString::getResultsPage(link);
@@ -433,9 +398,6 @@ void resultsAppendTask(gpointer arg, gpointer arg1) {
 		switchToIconView();
 		showResultsRepeat(TRUE);
 	}
-
-	taskCount--;
-	disableBtnStopTasks();
 	gdk_threads_leave();
 }
 
@@ -465,10 +427,6 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	// Display spinner for new results
     showSpCenter(FALSE);
     string link = results.getUrl();
-    // Thread stopping functionality
-	curlResultsStop = FALSE;
-	enableBtnStopTasks();
-	taskCount++;
     gdk_threads_leave();
     // async part
 	string page = HtmlString::getResultsPage(link);
@@ -505,9 +463,6 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	if(results.isRefresh()) {
 		results.setRefresh(FALSE);
 	}
-		
-	taskCount--;
-	disableBtnStopTasks();
 	gdk_threads_leave();
 }
 
@@ -639,9 +594,6 @@ void playlistsTask(gpointer args, gpointer args2) {
 		gdk_threads_enter();
 		// Show spinner fullscreen
 		showSpCenter(FALSE);
-		curlStop = FALSE;
-		enableBtnStopTasks();
-		taskCount++;
 		gdk_threads_leave();
 		
 		string js = HtmlString::getPage(url, referer);
@@ -688,11 +640,6 @@ void playlistsTask(gpointer args, gpointer args2) {
 			gdk_threads_leave();
 		}
 	}
-	
-	gdk_threads_enter();
-	taskCount--;
-	disableBtnStopTasks();
-	gdk_threads_leave();
 }
 
 void updateActors() {
@@ -746,9 +693,6 @@ void actorsTask(gpointer args, gpointer args2) {
 	gdk_threads_enter();
 	string link = actors.getUrl();
 	showSpActors();
-	curlActorsStop = FALSE;
-	enableBtnStopTasks();
-	taskCount++;
 	gdk_threads_leave();
 	
 	string page = HtmlString::getActorsPage(link);
@@ -768,8 +712,6 @@ void actorsTask(gpointer args, gpointer args2) {
 	}else {
 	    showActorsError();
 	}
-	taskCount--;
-	disableBtnStopTasks();
 	gdk_threads_leave();
 }
 
@@ -960,9 +902,6 @@ gpointer categoriesTask(gpointer arg) {
 	// On pre execute
 	gdk_threads_enter();
 	showSpCategories();
-	curlCategoriesStop = FALSE;
-	enableBtnStopTasks();
-	taskCount++;
 	gdk_threads_leave();
 	string page = HtmlString::getCategoriesPage();
 	gdk_threads_enter();
@@ -982,8 +921,6 @@ gpointer categoriesTask(gpointer arg) {
 	}else {
 		showCategoriesError();
 	}
-	taskCount--;
-	disableBtnStopTasks();
 	gdk_threads_leave();
 	return NULL;
 }
@@ -1178,10 +1115,6 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 	}
 }
 
-static void btnStopTasksClicked(GtkWidget *widget, gpointer data) {
-	g_thread_new(NULL, stopAllThreadsTask, NULL);
-}
-
 static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
 	results.setRefresh(TRUE);
 	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
@@ -1265,15 +1198,6 @@ int main( int   argc,
                      "clicked", 
                      G_CALLBACK(btnCategoriesClicked),
                      NULL);
-	    
-	sep = gtk_separator_tool_item_new();
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
-    
-    btnStopTasks = gtk_tool_button_new_from_stock(GTK_STOCK_STOP);
-    gtk_tool_item_set_tooltip_text(btnStopTasks, "Stop tasks");
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnStopTasks, -1);
-    g_signal_connect(GTK_WIDGET(btnStopTasks), "clicked", 
-        G_CALLBACK(btnStopTasksClicked), NULL);
         
     sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
@@ -1573,12 +1497,6 @@ int main( int   argc,
         
     // Initialize default pixbuf for iconView here
     defaultPixbuf = create_pixbuf("blank.png");
-    
-    // Initialize breaking thread variable
-    curlStop = FALSE;
-    curlCategoriesStop = FALSE;
-    curlResultsStop = FALSE;
-    curlActorsStop = FALSE;
     
     GtkTreeStore *playlistsStore = gtk_tree_store_new(PLAYLIST_NUM_COLS, 
 						                              GDK_TYPE_PIXBUF,
