@@ -957,7 +957,6 @@ void showCategoriesError() {
 }
 
 gpointer categoriesTask(gpointer arg) {
-	Categories* categories = (Categories*)arg;
 	// On pre execute
 	gdk_threads_enter();
 	showSpCategories();
@@ -965,11 +964,11 @@ gpointer categoriesTask(gpointer arg) {
 	enableBtnStopTasks();
 	taskCount++;
 	gdk_threads_leave();
-	
 	string page = HtmlString::getCategoriesPage();
 	gdk_threads_enter();
-	categories->parse_categories(page);
-	if(categories->getCount() > 0) {
+	if(!page.empty()) {
+		Categories* categories = new Categories(page);
+		
 		gtk_widget_set_visible(hbCategoriesError, FALSE);
 		gtk_widget_set_visible(spCategories, FALSE);
 		gtk_spinner_stop(GTK_SPINNER(spCategories));
@@ -979,6 +978,7 @@ gpointer categoriesTask(gpointer arg) {
 		model = categories->getModel();
 	    gtk_tree_view_set_model(GTK_TREE_VIEW(tvCategories), model);
 		g_object_unref(model);
+		g_free(categories);
 	}else {
 		showCategoriesError();
 	}
@@ -988,15 +988,16 @@ gpointer categoriesTask(gpointer arg) {
 	return NULL;
 }
 
-static void btnCategoriesClicked( GtkWidget *widget,
+static void btnCategoriesClicked(GtkWidget *widget,
                       gpointer  data)
 {
-	Categories *categories = (Categories*)data;
 	if(!gtk_widget_get_visible(vbLeft)) { // Categories hidden
-		if(categories->getCount() == 0) {
-			categories->init();
+		//Get categories model
+		GtkTreeModel *model = gtk_tree_view_get_model(
+		                          GTK_TREE_VIEW(tvCategories));
+		if(model == NULL) {
 			//Starting new thread to get categories from the net  
-            g_thread_new(NULL, categoriesTask, categories);
+            g_thread_new(NULL, categoriesTask, NULL);
 		}else {
 			gtk_widget_set_visible(vbLeft, TRUE);
 		}
@@ -1147,7 +1148,7 @@ static void backActorsChanged(GtkWidget *widget, gpointer data) {
 
 static void btnCategoriesRepeatClicked(GtkWidget *widget, gpointer data) {
 	//Starting new thread to get categories from the net  
-    g_thread_new(NULL, categoriesTask, (Categories*)data);
+    g_thread_new(NULL, categoriesTask, NULL);
 }
 
 static void btnActorsRepeatClicked(GtkWidget *widget, gpointer data) {
@@ -1199,9 +1200,7 @@ static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
 
 int main( int   argc,
           char *argv[] )
-{
-    Categories *categories = new Categories();
-    
+{   
     GtkWidget *vbox;
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
@@ -1265,7 +1264,7 @@ int main( int   argc,
     g_signal_connect(GTK_WIDGET(btnCategories),
                      "clicked", 
                      G_CALLBACK(btnCategoriesClicked),
-                     categories);
+                     NULL);
 	    
 	sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
@@ -1424,7 +1423,7 @@ int main( int   argc,
     g_signal_connect(btnCategoriesError, 
                      "clicked", 
                      G_CALLBACK(btnCategoriesRepeatClicked), 
-                     categories);
+                     NULL);
     gtk_box_pack_start(GTK_BOX(hbCategoriesError), btnCategoriesError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbLeft), swLeftTop, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeft), spCategories, TRUE, FALSE, 1);
@@ -1593,8 +1592,6 @@ int main( int   argc,
     playlists.init(gtk_tree_view_get_model(GTK_TREE_VIEW(treeView)));
     
     gtk_main();
-    
-    g_free(categories);
     
     gdk_threads_leave ();
  

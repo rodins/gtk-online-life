@@ -8,14 +8,10 @@ class Categories {
 	GtkTreeIter topLevel, child;
 	
 	string domain;
-	int count;
 	public:
 	
-	Categories() {
-		count = 0;
-	}
-	
-	void init() {
+	Categories(string page) {
+		
 		categoryIcon = create_pixbuf("folder_16.png");
 	    itemIcon = create_pixbuf("link_16.png");
 	    
@@ -24,20 +20,15 @@ class Categories {
 					                   G_TYPE_STRING, 
 					                   G_TYPE_STRING);
 				  
-	    domain = "http://www.online-life.club"; 
-	}
-	
-	int getCount() {
-		return count;
-	}
-	
-	string getTitle() {
-		return string("Online Life - Categories");
+	    domain = "http://www.online-life.club";
+	    parse_categories(page);
 	}
 	
 	GtkTreeModel *getModel() {
 		return GTK_TREE_MODEL(treestore);		
 	}
+	
+	private:
 	
 	void parse_categories(string page) {
 		size_t nav_begin = page.find("<div class=\"nav\">");
@@ -121,8 +112,6 @@ class Categories {
 		}
 	}
 	
-	private:
-	
 	void addToChild(string title, string link) {
 		gtk_tree_store_append(treestore, &child, &topLevel);
 		gtk_tree_store_set(treestore,
@@ -134,7 +123,6 @@ class Categories {
 		                   TREE_HREF_COLUMN,
 		                   link.c_str(),
 		                   -1);
-		count++;
 	}
 	
 	void addToTopLevel(string title, string link) {
