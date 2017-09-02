@@ -906,7 +906,7 @@ gpointer categoriesTask(gpointer arg) {
 	string page = HtmlString::getCategoriesPage();
 	gdk_threads_enter();
 	if(!page.empty()) {
-		Categories* categories = new Categories(page);
+		Categories categories(page);
 		
 		gtk_widget_set_visible(hbCategoriesError, FALSE);
 		gtk_widget_set_visible(spCategories, FALSE);
@@ -914,10 +914,9 @@ gpointer categoriesTask(gpointer arg) {
 		gtk_widget_set_visible(swLeftTop, TRUE);
 		
 		GtkTreeModel *model;
-		model = categories->getModel();
+		model = categories.getModel();
 	    gtk_tree_view_set_model(GTK_TREE_VIEW(tvCategories), model);
 		g_object_unref(model);
-		g_free(categories);
 	}else {
 		showCategoriesError();
 	}
