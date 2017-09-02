@@ -6,7 +6,6 @@ class Results {
 	string page;
 	string title;
 	string url;
-	bool error; //TODO: maybe not the best solution to use this boolean
 	bool refresh;
 	
 	GtkListStore *iconViewStore;
@@ -16,14 +15,6 @@ class Results {
 	
 	Results() {
 		refresh = FALSE;
-	}
-	
-	bool isError() {
-		return error;
-	}
-	
-	void setError(bool e) {
-		error = e;
 	}
 	
 	bool isRefresh() {

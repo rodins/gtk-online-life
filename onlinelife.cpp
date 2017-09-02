@@ -32,8 +32,6 @@ using namespace std;
 
 //Results
 Results results;
-//Playlists
-Playlists playlists;
 //Actors
 Actors actors, prevActors;
 
@@ -78,6 +76,7 @@ GtkWidget *hbActorsError;
 
 GtkWidget *vbCenter;
 GtkWidget *hbResultsError;
+GtkWidget *btnResultsError;
 
 GThreadPool *imagesThreadPool;
 GThreadPool *resultsNewThreadPool;
@@ -457,7 +456,6 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	}else {
 		switchToIconView();
 		showResultsRepeat(FALSE);
-		results.setError(TRUE);
 	}
 	
 	if(results.isRefresh()) {
@@ -474,27 +472,6 @@ void saveResultsToBackStack() {
         // Set tooltip with results title
         gtk_tool_item_set_tooltip_text(btnPrev, results.getTitle().c_str());
 	}
-}
-
-string get_txt_link(string page) {
-	string begin = " {";
-	string end = "\"};";
-	size_t json_begin = page.find(begin);
-	size_t json_end = page.find(end);
-	if(json_end != string::npos && json_begin != string::npos) {
-		size_t json_length = json_end - json_begin;
-		string json = page.substr(json_begin+2, json_length-2);
-        
-        // Find link
-        size_t link_begin = json.find("pl:");
-        size_t link_end = json.find("\"", link_begin+4);
-        if(link_begin != string::npos && link_end != string::npos) {
-			size_t link_length = link_end - link_begin;
-			string link = json.substr(link_begin+4, link_length-4);
-			return link;
-		}
-	}
-	return "";
 }
 
 void displayPlaylists() {
@@ -553,41 +530,21 @@ void playOrDownload(string file, string download) {
 	}
 }
 
-string getTrailerId(string &page) {
-	size_t begin = page.find("?trailer_id=");
-	size_t end = page.find("' ", begin+13);
-	if(begin != string::npos && end != string::npos) {
-		size_t length = end - begin;
-		string trailerId = page.substr(begin+12, length-12);
-		return trailerId;
-	}
-	return "";
-}
-
-string getHrefId(string &href) {
-	//Find id
-	string domain("http://www.online-life.");
-	size_t id_begin = href.find(domain);
-	// Make parser domain end independent
-	if(id_begin != string::npos) {
-		id_begin = href.find("/", id_begin+1);
-	}
-	size_t id_end = href.find("-", id_begin + domain.length());
-	if(id_begin != string::npos && id_end != string::npos) {
-		size_t id_length = id_end - id_begin - domain.length();
-		string id_str = href.substr(id_begin + domain.length(), id_length);
-		//cout << "Id: " << id_str << endl;
-		return id_str;
-	}
-	return "";
+static void btnPlaylistsRepeatClicked(GtkWidget *widget, gpointer data) {
+	// Update playlists
+	g_thread_pool_push(playlistsThreadPool, data, NULL);
 }
 
 void playlistsTask(gpointer args, gpointer args2) {
-    gdk_threads_enter();
-    string href = playlists.getUrl();
+	string href((gchar*)args);
+	// free args in three places when it's no longer needed by repeat button
+	gdk_threads_enter();
+	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists));
     gdk_threads_leave();
-	string id = getHrefId(href);
-	if(id != "") {
+        
+	Playlists playlists(model);
+	string id = playlists.getHrefId(href);
+	if(!id.empty()) {
 		string url = "http://dterod.com/js.php?id=" + id;
 		string referer = "http://dterod.com/player.php?newsid=" + id;
 		// On pre execute
@@ -597,13 +554,13 @@ void playlistsTask(gpointer args, gpointer args2) {
 		gdk_threads_leave();
 		
 		string js = HtmlString::getPage(url, referer);
-		//TODO Remove spaghetti code somehow (get_txt_link helper function)
-		string playlist_link = get_txt_link(js);
+		string playlist_link = playlists.get_txt_link(js);
 		if(!playlist_link.empty()) { // Playlists found
 			string json = HtmlString::getPage(playlist_link);
 			gdk_threads_enter();
 			playlists.parse(json);
 			if(playlists.getCount() > 0) {
+				g_free(args);//1
 				displayPlaylists();
 			}else {
 				showResultsRepeat(FALSE);
@@ -618,12 +575,13 @@ void playlistsTask(gpointer args, gpointer args2) {
 			    switchToIconView();
 			    updateTitle();
 				processPlayItem(playItem); 
+				g_free(args);//2
 			}else {
 				if(results.getTitle().find("Трейлеры") != string::npos) {
 					gdk_threads_leave();
 					// Searching for alternative trailers links
 		            string infoHtml = HtmlString::getPage(href, referer);
-		            string trailerId = getTrailerId(infoHtml); 
+		            string trailerId = playlists.getTrailerId(infoHtml); 
 		            url = "http://dterod.com/js.php?id=" + trailerId + "&trailer=1";
 		            referer = "http://dterod.com/player.php?trailer_id=" + trailerId;
 		            string json = HtmlString::getPage(url, referer);
@@ -632,6 +590,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 			        switchToIconView();
 			        updateTitle();
 					processPlayItem(playlists.parse_play_item(json)); 
+					g_free(args);//3
 				}else {
 					showResultsRepeat(FALSE);
 				    setSensitiveItemsPlaylists();
@@ -848,12 +807,17 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 		// Set playlists title before playlists task
 		string title = PROG_NAME + " - " + resultTitle;
 	    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-	    playlists.setUrl(href);
-	    g_thread_pool_push(playlistsThreadPool, (gpointer)1, NULL);
+	    
+	    // TODO: this creates bug, when back to results, restore connect
+		g_signal_connect(btnResultsError,
+	                     "clicked",
+	                     G_CALLBACK(btnPlaylistsRepeatClicked),
+	                     href);
+	    
+	    g_thread_pool_push(playlistsThreadPool, href, NULL);
 	}
 	
 	g_free(resultTitle);
-	g_free(href);
 }
 
 void resultActivated(GtkWidget *widget, gpointer data) {
@@ -1120,14 +1084,8 @@ static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
 }
 
 static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
-	if(results.isError()) {
-		// Update results
-		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
-		results.setError(FALSE);
-	}else {
-		// Update playlists
-		g_thread_pool_push(playlistsThreadPool, (gpointer)1, NULL);
-	}
+	// Update results
+	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 }
 
 int main( int   argc,
@@ -1139,7 +1097,6 @@ int main( int   argc,
     GtkWidget *swRightTop, *swRightBottom;
     GtkWidget *btnCategoriesError;
     GtkWidget *btnActorsError;
-    GtkWidget *btnResultsError;
     
 	GtkToolItem *btnCategories;
 	GtkToolItem *sep;
@@ -1505,8 +1462,6 @@ int main( int   argc,
     gtk_tree_view_set_model(GTK_TREE_VIEW(tvPlaylists),
                             GTK_TREE_MODEL(playlistsStore));
     g_object_unref(playlistsStore);
-                          
-    playlists.init(gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists)));
     
     gtk_main();
     

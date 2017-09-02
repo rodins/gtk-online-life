@@ -9,21 +9,62 @@ class Playlists {
 	GtkTreeIter topLevel, child;
 	
 	int count;
-	string url;
 	public:
 	
-	void init(GtkTreeModel *model) {
+	Playlists(GtkTreeModel *model) {
 		directory = create_pixbuf("folder_16.png");
 	    item = create_pixbuf("link_16.png");
 	    treestore = GTK_TREE_STORE(model);
 	}
 	
-	string getUrl() {
-		return url;
+	string getHrefId(string &href) {
+		//Find id
+		string domain("http://www.online-life.");
+		size_t id_begin = href.find(domain);
+		// Make parser domain end independent
+		if(id_begin != string::npos) {
+			id_begin = href.find("/", id_begin+1);
+		}
+		size_t id_end = href.find("-", id_begin + domain.length());
+		if(id_begin != string::npos && id_end != string::npos) {
+			size_t id_length = id_end - id_begin - domain.length();
+			string id_str = href.substr(id_begin + domain.length(), id_length);
+			//cout << "Id: " << id_str << endl;
+			return id_str;
+		}
+		return "";
 	}
 	
-	void setUrl(string u) {
-		url = u;
+	string getTrailerId(string &page) {
+		size_t begin = page.find("?trailer_id=");
+		size_t end = page.find("' ", begin+13);
+		if(begin != string::npos && end != string::npos) {
+			size_t length = end - begin;
+			string trailerId = page.substr(begin+12, length-12);
+			return trailerId;
+		}
+		return "";
+	}
+	
+	string get_txt_link(string page) {
+		string begin = " {";
+		string end = "\"};";
+		size_t json_begin = page.find(begin);
+		size_t json_end = page.find(end);
+		if(json_end != string::npos && json_begin != string::npos) {
+			size_t json_length = json_end - json_begin;
+			string json = page.substr(json_begin+2, json_length-2);
+	        
+	        // Find link
+	        size_t link_begin = json.find("pl:");
+	        size_t link_end = json.find("\"", link_begin+4);
+	        if(link_begin != string::npos && link_end != string::npos) {
+				size_t link_length = link_end - link_begin;
+				string link = json.substr(link_begin+4, link_length-4);
+				return link;
+			}
+		}
+		return "";
 	}
 	
 	int getCount() {
