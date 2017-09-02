@@ -23,7 +23,7 @@ GdkPixbuf *defaultPixbuf;
 map<string, GdkPixbuf*> imagesCache;
 GtkWidget *iconView;
 
-#include "Categories.hpp"
+#include "CategoriesParser.hpp"
 #include "Results.hpp"
 #include "Playlists.hpp"
 #include "Actors.hpp"
@@ -906,7 +906,7 @@ gpointer categoriesTask(gpointer arg) {
 	string page = HtmlString::getCategoriesPage();
 	gdk_threads_enter();
 	if(!page.empty()) {
-		Categories categories(page);
+		CategoriesParser categoriesParser(page);
 		
 		gtk_widget_set_visible(hbCategoriesError, FALSE);
 		gtk_widget_set_visible(spCategories, FALSE);
@@ -914,7 +914,7 @@ gpointer categoriesTask(gpointer arg) {
 		gtk_widget_set_visible(swLeftTop, TRUE);
 		
 		GtkTreeModel *model;
-		model = categories.getModel();
+		model = categoriesParser.getModel();
 	    gtk_tree_view_set_model(GTK_TREE_VIEW(tvCategories), model);
 		g_object_unref(model);
 	}else {
