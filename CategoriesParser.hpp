@@ -1,6 +1,6 @@
 //Categories.hpp
 
-class Categories {
+class CategoriesParser {
 	GdkPixbuf *categoryIcon;
 	GdkPixbuf *itemIcon;
 	
@@ -10,7 +10,7 @@ class Categories {
 	string domain;
 	public:
 	
-	Categories(string page) {
+	CategoriesParser(string page) {
 		
 		categoryIcon = create_pixbuf("folder_16.png");
 	    itemIcon = create_pixbuf("link_16.png");
