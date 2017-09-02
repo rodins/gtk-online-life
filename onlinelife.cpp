@@ -21,7 +21,7 @@
 
 GdkPixbuf *defaultPixbuf;
 map<string, GdkPixbuf*> imagesCache;
-GtkWidget *iconView;
+GtkWidget *ivResults;
 
 #include "CategoriesParser.hpp"
 #include "Results.hpp"
@@ -183,7 +183,7 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 	if(pixbufOrig != NULL) {
 		gdk_threads_enter();
 		GtkListStore *store = GTK_LIST_STORE(gtk_icon_view_get_model
-			(GTK_ICON_VIEW(iconView)));
+			(GTK_ICON_VIEW(ivResults)));
 		gtk_list_store_set(store, &args->iter, IMAGE_COLUMN, pixbufOrig, -1);  
 		gdk_threads_leave();
 	}
@@ -250,7 +250,7 @@ void getPixbufFromUrl(string url, GtkTreeIter iter, int index) {
 			imagesCache[url] = pixbuf;
 				
 			store = GTK_LIST_STORE(gtk_icon_view_get_model
-				(GTK_ICON_VIEW(iconView))); 
+				(GTK_ICON_VIEW(ivResults))); 
 			gtk_list_store_set(store, &iter, IMAGE_COLUMN, pixbuf, -1);
 			gdk_threads_leave();
         }
@@ -268,7 +268,7 @@ void imageDownloadTask(gpointer arg, gpointer arg1) {
 	index--;
 	
 	gdk_threads_enter();
-	GtkTreeModel* model = gtk_icon_view_get_model(GTK_ICON_VIEW(iconView));
+	GtkTreeModel* model = gtk_icon_view_get_model(GTK_ICON_VIEW(ivResults));
 	gdk_threads_leave();
 	
 	string strIndex = SSTR(index);
@@ -295,7 +295,7 @@ void imageDownloadTask(gpointer arg, gpointer arg1) {
 
 void saveResultsPostion() {
 	GtkTreePath *path1, *path2;
-	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(iconView), &path1, &path2)) {
+	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
 		string index(gtk_tree_path_to_string(path1));
         results.setIndex(index);
 		gtk_tree_path_free(path1);
@@ -305,7 +305,7 @@ void saveResultsPostion() {
 
 void displayRange() {
 	GtkTreePath *path1, *path2;
-	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(iconView), &path1, &path2)) {
+	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
 		gint *indices1 = gtk_tree_path_get_indices(path1);
 		gint *indices2 = gtk_tree_path_get_indices(path2);
 		gint indexDisplayFirst = indices1[0];
@@ -333,7 +333,7 @@ void updateTitle() {
 
 void showSpCenter(bool isPage) {
 	gtk_widget_set_visible(swTree, FALSE);
-	// Show and hide of iconView depends on isPage
+	// Show and hide of ivResults depends on isPage
 	gtk_widget_set_visible(swIcon, isPage);
 	// Change packing params of spCenter
 	gtk_box_set_child_packing(
@@ -350,7 +350,7 @@ void showSpCenter(bool isPage) {
 
 void showResultsRepeat(bool isPage) {
 	gtk_widget_set_visible(swTree, FALSE);
-	// Show and hide of iconView depends on isPage
+	// Show and hide of ivResults depends on isPage
 	gtk_widget_set_visible(swIcon, isPage);
 	// Change packing params of spCenter
 	gtk_box_set_child_packing(
@@ -444,7 +444,7 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 		
 		// Scroll to the top of the list
 	    GtkTreePath *path = gtk_tree_path_new_first();
-	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path, FALSE, 0, 0);
+	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), path, FALSE, 0, 0);
 	    
 	    // Clear results links set if not paging
 	    resultsThreadsLinks.clear();
@@ -819,8 +819,8 @@ void playlistClicked(GtkWidget *widget, GtkTreePath *path, gpointer statusbar) {
 }
 
 void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
-	// Get model from iconView
-	GtkTreeModel *model = gtk_icon_view_get_model(GTK_ICON_VIEW(iconView));
+	// Get model from ivResults
+	GtkTreeModel *model = gtk_icon_view_get_model(GTK_ICON_VIEW(ivResults));
 	
 	// Get iter from path
 	GtkTreeIter iter;
@@ -958,12 +958,12 @@ void savedRecovery() {
     // New images for new indexes will be downloaded
     imageIndexes.clear();
     
-	// Update iconView with history results
+	// Update ivResults with history results
 	results.setModel();
 	// Scroll to saved position after updating model
 	string index = results.getIndex();
 	GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
-	gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(iconView), path1, FALSE, 0, 0);
+	gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), path1, FALSE, 0, 0);
     gtk_tree_path_free(path1);
 }
 
@@ -1169,7 +1169,7 @@ int main( int   argc,
     
     tvPlaylists = createTreeView();
     
-    // set model to iconView
+    // set model to ivResults
     // it's kind of not needed but it removes some error
     GtkTreeModel *model = GTK_TREE_MODEL(gtk_list_store_new(
 	     ICON_NUM_COLS,   // Number of columns
@@ -1179,10 +1179,10 @@ int main( int   argc,
 	     G_TYPE_STRING    // Image link
     ));
     
-    iconView = gtk_icon_view_new_with_model(model);
-    gtk_icon_view_set_pixbuf_column(GTK_ICON_VIEW(iconView), ICON_IMAGE_COLUMN);                                                  
-    gtk_icon_view_set_text_column(GTK_ICON_VIEW(iconView), ICON_TITLE_COLUMN);
-    gtk_icon_view_set_item_width(GTK_ICON_VIEW(iconView), 180);
+    ivResults = gtk_icon_view_new_with_model(model);
+    gtk_icon_view_set_pixbuf_column(GTK_ICON_VIEW(ivResults), ICON_IMAGE_COLUMN);                                                  
+    gtk_icon_view_set_text_column(GTK_ICON_VIEW(ivResults), ICON_TITLE_COLUMN);
+    gtk_icon_view_set_item_width(GTK_ICON_VIEW(ivResults), 180);
     
 	g_object_unref(model);
     
@@ -1286,7 +1286,7 @@ int main( int   argc,
             GTK_SHADOW_ETCHED_IN);
     
     gtk_container_add(GTK_CONTAINER(swTree), tvPlaylists);
-    gtk_container_add(GTK_CONTAINER(swIcon), iconView);
+    gtk_container_add(GTK_CONTAINER(swIcon), ivResults);
     
     tvBackActors = createTreeView();
     // Set up store
@@ -1420,10 +1420,10 @@ int main( int   argc,
     g_signal_connect(tvActors, "row-activated",
         G_CALLBACK(actorsClicked), NULL);
         
-    g_signal_connect(iconView, "item-activated", 
+    g_signal_connect(ivResults, "item-activated", 
         G_CALLBACK(resultActivated), NULL);  
     
-    g_signal_connect(iconView, "expose-event",
+    g_signal_connect(ivResults, "expose-event",
         G_CALLBACK(iconViewExposed), NULL);
     
     gtk_container_add(GTK_CONTAINER(window), vbox);
@@ -1494,7 +1494,7 @@ int main( int   argc,
     g_signal_connect(vadjustment, "value-changed",
         G_CALLBACK(swIconVScrollChanged), NULL);
         
-    // Initialize default pixbuf for iconView here
+    // Initialize default pixbuf for ivResults here
     defaultPixbuf = create_pixbuf("blank.png");
     
     GtkTreeStore *playlistsStore = gtk_tree_store_new(PLAYLIST_NUM_COLS, 

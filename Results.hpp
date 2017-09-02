@@ -101,7 +101,7 @@ class Results {
 	
 	void setModel() {
 		gtk_icon_view_set_model(
-		    GTK_ICON_VIEW(iconView),
+		    GTK_ICON_VIEW(ivResults),
 		    GTK_TREE_MODEL(iconViewStore)
 		);
 	}
