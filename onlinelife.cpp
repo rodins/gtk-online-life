@@ -47,7 +47,7 @@ GtkWidget *frRightTop, *frInfo;
 
 const string PROG_NAME("Online life");
 
-GtkWidget *treeView;
+GtkWidget *tvPlaylists;
 
 GtkToolItem *btnUp;
 GtkToolItem *btnPrev;
@@ -1167,7 +1167,7 @@ int main( int   argc,
     
     vbox = gtk_vbox_new(FALSE, 1);
     
-    treeView = createTreeView();
+    tvPlaylists = createTreeView();
     
     // set model to iconView
     // it's kind of not needed but it removes some error
@@ -1285,7 +1285,7 @@ int main( int   argc,
     gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swIcon),
             GTK_SHADOW_ETCHED_IN);
     
-    gtk_container_add(GTK_CONTAINER(swTree), treeView);
+    gtk_container_add(GTK_CONTAINER(swTree), tvPlaylists);
     gtk_container_add(GTK_CONTAINER(swIcon), iconView);
     
     tvBackActors = createTreeView();
@@ -1411,7 +1411,7 @@ int main( int   argc,
     
     gtk_box_pack_start(GTK_BOX(vbox), hbCenter, TRUE, TRUE, 1);
     
-    g_signal_connect(treeView, "row-activated", 
+    g_signal_connect(tvPlaylists, "row-activated", 
         G_CALLBACK(playlistClicked), NULL);
         
     g_signal_connect(tvCategories, "row-activated",
@@ -1502,11 +1502,11 @@ int main( int   argc,
 									                  G_TYPE_STRING,
 									                  G_TYPE_STRING,
 									                  G_TYPE_STRING);
-    gtk_tree_view_set_model(GTK_TREE_VIEW(treeView),
+    gtk_tree_view_set_model(GTK_TREE_VIEW(tvPlaylists),
                             GTK_TREE_MODEL(playlistsStore));
     g_object_unref(playlistsStore);
                           
-    playlists.init(gtk_tree_view_get_model(GTK_TREE_VIEW(treeView)));
+    playlists.init(gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists)));
     
     gtk_main();
     
