@@ -9,6 +9,7 @@ class Playlists {
 	GtkTreeIter topLevel, child;
 	
 	int count;
+	string url;
 	public:
 	
 	Playlists(GtkTreeModel *model) {
@@ -17,18 +18,30 @@ class Playlists {
 	    treestore = GTK_TREE_STORE(model);
 	}
 	
-	string getHrefId(string &href) {
+	void setUrl(gpointer args) {
+		string href((gchar*)args);
+		if(!href.empty()) { // empty link means repeat (use saved link)
+			url = href;
+			g_free(args);
+		}
+	}
+	
+	string getUrl() {
+		return url;
+	}
+	
+	string getHrefId() {
 		//Find id
 		string domain("http://www.online-life.");
-		size_t id_begin = href.find(domain);
+		size_t id_begin = url.find(domain);
 		// Make parser domain end independent
 		if(id_begin != string::npos) {
-			id_begin = href.find("/", id_begin+1);
+			id_begin = url.find("/", id_begin+1);
 		}
-		size_t id_end = href.find("-", id_begin + domain.length());
+		size_t id_end = url.find("-", id_begin + domain.length());
 		if(id_begin != string::npos && id_end != string::npos) {
 			size_t id_length = id_end - id_begin - domain.length();
-			string id_str = href.substr(id_begin + domain.length(), id_length);
+			string id_str = url.substr(id_begin + domain.length(), id_length);
 			//cout << "Id: " << id_str << endl;
 			return id_str;
 		}

@@ -530,20 +530,11 @@ void playOrDownload(string file, string download) {
 	}
 }
 
-static void btnPlaylistsRepeatClicked(GtkWidget *widget, gpointer data) {
-	// Update playlists
-	g_thread_pool_push(playlistsThreadPool, data, NULL);
-}
-
 void playlistsTask(gpointer args, gpointer args2) {
-	string href((gchar*)args);
-	// free args in three places when it's no longer needed by repeat button
-	gdk_threads_enter();
-	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists));
-    gdk_threads_leave();
-        
-	Playlists playlists(model);
-	string id = playlists.getHrefId(href);
+	Playlists *playlists = (Playlists*)args2;
+	playlists->setUrl(args);
+	string href = playlists->getUrl();
+	string id = playlists->getHrefId();
 	if(!id.empty()) {
 		string url = "http://dterod.com/js.php?id=" + id;
 		string referer = "http://dterod.com/player.php?newsid=" + id;
@@ -554,13 +545,12 @@ void playlistsTask(gpointer args, gpointer args2) {
 		gdk_threads_leave();
 		
 		string js = HtmlString::getPage(url, referer);
-		string playlist_link = playlists.get_txt_link(js);
+		string playlist_link = playlists->get_txt_link(js);
 		if(!playlist_link.empty()) { // Playlists found
 			string json = HtmlString::getPage(playlist_link);
 			gdk_threads_enter();
-			playlists.parse(json);
-			if(playlists.getCount() > 0) {
-				g_free(args);//1
+			playlists->parse(json);
+			if(playlists->getCount() > 0) {
 				displayPlaylists();
 			}else {
 				showResultsRepeat(FALSE);
@@ -569,19 +559,18 @@ void playlistsTask(gpointer args, gpointer args2) {
 			gdk_threads_leave();
 		}else { //PlayItem found or nothing found
 			gdk_threads_enter();
-			PlayItem playItem = playlists.parse_play_item(js);
+			PlayItem playItem = playlists->parse_play_item(js);
 			if(!playItem.comment.empty()) { // PlayItem found
 			    // get results list back
 			    switchToIconView();
 			    updateTitle();
 				processPlayItem(playItem); 
-				g_free(args);//2
 			}else {
 				if(results.getTitle().find("Трейлеры") != string::npos) {
 					gdk_threads_leave();
 					// Searching for alternative trailers links
 		            string infoHtml = HtmlString::getPage(href, referer);
-		            string trailerId = playlists.getTrailerId(infoHtml); 
+		            string trailerId = playlists->getTrailerId(infoHtml); 
 		            url = "http://dterod.com/js.php?id=" + trailerId + "&trailer=1";
 		            referer = "http://dterod.com/player.php?trailer_id=" + trailerId;
 		            string json = HtmlString::getPage(url, referer);
@@ -589,8 +578,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 					// get results list back
 			        switchToIconView();
 			        updateTitle();
-					processPlayItem(playlists.parse_play_item(json)); 
-					g_free(args);//3
+					processPlayItem(playlists->parse_play_item(json)); 
 				}else {
 					showResultsRepeat(FALSE);
 				    setSensitiveItemsPlaylists();
@@ -807,12 +795,6 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 		// Set playlists title before playlists task
 		string title = PROG_NAME + " - " + resultTitle;
 	    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-	    
-	    // TODO: this creates bug, when back to results, restore connect
-		g_signal_connect(btnResultsError,
-	                     "clicked",
-	                     G_CALLBACK(btnPlaylistsRepeatClicked),
-	                     href);
 	    
 	    g_thread_pool_push(playlistsThreadPool, href, NULL);
 	}
@@ -1084,8 +1066,14 @@ static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
 }
 
 static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
-	// Update results
-	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	if(results.isError()) {
+		// Update results
+	    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	    results.setError(FALSE);
+	}else {
+		// Update playlists
+	    g_thread_pool_push(playlistsThreadPool, (gpointer)"", NULL);
+	}
 }
 
 int main( int   argc,
@@ -1410,6 +1398,19 @@ int main( int   argc,
     
     gtk_widget_set_visible(hbResultsError, FALSE);
     
+    GtkTreeStore *playlistsStore = gtk_tree_store_new(PLAYLIST_NUM_COLS, 
+						                              GDK_TYPE_PIXBUF,
+									                  G_TYPE_STRING,
+									                  G_TYPE_STRING,
+									                  G_TYPE_STRING);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(tvPlaylists),
+                            GTK_TREE_MODEL(playlistsStore));
+    g_object_unref(playlistsStore);
+    
+    Playlists *playlists = new Playlists(
+        gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists))
+    );
+    
     // GThreadPool for downloading images
     imagesThreadPool = g_thread_pool_new(imageDownloadTask,
                                    NULL, 
@@ -1440,7 +1441,7 @@ int main( int   argc,
                                    
     // GThreadPool for playlists
     playlistsThreadPool = g_thread_pool_new(playlistsTask,
-                                   NULL,
+                                   playlists,
                                    1, // Run one thread at the time
                                    FALSE,
                                    NULL);
@@ -1454,18 +1455,11 @@ int main( int   argc,
     // Initialize default pixbuf for ivResults here
     defaultPixbuf = create_pixbuf("blank.png");
     
-    GtkTreeStore *playlistsStore = gtk_tree_store_new(PLAYLIST_NUM_COLS, 
-						                              GDK_TYPE_PIXBUF,
-									                  G_TYPE_STRING,
-									                  G_TYPE_STRING,
-									                  G_TYPE_STRING);
-    gtk_tree_view_set_model(GTK_TREE_VIEW(tvPlaylists),
-                            GTK_TREE_MODEL(playlistsStore));
-    g_object_unref(playlistsStore);
-    
     gtk_main();
     
     gdk_threads_leave ();
+    
+    g_free(playlists);
  
     /* we're done with libcurl, so clean it up */ 
 	curl_global_cleanup();

@@ -7,6 +7,7 @@ class Results {
 	string title;
 	string url;
 	bool refresh;
+	bool error;
 	
 	GtkListStore *iconViewStore;
 	
@@ -15,6 +16,15 @@ class Results {
 	
 	Results() {
 		refresh = FALSE;
+		error = FALSE;
+	}
+	
+	bool isError() {
+		return error;
+	}
+	
+	void setError(bool e) {
+		error = e;
 	}
 	
 	bool isRefresh() {
