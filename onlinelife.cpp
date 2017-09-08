@@ -396,6 +396,7 @@ void resultsAppendTask(gpointer arg, gpointer arg1) {
 		}
 		switchToIconView();
 		showResultsRepeat(TRUE);
+		results.setError(TRUE);
 	}
 	gdk_threads_leave();
 }
@@ -456,6 +457,7 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	}else {
 		switchToIconView();
 		showResultsRepeat(FALSE);
+		results.setError(TRUE);
 	}
 	
 	if(results.isRefresh()) {
