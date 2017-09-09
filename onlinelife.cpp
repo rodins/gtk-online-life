@@ -606,7 +606,7 @@ void actorsTask(gpointer args, gpointer args2) {
 	gdk_threads_leave();
 }
 
-void categoriesClicked(GtkWidget *widget,
+void categoriesClicked(GtkTreeView *treeView,
                        GtkTreePath *path,
                        GtkTreeViewColumn *column,
                        gpointer data) {
@@ -614,7 +614,7 @@ void categoriesClicked(GtkWidget *widget,
 	resultsHistory->saveToBackStack();
 	
 	// Get model from tree view
-	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
+	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
 	// Get iter from path
 	GtkTreeIter iter, parent;
@@ -653,13 +653,13 @@ void categoriesClicked(GtkWidget *widget,
 	g_free(link);
 }
 
-void actorsClicked(GtkWidget *widget,
+void actorsClicked(GtkTreeView *treeView,
                    GtkTreePath *path,
                    GtkTreeViewColumn *column,
                    gpointer data) {
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	// Get model from tree view
-	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
+	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
 	// Get iter from path
 	GtkTreeIter iter;
@@ -686,9 +686,12 @@ void actorsClicked(GtkWidget *widget,
 	g_free(link);
 }
 
-void playlistClicked(GtkWidget *widget, GtkTreePath *path, gpointer statusbar) {
+void playlistClicked(GtkTreeView *treeView,
+                     GtkTreePath *path,
+                     GtkTreeViewColumn *column,
+                     gpointer data) {
 	// Get model from tree view
-	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
+	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
 	// Get iter from path
 	GtkTreeIter iter;
