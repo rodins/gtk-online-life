@@ -21,23 +21,19 @@
 
 GdkPixbuf *defaultPixbuf;
 map<string, GdkPixbuf*> imagesCache;
-GtkWidget *ivResults;
 
 #include "CategoriesParser.hpp"
 #include "Results.hpp"
+#include "ResultsHistory.hpp"
 #include "Playlists.hpp"
 #include "Actors.hpp"
 
 using namespace std;
 
-//Results
-Results results;
 //Actors
 Actors actors, prevActors;
 
 map <string, Actors> backActors;
-
-vector<Results> backResultsStack, forwardResultsStack;
 
 GtkWidget *frRightBottom;
 GtkWidget *lbInfo;
@@ -45,6 +41,7 @@ GtkWidget *frRightTop, *frInfo;
 
 const string PROG_NAME("Online life");
 
+GtkWidget *ivResults;
 GtkWidget *tvPlaylists;
 
 GtkToolItem *btnUp;
@@ -144,18 +141,6 @@ void setSensitiveItemsPlaylists() {
 
 void setSensitiveItemsResults() {
 	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
-
-	if(backResultsStack.empty()) {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
-	}else {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
-	}
-	
-	if(forwardResultsStack.empty()) {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
-	}else {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), TRUE);
-	}
 	
 	gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
@@ -292,16 +277,6 @@ void imageDownloadTask(gpointer arg, gpointer arg1) {
 	}
 }
 
-void saveResultsPostion() {
-	GtkTreePath *path1, *path2;
-	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
-		string index(gtk_tree_path_to_string(path1));
-        results.setIndex(index);
-		gtk_tree_path_free(path1);
-	    gtk_tree_path_free(path2);
-	}
-}
-
 void displayRange() {
 	GtkTreePath *path1, *path2;
 	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
@@ -323,11 +298,6 @@ void displayRange() {
 		gtk_tree_path_free(path1);
 		gtk_tree_path_free(path2);
 	}
-}
-
-void updateTitle() {
-	string title = PROG_NAME + " - " + results.getTitle();
-	gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 }
 
 void showSpCenter(bool isPage) {
@@ -377,9 +347,10 @@ void show_error_dialog() {
 }
 
 void resultsAppendTask(gpointer arg, gpointer arg1) {
+	ResultsHistory *resultsHistory = (ResultsHistory *)arg1;
 	// On pre execute
 	gdk_threads_enter();
-	string link = results.getNextLink();
+	string link = resultsHistory->getNextLink();
 	// Display spinner at the bottom of list
     showSpCenter(TRUE);
 	gdk_threads_leave();
@@ -388,45 +359,29 @@ void resultsAppendTask(gpointer arg, gpointer arg1) {
 	// On post execute
 	gdk_threads_enter();
 	if(!page.empty()) {
-		results.show(page);
+		resultsHistory->show(page);
 		switchToIconView();
 	}else { // error
-		if(resultsThreadsLinks.count(link) > 0) {
-			resultsThreadsLinks.erase(link);
+		if(resultsHistory->threadLinksContainNextLink()) {
+			resultsHistory->eraseNextLinkFromThreadLinks();
 		}
 		switchToIconView();
 		showResultsRepeat(TRUE);
-		results.setError(TRUE);
+		resultsHistory->setError(TRUE);
 	}
 	gdk_threads_leave();
-}
-
-void removeBackStackDuplicate() {
-	// Linear search for title
-	int eraseIndex = -1;
-	// If back stack has title, remove results with it.
-	for(unsigned i = 0; i < backResultsStack.size(); i++) {
-		if(backResultsStack[i].getTitle() == results.getTitle()) {
-			eraseIndex = i;
-			break;
-		}
-	}
-	
-	if(eraseIndex != -1) {
-		backResultsStack.erase(backResultsStack.begin() + eraseIndex);
-	}
 }
 
 void resultsNewTask(gpointer arg, gpointer arg1) {
 	// On pre execute
 	gdk_threads_enter();
-	
+	ResultsHistory *resultsHistory = (ResultsHistory*)arg1;
 	// New images for new indexes will be downloaded
     imageIndexes.clear();
     
 	// Display spinner for new results
     showSpCenter(FALSE);
-    string link = results.getUrl();
+    string link = resultsHistory->getUrl();
     gdk_threads_leave();
     // async part
 	string page = HtmlString::getResultsPage(link);
@@ -434,46 +389,32 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	if(!page.empty()) {
 		//TODO: maybe I need to clear it while saving....
 		// clear forward results stack on fetching new results
-		// Do not clear if refresh button clicked
-		if(!results.isRefresh()) {
-			forwardResultsStack.clear();
-	        gtk_tool_item_set_tooltip_text(btnNext, "Move forward in history");
-		}
+	    resultsHistory->clearForwardResultsStack();
 
-		removeBackStackDuplicate();
+		resultsHistory->removeBackStackDuplicate();
 		
 		// Scroll to the top of the list
 	    GtkTreePath *path = gtk_tree_path_new_first();
 	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), path, FALSE, 0, 0);
 	    
 	    // Clear results links set if not paging
-	    resultsThreadsLinks.clear();
+	    resultsHistory->clearThreadsLinks();
 		
-		results.createNewModel();
-		results.show(page);
-		
+		resultsHistory->createNewModel();
 		switchToIconView();
+		resultsHistory->show(page);
+		
 		setSensitiveItemsResults();
 	}else {
 		switchToIconView();
 		showResultsRepeat(FALSE);
-		results.setError(TRUE);
+		resultsHistory->setError(TRUE);
 	}
 	
-	if(results.isRefresh()) {
-		results.setRefresh(FALSE);
+	if(resultsHistory->isRefresh()) {
+		resultsHistory->setRefresh(FALSE);
 	}
 	gdk_threads_leave();
-}
-
-void saveResultsToBackStack() {
-	// Save position and copy to save variable
-	if(!results.getTitle().empty()) {
-		saveResultsPostion();
-        backResultsStack.push_back(results);
-        // Set tooltip with results title
-        gtk_tool_item_set_tooltip_text(btnPrev, results.getTitle().c_str());
-	}
 }
 
 void displayPlaylists() {
@@ -534,6 +475,7 @@ void playOrDownload(string file, string download) {
 
 void playlistsTask(gpointer args, gpointer args2) {
 	Playlists *playlists = (Playlists*)args2;
+	ResultsHistory *resultsHistory = playlists->getResultsHistory();
 	playlists->setUrl(args);
 	string href = playlists->getUrl();
 	string id = playlists->getHrefId();
@@ -565,10 +507,10 @@ void playlistsTask(gpointer args, gpointer args2) {
 			if(!playItem.comment.empty()) { // PlayItem found
 			    // get results list back
 			    switchToIconView();
-			    updateTitle();
+			    resultsHistory->updateTitle();
 				processPlayItem(playItem); 
 			}else {
-				if(results.getTitle().find("Трейлеры") != string::npos) {
+				if(resultsHistory->getTitle().find("Трейлеры") != string::npos) {
 					gdk_threads_leave();
 					// Searching for alternative trailers links
 		            string infoHtml = HtmlString::getPage(href, referer);
@@ -579,7 +521,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 					gdk_threads_enter();
 					// get results list back
 			        switchToIconView();
-			        updateTitle();
+			        resultsHistory->updateTitle();
 					processPlayItem(playlists->parse_play_item(json)); 
 				}else {
 					showResultsRepeat(FALSE);
@@ -665,7 +607,8 @@ void actorsTask(gpointer args, gpointer args2) {
 }
 
 void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
-	saveResultsToBackStack();
+	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+	resultsHistory->saveToBackStack();
 	
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
@@ -684,7 +627,7 @@ void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
 	                   TREE_HREF_COLUMN,
 	                   &link,
 	                   -1);
-	
+	                   
 	// Get parent (category) of iter
 	if(gtk_tree_model_iter_parent(model, &parent, &iter)) {
 		gchar *parentTitle = NULL;
@@ -693,14 +636,14 @@ void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
 		                   TREE_TITLE_COLUMN,
 		                   &parentTitle,
 		                   -1);
-	    results.setTitle(string(parentTitle) + " - " + title);
+	    resultsHistory->setTitle(string(parentTitle) + " - " + title);
 		g_free(parentTitle);
 	}else {
-		results.setTitle(title);
+		resultsHistory->setTitle(title);
 	}
 	
-	updateTitle();
-	results.setUrl(link);
+	resultsHistory->updateTitle();
+	resultsHistory->setUrl(link);
 	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 	
 	g_free(title);
@@ -708,6 +651,7 @@ void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
 }
 
 void actorsClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
+	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
 	
@@ -726,10 +670,10 @@ void actorsClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
 	                   &link, 
 	                   -1);
 	                   
-	saveResultsToBackStack();
-	results.setTitle(title);
-	updateTitle();
-	results.setUrl(link);
+	resultsHistory->saveToBackStack();
+	resultsHistory->setTitle(title);
+	resultsHistory->updateTitle();
+	resultsHistory->setUrl(link);
     g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 	                   
 	g_free(title);
@@ -893,108 +837,65 @@ static void btnCategoriesClicked(GtkWidget *widget,
 static void btnUpClicked( GtkWidget *widget,
                       gpointer   data )
 {
+	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	switchToIconView();
-	updateTitle();
+	resultsHistory->updateTitle();
 	setSensitiveItemsResults();
-}
-
-void savedRecovery() {
-	// Clear results links set if not paging
-    // (do not allow next page thread to be called twice)
-    resultsThreadsLinks.clear(); 
-    
-    // New images for new indexes will be downloaded
-    imageIndexes.clear();
-    
-	// Update ivResults with history results
-	results.setModel();
-	// Scroll to saved position after updating model
-	string index = results.getIndex();
-	GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
-	gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), path1, FALSE, 0, 0);
-    gtk_tree_path_free(path1);
 }
 
 static void btnPrevClicked( GtkWidget *widget,
                       gpointer   data )
 {   
+	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	// If results repeat button not displayed
 	if(!gtk_widget_get_visible(hbResultsError)) {
 		// Save current results to forwardResultsStack
-		saveResultsPostion();
-		forwardResultsStack.push_back(results); 
-		// Set tooltip with results title
-        gtk_tool_item_set_tooltip_text(btnNext, results.getTitle().c_str());
+		resultsHistory->saveToForwardStack();
 	}else {
 		switchToIconView();
 	}
 	
 	// Display top results from backResultsStack
-	results = backResultsStack.back();
-	backResultsStack.pop_back();
-	if(!backResultsStack.empty()) {
-		// Set tooltip with results title
-		gtk_tool_item_set_tooltip_text(btnPrev, 
-									   backResultsStack
-										   .back()
-										   .getTitle().c_str());
-	}else {
-		// Set tooltip with results title
-	    gtk_tool_item_set_tooltip_text(btnPrev, "Move back in history");
-	}
-	
-	savedRecovery();
-	updateTitle();
+	resultsHistory->restoreFromBackStack();
+	// New images for new indexes will be downloaded
+	imageIndexes.clear();
 	setSensitiveItemsResults();		  
 }
 
 static void btnNextClicked( GtkWidget *widget,
                       gpointer   data)
 {   
+	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	// If results repeat button not displayed
 	if(!gtk_widget_get_visible(hbResultsError)) {
 		// Save current results to backResultsStack
-        saveResultsPostion();
-        backResultsStack.push_back(results);
-        // Set tooltip with results title
-        gtk_tool_item_set_tooltip_text(btnPrev, results.getTitle().c_str());
+		resultsHistory->saveToBackStack();
 	}else {
 		// If repeat button displayed
 	    switchToIconView();
 	}
 	
     // Display top result from forwardResultsStack
-    results = forwardResultsStack.back();
-    forwardResultsStack.pop_back();
-    if(!forwardResultsStack.empty()) {
-		// Set tooltip with results title
-	    gtk_tool_item_set_tooltip_text(btnNext, 
-	                                   forwardResultsStack
-	                                       .back()
-	                                       .getTitle().c_str());
-	}else {
-		// Set tooltip with results title
-	    gtk_tool_item_set_tooltip_text(btnNext, "Move forward in history");
-	}
-    
-    savedRecovery();
-    updateTitle(); 
+    resultsHistory->restoreFromForwardStack();
+    // New images for new indexes will be downloaded
+	imageIndexes.clear();
     setSensitiveItemsResults();
 }
 
 static void entryActivated( GtkWidget *widget, 
                       gpointer data) {
+    ResultsHistory *resultsHistory = (ResultsHistory *)data;
     string query(gtk_entry_get_text(GTK_ENTRY(widget)));
     if(!query.empty()) {
-		saveResultsToBackStack();
+		resultsHistory->saveToBackStack();
 	    string title = "Search: " + query;
-	    results.setTitle(title);
-	    updateTitle();
+	    resultsHistory->setTitle(title);
+	    resultsHistory->updateTitle();
 	    string base_url = string(DOMAIN) + 
 	         "/?do=search&subaction=search&mode=simple&story=" + 
 	         to_cp1251(query);
-		results.setBaseUrl(base_url);
-		results.setUrl(base_url);
+		resultsHistory->setBaseUrl(base_url);
+		resultsHistory->setUrl(base_url);
 	    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 	}		  						  
 }
@@ -1047,15 +948,16 @@ gboolean iconViewExposed(GtkWidget *widget, GdkEvent *event, gpointer data) {
 }
 
 void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
+	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	gdouble value = gtk_adjustment_get_value(adj);
 	gdouble upper = gtk_adjustment_get_upper(adj);
 	gdouble page_size = gtk_adjustment_get_page_size(adj);
 	gdouble max_value = upper - page_size - page_size;
 	if (value > max_value) {
-		if(!results.getNextLink().empty()) {
+		if(!resultsHistory->getNextLink().empty()) {
 			// Search for the same link only once if it's not saved in set.
-			if(resultsThreadsLinks.count(results.getNextLink()) == 0) {
-				resultsThreadsLinks.insert(results.getNextLink());
+			if(!resultsHistory->threadLinksContainNextLink()) {
+				resultsHistory->insertNextLinkToThreadLinks();
 				g_thread_pool_push(resultsAppendThreadPool, (gpointer)1, NULL);
 			}
 		}
@@ -1063,15 +965,17 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 }
 
 static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
-	results.setRefresh(TRUE);
+	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+	resultsHistory->setRefresh(TRUE);
 	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 }
 
 static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
-	if(results.isError()) {
+	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+	if(resultsHistory->isError()) {
 		// Update results
 	    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
-	    results.setError(FALSE);
+	    resultsHistory->setError(FALSE);
 	}else {
 		// Update playlists
 	    g_thread_pool_push(playlistsThreadPool, (gpointer)"", NULL);
@@ -1132,6 +1036,15 @@ int main( int   argc,
     gtk_icon_view_set_item_width(GTK_ICON_VIEW(ivResults), 180);
     
 	g_object_unref(model);
+	
+	btnPrev = gtk_tool_button_new_from_stock(GTK_STOCK_GO_BACK);
+	btnNext = gtk_tool_button_new_from_stock(GTK_STOCK_GO_FORWARD);
+	
+	ResultsHistory *resultsHistory = new ResultsHistory(window,
+	                                                    ivResults,
+	                                                    btnPrev,
+	                                                    btnNext,
+	                                                    PROG_NAME);
     
     toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
@@ -1151,8 +1064,10 @@ int main( int   argc,
 	btnRefresh = gtk_tool_button_new_from_stock(GTK_STOCK_REFRESH);
     gtk_tool_item_set_tooltip_text(btnRefresh, "Update results");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnRefresh, -1);
-    g_signal_connect(GTK_WIDGET(btnRefresh), "clicked", 
-        G_CALLBACK(btnRefreshClicked), NULL);
+    g_signal_connect(GTK_WIDGET(btnRefresh), 
+                     "clicked", 
+                     G_CALLBACK(btnRefreshClicked), 
+                     resultsHistory);
         
     sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
@@ -1160,17 +1075,24 @@ int main( int   argc,
     btnUp = gtk_tool_button_new_from_stock(GTK_STOCK_GO_UP);
     gtk_tool_item_set_tooltip_text(btnUp, "Move up");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnUp, -1);
-    g_signal_connect(GTK_WIDGET(btnUp), "clicked", G_CALLBACK(btnUpClicked), NULL);
+    g_signal_connect(GTK_WIDGET(btnUp),
+                     "clicked", 
+                     G_CALLBACK(btnUpClicked), 
+                     resultsHistory);
     
-    btnPrev = gtk_tool_button_new_from_stock(GTK_STOCK_GO_BACK);
     gtk_tool_item_set_tooltip_text(btnPrev, "Go back in history");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnPrev, -1);
-    g_signal_connect(btnPrev, "clicked", G_CALLBACK(btnPrevClicked), NULL);
+    g_signal_connect(btnPrev,
+                     "clicked", 
+                     G_CALLBACK(btnPrevClicked),
+                     resultsHistory);
     
-    btnNext = gtk_tool_button_new_from_stock(GTK_STOCK_GO_FORWARD);
     gtk_tool_item_set_tooltip_text(btnNext, "Go forward in history");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnNext, -1);
-    g_signal_connect(GTK_WIDGET(btnNext), "clicked", G_CALLBACK(btnNextClicked), NULL);
+    g_signal_connect(GTK_WIDGET(btnNext),
+                     "clicked", 
+                     G_CALLBACK(btnNextClicked),
+                     resultsHistory);
     
     sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
@@ -1179,7 +1101,10 @@ int main( int   argc,
     gtk_widget_set_tooltip_text(entry, "Search online-life");
 	GtkToolItem *entryItem = gtk_tool_item_new();
 	gtk_container_add(GTK_CONTAINER(entryItem), entry);
-    g_signal_connect(entry, "activate", G_CALLBACK(entryActivated), NULL);
+    g_signal_connect(entry,
+                     "activate", 
+                     G_CALLBACK(entryActivated), 
+                     resultsHistory);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), entryItem, -1);
     
     sep = gtk_separator_tool_item_new();
@@ -1341,7 +1266,7 @@ int main( int   argc,
         btnResultsError,
         "clicked",
         G_CALLBACK(btnResultsRepeatClicked),
-        NULL);
+        resultsHistory);
     
     // add vbox center
     vbCenter = gtk_vbox_new(FALSE, 1);
@@ -1361,11 +1286,15 @@ int main( int   argc,
     g_signal_connect(tvPlaylists, "row-activated", 
         G_CALLBACK(playlistClicked), NULL);
         
-    g_signal_connect(tvCategories, "row-activated",
-        G_CALLBACK(categoriesClicked), NULL);
+    g_signal_connect(tvCategories,
+                     "row-activated",
+                     G_CALLBACK(categoriesClicked), 
+                     resultsHistory);
         
-    g_signal_connect(tvActors, "row-activated",
-        G_CALLBACK(actorsClicked), NULL);
+    g_signal_connect(tvActors, 
+                     "row-activated",
+                     G_CALLBACK(actorsClicked), 
+                     resultsHistory);
         
     g_signal_connect(ivResults, "item-activated", 
         G_CALLBACK(resultActivated), NULL);  
@@ -1410,7 +1339,8 @@ int main( int   argc,
     g_object_unref(playlistsStore);
     
     Playlists *playlists = new Playlists(
-        gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists))
+        gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists)),
+        resultsHistory
     );
     
     // GThreadPool for downloading images
@@ -1422,14 +1352,14 @@ int main( int   argc,
                                    
     // GThreadPool for new results
     resultsNewThreadPool = g_thread_pool_new(resultsNewTask,
-                                   NULL,
+                                   resultsHistory,
                                    1, // Run one thread at the time
                                    FALSE,
                                    NULL);
                                    
     // GThreadPool for results pages
     resultsAppendThreadPool = g_thread_pool_new(resultsAppendTask,
-                                   NULL,
+                                   resultsHistory,
                                    1, // Run one thread at the time
                                    FALSE,
                                    NULL);
@@ -1452,7 +1382,7 @@ int main( int   argc,
     GtkAdjustment *vadjustment;
     vadjustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(swIcon));
     g_signal_connect(vadjustment, "value-changed",
-        G_CALLBACK(swIconVScrollChanged), NULL);
+        G_CALLBACK(swIconVScrollChanged), resultsHistory);
         
     // Initialize default pixbuf for ivResults here
     defaultPixbuf = create_pixbuf("blank.png");
@@ -1462,6 +1392,7 @@ int main( int   argc,
     gdk_threads_leave ();
     
     g_free(playlists);
+    g_free(resultsHistory);
  
     /* we're done with libcurl, so clean it up */ 
 	curl_global_cleanup();

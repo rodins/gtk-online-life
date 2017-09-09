@@ -43,7 +43,7 @@ class Results {
 		index = i;
 	}
 	
-	void createNewModel() {
+	void createNewModel(GtkWidget *ivResults) {
 		iconViewStore = gtk_list_store_new(
 		     ICON_NUM_COLS,   // Number of columns
 		     GDK_TYPE_PIXBUF, // Image poster
@@ -52,14 +52,16 @@ class Results {
 		     G_TYPE_STRING    // Image link
 		);
 		
-		setModel();
+		setModel(ivResults);
 		
 		// Want to keep my copy of model
 		//g_object_unref(iconViewStore);
 	}
 	
 	void setTitle(string t) {
+		cout << "T in results: " << t << endl;
 		title = t;
+		cout << "Title in results: " << title << endl;
 	}
 	
 	string getTitle() {
@@ -100,7 +102,7 @@ class Results {
 		return current_page;
 	}
 	
-	void setModel() {
+	void setModel(GtkWidget *ivResults) {
 		gtk_icon_view_set_model(
 		    GTK_ICON_VIEW(ivResults),
 		    GTK_TREE_MODEL(iconViewStore)
