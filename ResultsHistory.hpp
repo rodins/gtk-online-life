@@ -203,4 +203,18 @@ class ResultsHistory {
 		resultsThreadsLinks.erase(results.getNextLink());
 	}
 	
+	void updatePrevNextButtons() {
+		if(forwardResultsStack.empty()) {
+			gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
+		}else {
+			gtk_widget_set_sensitive(GTK_WIDGET(btnNext), TRUE);
+		}
+		
+		if(backResultsStack.empty()) {
+			gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
+		}else {
+			gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
+		}
+	}
+	
 };

@@ -840,6 +840,7 @@ static void btnUpClicked( GtkWidget *widget,
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	switchToIconView();
 	resultsHistory->updateTitle();
+	resultsHistory->updatePrevNextButtons();
 	setSensitiveItemsResults();
 }
 
