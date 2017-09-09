@@ -606,8 +606,11 @@ void actorsTask(gpointer args, gpointer args2) {
 	gdk_threads_leave();
 }
 
-void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
-	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+void categoriesClicked(GtkWidget *widget,
+                       GtkTreePath *path,
+                       GtkTreeViewColumn *column,
+                       gpointer data) {
+	ResultsHistory *resultsHistory = (ResultsHistory*)data;
 	resultsHistory->saveToBackStack();
 	
 	// Get model from tree view
@@ -650,7 +653,10 @@ void categoriesClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
 	g_free(link);
 }
 
-void actorsClicked(GtkWidget *widget, GtkTreePath *path, gpointer data) {
+void actorsClicked(GtkWidget *widget,
+                   GtkTreePath *path,
+                   GtkTreeViewColumn *column,
+                   gpointer data) {
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
@@ -1263,6 +1269,7 @@ int main( int   argc,
         TRUE, 
         FALSE, 
         10);
+        
     g_signal_connect(
         btnResultsError,
         "clicked",

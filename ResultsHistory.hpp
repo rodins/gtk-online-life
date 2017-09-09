@@ -104,7 +104,6 @@ class ResultsHistory {
 	}
 	
 	void setTitle(string title) {
-		cout << "Setting title " << title << endl;
 		results.setTitle(title);
 	}
 	

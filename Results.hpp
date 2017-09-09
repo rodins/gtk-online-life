@@ -59,9 +59,7 @@ class Results {
 	}
 	
 	void setTitle(string t) {
-		cout << "T in results: " << t << endl;
 		title = t;
-		cout << "Title in results: " << title << endl;
 	}
 	
 	string getTitle() {
