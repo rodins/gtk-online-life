@@ -26,14 +26,9 @@ map<string, GdkPixbuf*> imagesCache;
 #include "Results.hpp"
 #include "ResultsHistory.hpp"
 #include "Playlists.hpp"
-#include "Actors.hpp"
+#include "ActorsHistory.hpp"
 
 using namespace std;
-
-//Actors
-Actors actors, prevActors;
-
-map <string, Actors> backActors;
 
 GtkWidget *frRightBottom;
 GtkWidget *lbInfo;
@@ -533,27 +528,6 @@ void playlistsTask(gpointer args, gpointer args2) {
 	}
 }
 
-void updateActors() {
-	gtk_label_set_text(GTK_LABEL(lbInfo), actors.getTitle().c_str());
-	GtkTreeModel *model;
-	model = actors.getModel();
-    gtk_tree_view_set_model(GTK_TREE_VIEW(tvActors), model);
-	//g_object_unref(model); // do not free, used for actors history
-}
-
-void backActorsListAdd(string title) {
-	gtk_widget_set_visible(frRightBottom, TRUE);
-	
-	GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(
-	    GTK_TREE_VIEW(tvBackActors)));
-	GtkTreeIter iter;
-	GdkPixbuf *icon = create_pixbuf("link_16.png");
-	
-	gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter, IMAGE_COLUMN, icon,
-           TITLE_COLUMN, title.c_str(), -1);
-}
-
 void showSpActors() {
 	gtk_widget_set_visible(frInfo, FALSE);
 	gtk_widget_set_visible(frRightTop, FALSE);
@@ -580,9 +554,10 @@ void showActorsError() {
 }
 
 void actorsTask(gpointer args, gpointer args2) {
+	ActorsHistory *actorsHistory = (ActorsHistory*)args2;
 	// On pre execute
 	gdk_threads_enter();
-	string link = actors.getUrl();
+	string link = actorsHistory->getUrl();
 	showSpActors();
 	gdk_threads_leave();
 	
@@ -591,15 +566,8 @@ void actorsTask(gpointer args, gpointer args2) {
 	// On post execute
 	gdk_threads_enter();
 	if(!page.empty()) {
-		actors.parse(page);
-		if(backActors.count(prevActors.getTitle()) == 0 
-		        && prevActors.getCount() > 0
-		        && prevActors.getTitle() != actors.getTitle()) {
-		    backActors[prevActors.getTitle()] = prevActors;
-		    backActorsListAdd(prevActors.getTitle());	
-		}
-		showActors();
-		updateActors();	
+		actorsHistory->newActors(page);
+		showActors(); // TODO: move this into actorsHistory	
 	}else {
 	    showActorsError();
 	}
@@ -721,6 +689,7 @@ void playlistClicked(GtkTreeView *treeView,
 }
 
 void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
+	ActorsHistory *actorsHistory = (ActorsHistory*) data;
 	// Get model from ivResults
 	GtkTreeModel *model = gtk_icon_view_get_model(GTK_ICON_VIEW(ivResults));
 	
@@ -740,11 +709,10 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	                   -1);
 	
 	if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
-		// Fetch actors
-		prevActors = actors;
-		actors.setTitle(resultTitle);
-		actors.setUrl(href); 
+		// Fetch actors 
+		actorsHistory->saveActors(resultTitle, href);
         g_thread_pool_push(actorsThreadPool, (gpointer)1, NULL);
+        //g_free(href);
 	}else {
 		// Fetch playlists/playItem
 		// Set playlists title before playlists task
@@ -757,8 +725,10 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	g_free(resultTitle);
 }
 
-void resultActivated(GtkWidget *widget, gpointer data) {
-	gtk_icon_view_selected_foreach(GTK_ICON_VIEW(widget), resultFunc, NULL);
+void resultActivated(GtkWidget *widget,
+                     GtkTreePath *path,
+                     gpointer data) {
+	gtk_icon_view_selected_foreach(GTK_ICON_VIEW(widget), resultFunc, data);
 }
 
 GtkWidget *createTreeView(void) {
@@ -911,9 +881,10 @@ static void entryActivated( GtkWidget *widget,
 }
 
 static void rbActorsClicked(GtkWidget *widget, gpointer data) {
+	ActorsHistory *actorsHistory = (ActorsHistory*)data;
 	//Toggle visibility of actors list (vbRight)
 	if(!gtk_widget_get_visible(vbRight)) {
-		if(actors.getCount() > 0 && 
+		if(actorsHistory->getCount() > 0 && 
 		  gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))) {
 			gtk_widget_set_visible(vbRight, TRUE);
 		}
@@ -922,27 +893,14 @@ static void rbActorsClicked(GtkWidget *widget, gpointer data) {
 	}
 }
 
-static void backActorsChanged(GtkWidget *widget, gpointer data) {
-	GtkTreeIter iter;
-	GtkTreeModel *model;
-	gchar *value;
-	
-	if (gtk_tree_selection_get_selected(
-	    GTK_TREE_SELECTION(widget), &model, &iter)) {
-	
-		gtk_tree_model_get(model, &iter, TITLE_COLUMN, &value,  -1);
-		if(backActors.count(actors.getTitle()) == 0) {
-			backActors[actors.getTitle()] = actors; // save prev actors
-			backActorsListAdd(actors.getTitle());
-		}
-		actors = backActors[string(value)];// set new actors
-		updateActors();
-		g_free(value);
-    }
+static void backActorsChanged(GtkTreeSelection *treeselection, gpointer data) {
+	ActorsHistory *actorsHistory = (ActorsHistory *)data;
+	actorsHistory->changed(treeselection);
 }
 
 static void btnCategoriesRepeatClicked(GtkWidget *widget, gpointer data) {
-	//Starting new thread to get categories from the net  
+	//Starting new thread to get categories from the net
+	// TODO: maybe should use thread pool here  
     g_thread_new(NULL, categoriesTask, NULL);
 }
 
@@ -1180,9 +1138,6 @@ int main( int   argc,
 	
 	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tvBackActors));
 
-	g_signal_connect(selection, "changed", 
-	  G_CALLBACK(backActorsChanged), NULL);
-    
     tvCategories = createTreeView();
     tvActors = createTreeView();
     
@@ -1250,12 +1205,24 @@ int main( int   argc,
     hbActorsError = gtk_hbox_new(FALSE, 1);
     spActors = gtk_spinner_new();
     btnActorsError = gtk_button_new_with_label("Repeat");
-    g_signal_connect(btnActorsError, "clicked",
-        G_CALLBACK(btnActorsRepeatClicked), NULL);
+    g_signal_connect(btnActorsError,
+                     "clicked",
+                     G_CALLBACK(btnActorsRepeatClicked), 
+                     NULL);
     gtk_box_pack_start(GTK_BOX(hbActorsError), btnActorsError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbRight), spActors, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), hbActorsError, TRUE, FALSE, 1);
     gtk_widget_set_size_request(spActors, 32, 32);
+    
+    ActorsHistory *actorsHistory = new ActorsHistory(tvActors,
+                                                     tvBackActors,
+                                                     frRightBottom,
+                                                     lbInfo);
+                                                     
+    g_signal_connect(selection,
+	                 "changed", 
+	                 G_CALLBACK(backActorsChanged), 
+	                 actorsHistory);
         
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
@@ -1307,8 +1274,10 @@ int main( int   argc,
                      G_CALLBACK(actorsClicked), 
                      resultsHistory);
         
-    g_signal_connect(ivResults, "item-activated", 
-        G_CALLBACK(resultActivated), NULL);  
+    g_signal_connect(ivResults, 
+                     "item-activated", 
+                     G_CALLBACK(resultActivated), 
+                     actorsHistory);  
     
     g_signal_connect(ivResults, "expose-event",
         G_CALLBACK(iconViewExposed), NULL);
@@ -1319,8 +1288,10 @@ int main( int   argc,
     
     gtk_widget_show_all(window);
     
-    g_signal_connect(GTK_WIDGET(rbActors), "clicked", 
-        G_CALLBACK(rbActorsClicked), NULL);
+    g_signal_connect(GTK_WIDGET(rbActors),
+                     "clicked", 
+                     G_CALLBACK(rbActorsClicked),
+                     actorsHistory);
     
     gtk_widget_set_visible(vbLeft, FALSE);
     gtk_widget_set_visible(vbRight, FALSE);
@@ -1377,7 +1348,7 @@ int main( int   argc,
                                    
     // GThreadPool for actors
     actorsThreadPool = g_thread_pool_new(actorsTask,
-                                   NULL,
+                                   actorsHistory,
                                    1, // Run one thread at the time
                                    FALSE,
                                    NULL);
@@ -1404,6 +1375,7 @@ int main( int   argc,
     
     g_free(playlists);
     g_free(resultsHistory);
+    g_free(actorsHistory);
  
     /* we're done with libcurl, so clean it up */ 
 	curl_global_cleanup();
