@@ -30,10 +30,6 @@ map<string, GdkPixbuf*> imagesCache;
 
 using namespace std;
 
-GtkWidget *frRightBottom;
-GtkWidget *lbInfo;
-GtkWidget *frRightTop, *frInfo;
-
 const string PROG_NAME("Online life");
 
 GtkWidget *ivResults;
@@ -62,9 +58,6 @@ GtkWidget *spCategories;
 GtkWidget *hbCategoriesError;
 
 GtkWidget *swLeftTop;
-
-GtkWidget *spActors;
-GtkWidget *hbActorsError;
 
 GtkWidget *vbCenter;
 GtkWidget *hbResultsError;
@@ -528,37 +521,12 @@ void playlistsTask(gpointer args, gpointer args2) {
 	}
 }
 
-void showSpActors() {
-	gtk_widget_set_visible(frInfo, FALSE);
-	gtk_widget_set_visible(frRightTop, FALSE);
-	gtk_widget_set_visible(hbActorsError, FALSE);
-	gtk_widget_set_visible(spActors, TRUE);
-	gtk_spinner_start(GTK_SPINNER(spActors));
-	gtk_widget_set_visible(vbRight, TRUE);
-}
-
-void showActors() {
-	gtk_widget_set_visible(frInfo, TRUE);
-	gtk_widget_set_visible(frRightTop, TRUE);
-	gtk_widget_set_visible(hbActorsError, FALSE);
-	gtk_widget_set_visible(spActors, FALSE);
-	gtk_spinner_stop(GTK_SPINNER(spActors));
-}
-
-void showActorsError() {
-	gtk_widget_set_visible(frInfo, FALSE);
-	gtk_widget_set_visible(frRightTop, FALSE);
-	gtk_widget_set_visible(hbActorsError, TRUE);
-	gtk_widget_set_visible(spActors, FALSE);
-	gtk_spinner_stop(GTK_SPINNER(spActors));
-}
-
 void actorsTask(gpointer args, gpointer args2) {
 	ActorsHistory *actorsHistory = (ActorsHistory*)args2;
 	// On pre execute
 	gdk_threads_enter();
 	string link = actorsHistory->getUrl();
-	showSpActors();
+	actorsHistory->showSpActors();
 	gdk_threads_leave();
 	
 	string page = HtmlString::getActorsPage(link);
@@ -567,9 +535,8 @@ void actorsTask(gpointer args, gpointer args2) {
 	gdk_threads_enter();
 	if(!page.empty()) {
 		actorsHistory->newActors(page);
-		showActors(); // TODO: move this into actorsHistory	
 	}else {
-	    showActorsError();
+	    actorsHistory->showActorsError();
 	}
 	gdk_threads_leave();
 }
@@ -882,15 +849,7 @@ static void entryActivated( GtkWidget *widget,
 
 static void rbActorsClicked(GtkWidget *widget, gpointer data) {
 	ActorsHistory *actorsHistory = (ActorsHistory*)data;
-	//Toggle visibility of actors list (vbRight)
-	if(!gtk_widget_get_visible(vbRight)) {
-		if(actorsHistory->getCount() > 0 && 
-		  gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))) {
-			gtk_widget_set_visible(vbRight, TRUE);
-		}
-	}else {
-		gtk_widget_set_visible(vbRight, FALSE);
-	}
+	actorsHistory->rbActorsClicked(widget);
 }
 
 static void backActorsChanged(GtkTreeSelection *treeselection, gpointer data) {
@@ -953,6 +912,12 @@ static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
 int main( int   argc,
           char *argv[] )
 {   
+	GtkWidget *frRightBottom;
+	GtkWidget *lbInfo;
+	GtkWidget *frRightTop, *frInfo;
+	GtkWidget *spActors;
+    GtkWidget *hbActorsError;
+	
     GtkWidget *vbox;
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
@@ -1217,7 +1182,12 @@ int main( int   argc,
     ActorsHistory *actorsHistory = new ActorsHistory(tvActors,
                                                      tvBackActors,
                                                      frRightBottom,
-                                                     lbInfo);
+                                                     lbInfo,
+                                                     frRightTop,
+                                                     frInfo,
+                                                     spActors,
+                                                     hbActorsError,
+                                                     vbRight);
                                                      
     g_signal_connect(selection,
 	                 "changed", 

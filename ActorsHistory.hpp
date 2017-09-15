@@ -9,13 +9,27 @@ class ActorsHistory {
     GtkWidget *frRightBottom;
     GdkPixbuf *icon;
     GtkWidget *lbInfo;
+    
+    GtkWidget *frRightTop, *frInfo;
+    GtkWidget *spActors;
+    GtkWidget *hbActorsError;
+    GtkWidget *vbRight;
     public:
     
-    ActorsHistory(GtkWidget *a, GtkWidget *pa, GtkWidget* fr, GtkWidget* li) {
+    ActorsHistory(GtkWidget *a, GtkWidget *pa, GtkWidget* fr, GtkWidget* li,
+                  GtkWidget *frt, GtkWidget *fri, GtkWidget *sa, GtkWidget *hba,
+                  GtkWidget *vbr) {
 		tvActors = a;
 		tvBackActors = pa;
 		frRightBottom = fr;
 		lbInfo = li;
+		
+		frRightTop = frt;
+		frInfo = fri;
+		spActors = sa;
+		hbActorsError = hba;
+		vbRight = vbr;
+		
 		icon = create_pixbuf("link_16.png");
 	} 
     
@@ -37,6 +51,7 @@ class ActorsHistory {
 		    backActorsListAdd(prevActors.getTitle());	
 		}
 		updateActors();
+		showActors();
 	}
 	
 	void changed(GtkTreeSelection *treeselection) {
@@ -62,8 +77,41 @@ class ActorsHistory {
 		return actors.getUrl();
 	}
 	
-	int getCount() {
-		return actors.getCount();
+	void showSpActors() {
+		gtk_widget_set_visible(frInfo, FALSE);
+		gtk_widget_set_visible(frRightTop, FALSE);
+		gtk_widget_set_visible(hbActorsError, FALSE);
+		gtk_widget_set_visible(spActors, TRUE);
+		gtk_spinner_start(GTK_SPINNER(spActors));
+		gtk_widget_set_visible(vbRight, TRUE);
+	}
+	
+	void showActors() {
+		gtk_widget_set_visible(frInfo, TRUE);
+		gtk_widget_set_visible(frRightTop, TRUE);
+		gtk_widget_set_visible(hbActorsError, FALSE);
+		gtk_widget_set_visible(spActors, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spActors));
+	}
+	
+	void showActorsError() {
+		gtk_widget_set_visible(frInfo, FALSE);
+		gtk_widget_set_visible(frRightTop, FALSE);
+		gtk_widget_set_visible(hbActorsError, TRUE);
+		gtk_widget_set_visible(spActors, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spActors));
+	}
+	
+	void rbActorsClicked(GtkWidget *widget) {
+		//Toggle visibility of actors list (vbRight)
+		if(!gtk_widget_get_visible(widget)) {
+			if(actors.getCount() > 0 && 
+			  gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(widget))) {
+				gtk_widget_set_visible(vbRight, TRUE);
+			}
+		}else {
+			gtk_widget_set_visible(vbRight, FALSE);
+		}
 	}
 	
 	private:
