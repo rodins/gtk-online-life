@@ -22,7 +22,7 @@
 GdkPixbuf *defaultPixbuf;
 map<string, GdkPixbuf*> imagesCache;
 
-#include "CategoriesParser.hpp"
+#include "CategoriesWidgets.hpp"
 #include "Results.hpp"
 #include "ResultsHistory.hpp"
 #include "Playlists.hpp"
@@ -49,16 +49,8 @@ GtkWidget *window;
 GtkWidget *entry;
 
 GtkWidget *swTree, *swIcon;
-GtkWidget *tvCategories, *tvActors, *tvBackActors;
-GtkWidget *vbLeft, *vbRight;
 
 GtkWidget *spCenter;
-
-GtkWidget *spCategories;
-GtkWidget *hbCategoriesError;
-
-GtkWidget *swLeftTop;
-
 GtkWidget *vbCenter;
 GtkWidget *hbResultsError;
 GtkWidget *btnResultsError;
@@ -720,64 +712,11 @@ GtkWidget *createTreeView(void) {
 	return view;
 }
 
-void showSpCategories() {
-	gtk_widget_set_visible(vbLeft, TRUE);
-	gtk_widget_set_visible(swLeftTop, FALSE);
-	gtk_widget_set_visible(hbCategoriesError, FALSE);
-	gtk_widget_set_visible(spCategories, TRUE);
-	gtk_spinner_start(GTK_SPINNER(spCategories));
-}
-
-void showCategoriesError() {
-	gtk_widget_set_visible(vbLeft, TRUE);
-	gtk_widget_set_visible(swLeftTop, FALSE);
-	gtk_widget_set_visible(hbCategoriesError, TRUE);
-	gtk_widget_set_visible(spCategories, FALSE);
-	gtk_spinner_stop(GTK_SPINNER(spCategories));
-}
-
-gpointer categoriesTask(gpointer arg) {
-	// On pre execute
-	gdk_threads_enter();
-	showSpCategories();
-	gdk_threads_leave();
-	string page = HtmlString::getCategoriesPage();
-	gdk_threads_enter();
-	if(!page.empty()) {
-		CategoriesParser categoriesParser(page);
-		
-		gtk_widget_set_visible(hbCategoriesError, FALSE);
-		gtk_widget_set_visible(spCategories, FALSE);
-		gtk_spinner_stop(GTK_SPINNER(spCategories));
-		gtk_widget_set_visible(swLeftTop, TRUE);
-		
-		GtkTreeModel *model;
-		model = categoriesParser.getModel();
-	    gtk_tree_view_set_model(GTK_TREE_VIEW(tvCategories), model);
-		g_object_unref(model);
-	}else {
-		showCategoriesError();
-	}
-	gdk_threads_leave();
-	return NULL;
-}
-
 static void btnCategoriesClicked(GtkWidget *widget,
                       gpointer  data)
 {
-	if(!gtk_widget_get_visible(vbLeft)) { // Categories hidden
-		//Get categories model
-		GtkTreeModel *model = gtk_tree_view_get_model(
-		                          GTK_TREE_VIEW(tvCategories));
-		if(model == NULL) {
-			//Starting new thread to get categories from the net  
-            g_thread_new(NULL, categoriesTask, NULL);
-		}else {
-			gtk_widget_set_visible(vbLeft, TRUE);
-		}
-	}else { // Categories visible
-		gtk_widget_set_visible(vbLeft, FALSE);
-	}	
+	CategoriesWidgets *categoriesWidgets = (CategoriesWidgets *)data;
+	categoriesWidgets->btnCategoriesClicked();	
 }
 
 static void btnUpClicked( GtkWidget *widget,
@@ -860,7 +799,7 @@ static void backActorsChanged(GtkTreeSelection *treeselection, gpointer data) {
 static void btnCategoriesRepeatClicked(GtkWidget *widget, gpointer data) {
 	//Starting new thread to get categories from the net
 	// TODO: maybe should use thread pool here  
-    g_thread_new(NULL, categoriesTask, NULL);
+    g_thread_new(NULL, CategoriesWidgets::categoriesTask, data);
 }
 
 static void btnActorsRepeatClicked(GtkWidget *widget, gpointer data) {
@@ -917,6 +856,12 @@ int main( int   argc,
 	GtkWidget *frRightTop, *frInfo;
 	GtkWidget *spActors;
     GtkWidget *hbActorsError;
+    
+    GtkWidget *vbLeft, *vbRight;
+    GtkWidget *tvCategories, *tvActors, *tvBackActors;
+    GtkWidget *spCategories;
+    GtkWidget *hbCategoriesError;
+    GtkWidget *swLeftTop;
 	
     GtkWidget *vbox;
     GtkWidget *toolbar; 
@@ -986,10 +931,6 @@ int main( int   argc,
     btnCategories = gtk_tool_button_new_from_stock(GTK_STOCK_DIRECTORY);
     gtk_tool_item_set_tooltip_text(btnCategories, "Display categories");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnCategories, -1);
-    g_signal_connect(GTK_WIDGET(btnCategories),
-                     "clicked", 
-                     G_CALLBACK(btnCategoriesClicked),
-                     NULL);
         
     sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
@@ -1145,10 +1086,7 @@ int main( int   argc,
     hbCategoriesError = gtk_hbox_new(FALSE, 1); // for Repeat button normal size
     spCategories = gtk_spinner_new();
     btnCategoriesError = gtk_button_new_with_label("Repeat");
-    g_signal_connect(btnCategoriesError, 
-                     "clicked", 
-                     G_CALLBACK(btnCategoriesRepeatClicked), 
-                     NULL);
+    
     gtk_box_pack_start(GTK_BOX(hbCategoriesError), btnCategoriesError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbLeft), swLeftTop, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeft), spCategories, TRUE, FALSE, 1);
@@ -1178,6 +1116,24 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbRight), spActors, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), hbActorsError, TRUE, FALSE, 1);
     gtk_widget_set_size_request(spActors, 32, 32);
+    
+    CategoriesWidgets *categoriesWidgets = new CategoriesWidgets(
+                                               vbLeft,
+                                               swLeftTop,
+                                               spCategories,
+                                               hbCategoriesError,
+                                               tvCategories
+                                           );
+                                           
+    g_signal_connect(btnCategoriesError, 
+                     "clicked", 
+                     G_CALLBACK(btnCategoriesRepeatClicked), 
+                     categoriesWidgets);
+                     
+    g_signal_connect(GTK_WIDGET(btnCategories),
+                     "clicked", 
+                     G_CALLBACK(btnCategoriesClicked),
+                     categoriesWidgets);
     
     ActorsHistory *actorsHistory = new ActorsHistory(tvActors,
                                                      tvBackActors,
