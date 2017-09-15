@@ -32,6 +32,28 @@ class ActorsHistory {
 		
 		icon = create_pixbuf("link_16.png");
 	} 
+	
+	string onPreExecute() {
+	    showSpActors();
+	    return actors.getUrl();
+	}
+	
+	void onPostExecute(string &page) {
+		if(!page.empty()) {
+			actors.parse(page);
+			// Save to back actors map
+			if(backActors.count(prevActors.getTitle()) == 0 
+			        && prevActors.getCount() > 0
+			        && prevActors.getTitle() != actors.getTitle()) {
+			    backActors[prevActors.getTitle()] = prevActors;
+			    backActorsListAdd(prevActors.getTitle());	
+			}
+			updateActors();
+			showActors();
+		}else {
+		    showActorsError();
+		}
+	}
     
     void saveActors(string title, string href) {
 		if(!actors.getTitle().empty()) {
@@ -41,19 +63,6 @@ class ActorsHistory {
 		actors.setUrl(href);
 	}
     
-    void newActors(string &page) {
-		actors.parse(page);
-		// Save to back actors map
-		if(backActors.count(prevActors.getTitle()) == 0 
-		        && prevActors.getCount() > 0
-		        && prevActors.getTitle() != actors.getTitle()) {
-		    backActors[prevActors.getTitle()] = prevActors;
-		    backActorsListAdd(prevActors.getTitle());	
-		}
-		updateActors();
-		showActors();
-	}
-	
 	void changed(GtkTreeSelection *treeselection) {
 		GtkTreeIter iter;
 		GtkTreeModel *model;
@@ -73,9 +82,32 @@ class ActorsHistory {
 	    }
 	}
 	
-	string getUrl() {
-		return actors.getUrl();
+	void rbActorsClicked(GtkWidget *widget) {
+		//Toggle visibility of actors list (vbRight)
+		if(!gtk_widget_get_visible(vbRight)) {
+			if(actors.getCount() > 0 && 
+			  gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(widget))) {
+				gtk_widget_set_visible(vbRight, TRUE);
+			}
+		}else {
+			gtk_widget_set_visible(vbRight, FALSE);
+		}
 	}
+	
+	static void actorsTask(gpointer args, gpointer args2) {
+		ActorsHistory *actorsHistory = (ActorsHistory*)args2;
+		// On pre execute
+		gdk_threads_enter();
+		string link = actorsHistory->onPreExecute();
+		gdk_threads_leave();
+		string page = HtmlString::getActorsPage(link);
+		// On post execute
+		gdk_threads_enter();
+		actorsHistory->onPostExecute(page);
+		gdk_threads_leave();
+	}
+	
+	private:
 	
 	void showSpActors() {
 		gtk_widget_set_visible(frInfo, FALSE);
@@ -101,20 +133,6 @@ class ActorsHistory {
 		gtk_widget_set_visible(spActors, FALSE);
 		gtk_spinner_stop(GTK_SPINNER(spActors));
 	}
-	
-	void rbActorsClicked(GtkWidget *widget) {
-		//Toggle visibility of actors list (vbRight)
-		if(!gtk_widget_get_visible(vbRight)) {
-			if(actors.getCount() > 0 && 
-			  gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(widget))) {
-				gtk_widget_set_visible(vbRight, TRUE);
-			}
-		}else {
-			gtk_widget_set_visible(vbRight, FALSE);
-		}
-	}
-	
-	private:
 	
 	void updateActors() {
 		gtk_label_set_text(GTK_LABEL(lbInfo), actors.getTitle().c_str());

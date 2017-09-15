@@ -513,26 +513,6 @@ void playlistsTask(gpointer args, gpointer args2) {
 	}
 }
 
-void actorsTask(gpointer args, gpointer args2) {
-	ActorsHistory *actorsHistory = (ActorsHistory*)args2;
-	// On pre execute
-	gdk_threads_enter();
-	string link = actorsHistory->getUrl();
-	actorsHistory->showSpActors();
-	gdk_threads_leave();
-	
-	string page = HtmlString::getActorsPage(link);
-	
-	// On post execute
-	gdk_threads_enter();
-	if(!page.empty()) {
-		actorsHistory->newActors(page);
-	}else {
-	    actorsHistory->showActorsError();
-	}
-	gdk_threads_leave();
-}
-
 void categoriesClicked(GtkTreeView *treeView,
                        GtkTreePath *path,
                        GtkTreeViewColumn *column,
@@ -1273,7 +1253,7 @@ int main( int   argc,
                                    NULL);
                                    
     // GThreadPool for actors
-    actorsThreadPool = g_thread_pool_new(actorsTask,
+    actorsThreadPool = g_thread_pool_new(ActorsHistory::actorsTask,
                                    actorsHistory,
                                    1, // Run one thread at the time
                                    FALSE,
