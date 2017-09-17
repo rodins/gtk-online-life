@@ -10,23 +10,192 @@ class ResultsHistory {
     GtkToolItem *btnPrev;
     GtkToolItem *btnNext;
     string progName;
+    
+    GtkWidget *swTree, *swIcon;
+    GtkWidget *spCenter;
+	GtkWidget *vbCenter;
+	GtkWidget *hbResultsError;
+	
+	GtkToolItem *btnUp;
+	GtkToolItem *rbActors;
+    GtkToolItem *rbPlay;
+    GtkToolItem *rbDownload;
+    GtkToolItem *btnRefresh;
     public:
     
     ResultsHistory(GtkWidget *w,
                    GtkWidget *iv,
                    GtkToolItem *bp,
                    GtkToolItem *bn,
+                   GtkWidget *sw_tree,
+                   GtkWidget *sw_icon,
+                   GtkWidget *sp_center,
+                   GtkWidget *vb_center,
+                   GtkWidget *hb_results_error,
+                   GtkToolItem *btn_up,
+                   GtkToolItem *rb_actors,
+                   GtkToolItem *rb_play,
+                   GtkToolItem *rb_download,
+                   GtkToolItem *btn_refresh,
                    string pn) {
 		window = w;
 		ivResults = iv;
 		btnPrev = bp;
 		btnNext = bn;
+		
+		swTree = sw_tree;
+		swIcon = sw_icon;
+		spCenter = sp_center;
+		vbCenter = vb_center;
+		hbResultsError = hb_results_error;
+		
+		btnUp = btn_up;
+		rbActors = rb_actors;
+		rbPlay = rb_play;
+		rbDownload = rb_download;
+		btnRefresh = btn_refresh;
+		
 		progName = pn;
 	}
 	
-	string getUrl() {
-		return results.getUrl();
-	} 
+	void showSpCenter(bool isPage) {
+		gtk_widget_set_visible(swTree, FALSE);
+		// Show and hide of ivResults depends on isPage
+		gtk_widget_set_visible(swIcon, isPage);
+		// Change packing params of spCenter
+		gtk_box_set_child_packing(
+		    GTK_BOX(vbCenter),
+		    spCenter,
+		    !isPage,
+		    FALSE,
+		    1,
+		    GTK_PACK_START);
+		gtk_widget_set_visible(spCenter, TRUE);
+		gtk_widget_set_visible(hbResultsError, FALSE);
+		gtk_spinner_start(GTK_SPINNER(spCenter));
+	}
+	
+	void showResultsRepeat(bool isPage) {
+		gtk_widget_set_visible(swTree, FALSE);
+		// Show and hide of ivResults depends on isPage
+		gtk_widget_set_visible(swIcon, isPage);
+		// Change packing params of spCenter
+		gtk_box_set_child_packing(
+		    GTK_BOX(vbCenter),
+		    hbResultsError,
+		    !isPage,
+		    FALSE,
+		    1,
+		    GTK_PACK_START);
+		gtk_widget_set_visible(spCenter, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spCenter));
+		gtk_widget_set_visible(hbResultsError, TRUE);
+	}
+	
+	void switchToIconView() {
+		gtk_widget_set_visible(swTree, FALSE);
+		gtk_widget_set_visible(swIcon, TRUE);
+		gtk_widget_set_visible(spCenter, FALSE);
+		gtk_widget_set_visible(hbResultsError, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spCenter));
+	}
+	
+	void setSensitiveItemsResults() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
+	    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
+	    gtk_widget_set_sensitive(GTK_WIDGET(rbActors), TRUE);
+	}
+	
+	void btnUpClicked() {
+		switchToIconView();
+		updateTitle();
+		updatePrevNextButtons();
+		setSensitiveItemsResults();
+	}
+	
+	void btnPrevClicked() {
+			// If results repeat button not displayed
+		if(!gtk_widget_get_visible(hbResultsError)) {
+			// Save current results to forwardResultsStack
+			saveToForwardStack();
+		}else {
+			switchToIconView();
+		}
+		// Display top results from backResultsStack
+		restoreFromBackStack();
+		setSensitiveItemsResults();	
+	}
+	
+	void btnNextClicked() {
+		// If results repeat button not displayed
+		if(!gtk_widget_get_visible(hbResultsError)) {
+			// Save current results to backResultsStack
+			saveToBackStack();
+		}else {
+			// If repeat button displayed
+		    switchToIconView();
+		}
+	    // Display top result from forwardResultsStack
+	    restoreFromForwardStack();
+	    setSensitiveItemsResults();
+	}
+	
+	string onPreExecuteNew() {
+		// Display spinner for new results
+	    showSpCenter(FALSE);
+	    return results.getUrl();
+	}
+	
+	string onPreExecuteAppend() {
+		// Display spinner at the bottom of list
+	    showSpCenter(TRUE);
+	    return results.getNextLink();
+	}
+	
+	void onPostExecuteNew(string &page) {
+		if(!page.empty()) {
+			//TODO: maybe I need to clear it while saving....
+			// clear forward results stack on fetching new results
+		    clearForwardResultsStack();
+			removeBackStackDuplicate();
+			
+			// Scroll to the top of the list
+		    GtkTreePath *path = gtk_tree_path_new_first();
+		    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), path, FALSE, 0, 0);
+		    
+		    // Clear results links set if not paging
+		    clearThreadsLinks();
+			createNewModel();
+			switchToIconView();
+			results.show(page);
+			
+			setSensitiveItemsResults();
+		}else {
+			switchToIconView(); // TODO: why is this here?
+			showResultsRepeat(FALSE);
+			setError(TRUE);
+		}
+		
+		if(isRefresh()) {
+			setRefresh(FALSE);
+		}
+	}
+	
+	void onPostExecuteAppend(string &page) {
+		if(!page.empty()) {
+			results.show(page);
+			switchToIconView();
+		}else { // error
+			if(threadLinksContainNextLink()) {
+				eraseNextLinkFromThreadLinks();
+			}
+			switchToIconView(); //TODO: why is this here?
+			showResultsRepeat(TRUE);
+			setError(TRUE);
+		}
+	}
 	
 	bool isRefresh() {
 		return results.isRefresh();
@@ -68,11 +237,7 @@ class ResultsHistory {
 	void createNewModel() {
 		results.createNewModel(ivResults);
 	}
-	
-	void show(string &page) {
-		results.show(page);
-	}
-	
+		
 	void setError(bool error) {
 		results.setError(error);
 	}

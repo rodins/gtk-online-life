@@ -87,14 +87,6 @@ void switchToTreeView() {
 	gtk_spinner_stop(GTK_SPINNER(spCenter));
 }
 
-void switchToIconView() {
-	gtk_widget_set_visible(swTree, FALSE);
-	gtk_widget_set_visible(swIcon, TRUE);
-	gtk_widget_set_visible(spCenter, FALSE);
-	gtk_widget_set_visible(hbResultsError, FALSE);
-	gtk_spinner_stop(GTK_SPINNER(spCenter));
-}
-
 void disableAllItems() {
 	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
@@ -117,18 +109,6 @@ void setSensitiveItemsPlaylists() {
     gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
     
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
-}
-
-void setSensitiveItemsResults() {
-	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
-	
-	gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
-    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
-    gtk_widget_set_sensitive(GTK_WIDGET(rbActors), TRUE);
-    
-    gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
-    
-    //gtk_entry_set_text(GTK_ENTRY(entry), "");
 }
 
 struct ArgsStruct {
@@ -257,63 +237,6 @@ void imageDownloadTask(gpointer arg, gpointer arg1) {
 	}
 }
 
-void displayRange() {
-	GtkTreePath *path1, *path2;
-	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
-		gint *indices1 = gtk_tree_path_get_indices(path1);
-		gint *indices2 = gtk_tree_path_get_indices(path2);
-		gint indexDisplayFirst = indices1[0];
-		gint indexDisplayLast = indices2[0];
-		
-	    // Downloading images for displayed items
-		for(int i = indexDisplayFirst; i <= indexDisplayLast; i++) {
-			if(imageIndexes.count(i) == 0) {
-				imageIndexes.insert(i);
-				g_thread_pool_push(imagesThreadPool, 
-				    (gpointer)(long)(i+1),
-				     NULL);
-			}	
-		}		
-		
-		gtk_tree_path_free(path1);
-		gtk_tree_path_free(path2);
-	}
-}
-
-void showSpCenter(bool isPage) {
-	gtk_widget_set_visible(swTree, FALSE);
-	// Show and hide of ivResults depends on isPage
-	gtk_widget_set_visible(swIcon, isPage);
-	// Change packing params of spCenter
-	gtk_box_set_child_packing(
-	    GTK_BOX(vbCenter),
-	    spCenter,
-	    !isPage,
-	    FALSE,
-	    1,
-	    GTK_PACK_START);
-	gtk_widget_set_visible(spCenter, TRUE);
-	gtk_widget_set_visible(hbResultsError, FALSE);
-	gtk_spinner_start(GTK_SPINNER(spCenter));
-}
-
-void showResultsRepeat(bool isPage) {
-	gtk_widget_set_visible(swTree, FALSE);
-	// Show and hide of ivResults depends on isPage
-	gtk_widget_set_visible(swIcon, isPage);
-	// Change packing params of spCenter
-	gtk_box_set_child_packing(
-	    GTK_BOX(vbCenter),
-	    hbResultsError,
-	    !isPage,
-	    FALSE,
-	    1,
-	    GTK_PACK_START);
-	gtk_widget_set_visible(spCenter, FALSE);
-	gtk_spinner_stop(GTK_SPINNER(spCenter));
-	gtk_widget_set_visible(hbResultsError, TRUE);
-}
-
 void show_error_dialog() {
 	GtkWidget *dialog;
 	dialog = gtk_message_dialog_new(GTK_WINDOW(window),
@@ -330,25 +253,13 @@ void resultsAppendTask(gpointer arg, gpointer arg1) {
 	ResultsHistory *resultsHistory = (ResultsHistory *)arg1;
 	// On pre execute
 	gdk_threads_enter();
-	string link = resultsHistory->getNextLink();
-	// Display spinner at the bottom of list
-    showSpCenter(TRUE);
+	string link = resultsHistory->onPreExecuteAppend();
 	gdk_threads_leave();
 	// async part
 	string page = HtmlString::getResultsPage(link);
 	// On post execute
 	gdk_threads_enter();
-	if(!page.empty()) {
-		resultsHistory->show(page);
-		switchToIconView();
-	}else { // error
-		if(resultsHistory->threadLinksContainNextLink()) {
-			resultsHistory->eraseNextLinkFromThreadLinks();
-		}
-		switchToIconView();
-		showResultsRepeat(TRUE);
-		resultsHistory->setError(TRUE);
-	}
+	resultsHistory->onPostExecuteAppend(page);
 	gdk_threads_leave();
 }
 
@@ -358,42 +269,12 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	ResultsHistory *resultsHistory = (ResultsHistory*)arg1;
 	// New images for new indexes will be downloaded
     imageIndexes.clear();
-    
-	// Display spinner for new results
-    showSpCenter(FALSE);
-    string link = resultsHistory->getUrl();
+    string link = resultsHistory->onPreExecuteNew();
     gdk_threads_leave();
     // async part
 	string page = HtmlString::getResultsPage(link);
     gdk_threads_enter();
-	if(!page.empty()) {
-		//TODO: maybe I need to clear it while saving....
-		// clear forward results stack on fetching new results
-	    resultsHistory->clearForwardResultsStack();
-
-		resultsHistory->removeBackStackDuplicate();
-		
-		// Scroll to the top of the list
-	    GtkTreePath *path = gtk_tree_path_new_first();
-	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), path, FALSE, 0, 0);
-	    
-	    // Clear results links set if not paging
-	    resultsHistory->clearThreadsLinks();
-		
-		resultsHistory->createNewModel();
-		switchToIconView();
-		resultsHistory->show(page);
-		
-		setSensitiveItemsResults();
-	}else {
-		switchToIconView();
-		showResultsRepeat(FALSE);
-		resultsHistory->setError(TRUE);
-	}
-	
-	if(resultsHistory->isRefresh()) {
-		resultsHistory->setRefresh(FALSE);
-	}
+    resultsHistory->onPostExecuteNew(page);
 	gdk_threads_leave();
 }
 
@@ -465,7 +346,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 		// On pre execute
 		gdk_threads_enter();
 		// Show spinner fullscreen
-		showSpCenter(FALSE);
+		resultsHistory->showSpCenter(FALSE);
 		gdk_threads_leave();
 		
 		string js = HtmlString::getPage(url, referer);
@@ -477,7 +358,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 			if(playlists->getCount() > 0) {
 				displayPlaylists();
 			}else {
-				showResultsRepeat(FALSE);
+				resultsHistory->showResultsRepeat(FALSE);
 				setSensitiveItemsPlaylists();
 			}
 			gdk_threads_leave();
@@ -486,7 +367,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 			PlayItem playItem = playlists->parse_play_item(js);
 			if(!playItem.comment.empty()) { // PlayItem found
 			    // get results list back
-			    switchToIconView();
+			    resultsHistory->switchToIconView();
 			    resultsHistory->updateTitle();
 				processPlayItem(playItem); 
 			}else {
@@ -500,11 +381,11 @@ void playlistsTask(gpointer args, gpointer args2) {
 		            string json = HtmlString::getPage(url, referer);
 					gdk_threads_enter();
 					// get results list back
-			        switchToIconView();
+			        resultsHistory->switchToIconView();
 			        resultsHistory->updateTitle();
 					processPlayItem(playlists->parse_play_item(json)); 
 				}else {
-					showResultsRepeat(FALSE);
+					resultsHistory->showResultsRepeat(FALSE);
 				    setSensitiveItemsPlaylists();
 				}
 			}
@@ -703,49 +584,27 @@ static void btnUpClicked( GtkWidget *widget,
                       gpointer   data )
 {
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
-	switchToIconView();
-	resultsHistory->updateTitle();
-	resultsHistory->updatePrevNextButtons();
-	setSensitiveItemsResults();
+	resultsHistory->btnUpClicked();
 }
 
 static void btnPrevClicked( GtkWidget *widget,
                       gpointer   data )
 {   
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
-	// If results repeat button not displayed
-	if(!gtk_widget_get_visible(hbResultsError)) {
-		// Save current results to forwardResultsStack
-		resultsHistory->saveToForwardStack();
-	}else {
-		switchToIconView();
-	}
+	resultsHistory->btnPrevClicked();
 	
-	// Display top results from backResultsStack
-	resultsHistory->restoreFromBackStack();
 	// New images for new indexes will be downloaded
-	imageIndexes.clear();
-	setSensitiveItemsResults();		  
+	imageIndexes.clear();	  
 }
 
 static void btnNextClicked( GtkWidget *widget,
                       gpointer   data)
 {   
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
-	// If results repeat button not displayed
-	if(!gtk_widget_get_visible(hbResultsError)) {
-		// Save current results to backResultsStack
-		resultsHistory->saveToBackStack();
-	}else {
-		// If repeat button displayed
-	    switchToIconView();
-	}
-	
-    // Display top result from forwardResultsStack
-    resultsHistory->restoreFromForwardStack();
+	resultsHistory->btnNextClicked();
+    
     // New images for new indexes will be downloaded
 	imageIndexes.clear();
-    setSensitiveItemsResults();
 }
 
 static void entryActivated( GtkWidget *widget, 
@@ -789,7 +648,26 @@ static void btnActorsRepeatClicked(GtkWidget *widget, gpointer data) {
 }
 
 gboolean iconViewExposed(GtkWidget *widget, GdkEvent *event, gpointer data) {
-	displayRange();
+	GtkTreePath *path1, *path2;
+	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
+		gint *indices1 = gtk_tree_path_get_indices(path1);
+		gint *indices2 = gtk_tree_path_get_indices(path2);
+		gint indexDisplayFirst = indices1[0];
+		gint indexDisplayLast = indices2[0];
+		
+	    // Downloading images for displayed items
+		for(int i = indexDisplayFirst; i <= indexDisplayLast; i++) {
+			if(imageIndexes.count(i) == 0) {
+				imageIndexes.insert(i);
+				g_thread_pool_push(imagesThreadPool, 
+				    (gpointer)(long)(i+1),
+				     NULL);
+			}	
+		}		
+		
+		gtk_tree_path_free(path1);
+		gtk_tree_path_free(path2);
+	}
 	return FALSE;
 }
 
@@ -895,15 +773,22 @@ int main( int   argc,
     
 	g_object_unref(model);
 	
+	// Add center spinner
+    spCenter = gtk_spinner_new();
+    
+    // Add results repeat button
+    hbResultsError = gtk_hbox_new(FALSE, 1);
+    btnResultsError = gtk_button_new_with_label("Repeat");
+    gtk_box_pack_start(
+        GTK_BOX(hbResultsError), 
+        btnResultsError, 
+        TRUE, 
+        FALSE, 
+        10);
+	
 	btnPrev = gtk_tool_button_new_from_stock(GTK_STOCK_GO_BACK);
 	btnNext = gtk_tool_button_new_from_stock(GTK_STOCK_GO_FORWARD);
 	
-	ResultsHistory *resultsHistory = new ResultsHistory(window,
-	                                                    ivResults,
-	                                                    btnPrev,
-	                                                    btnNext,
-	                                                    PROG_NAME);
-    
     toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
 	gtk_container_set_border_width(GTK_CONTAINER(toolbar), 2);
@@ -918,10 +803,6 @@ int main( int   argc,
 	btnRefresh = gtk_tool_button_new_from_stock(GTK_STOCK_REFRESH);
     gtk_tool_item_set_tooltip_text(btnRefresh, "Update results");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnRefresh, -1);
-    g_signal_connect(GTK_WIDGET(btnRefresh), 
-                     "clicked", 
-                     G_CALLBACK(btnRefreshClicked), 
-                     resultsHistory);
         
     sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
@@ -929,24 +810,12 @@ int main( int   argc,
     btnUp = gtk_tool_button_new_from_stock(GTK_STOCK_GO_UP);
     gtk_tool_item_set_tooltip_text(btnUp, "Move up");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnUp, -1);
-    g_signal_connect(GTK_WIDGET(btnUp),
-                     "clicked", 
-                     G_CALLBACK(btnUpClicked), 
-                     resultsHistory);
     
     gtk_tool_item_set_tooltip_text(btnPrev, "Go back in history");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnPrev, -1);
-    g_signal_connect(btnPrev,
-                     "clicked", 
-                     G_CALLBACK(btnPrevClicked),
-                     resultsHistory);
     
     gtk_tool_item_set_tooltip_text(btnNext, "Go forward in history");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnNext, -1);
-    g_signal_connect(GTK_WIDGET(btnNext),
-                     "clicked", 
-                     G_CALLBACK(btnNextClicked),
-                     resultsHistory);
     
     sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
@@ -955,10 +824,6 @@ int main( int   argc,
     gtk_widget_set_tooltip_text(entry, "Search online-life");
 	GtkToolItem *entryItem = gtk_tool_item_new();
 	gtk_container_add(GTK_CONTAINER(entryItem), entry);
-    g_signal_connect(entry,
-                     "activate", 
-                     G_CALLBACK(entryActivated), 
-                     resultsHistory);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), entryItem, -1);
     
     sep = gtk_separator_tool_item_new();
@@ -1097,6 +962,70 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbRight), hbActorsError, TRUE, FALSE, 1);
     gtk_widget_set_size_request(spActors, 32, 32);
     
+    // add vbox center
+    vbCenter = gtk_vbox_new(FALSE, 1);
+    // add items to vbCenter
+    gtk_box_pack_start(GTK_BOX(vbCenter), swTree, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbCenter), swIcon, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbCenter), spCenter, TRUE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbCenter), hbResultsError, TRUE, FALSE, 1);
+    
+	ResultsHistory *resultsHistory = new ResultsHistory(window,
+                                                    ivResults,
+                                                    btnPrev,
+                                                    btnNext,
+                                                    swTree,
+                                                    swIcon,
+                                                    spCenter,
+                                                    vbCenter,
+                                                    hbResultsError,
+                                                    btnUp,
+                                                    rbActors,
+                                                    rbPlay,
+                                                    rbDownload,
+                                                    btnRefresh,
+                                                    PROG_NAME);
+
+    g_signal_connect(GTK_WIDGET(btnRefresh), 
+				     "clicked", 
+				     G_CALLBACK(btnRefreshClicked), 
+				     resultsHistory);
+				 
+    g_signal_connect(GTK_WIDGET(btnUp),
+                     "clicked", 
+                     G_CALLBACK(btnUpClicked), 
+                     resultsHistory);
+    
+    g_signal_connect(btnPrev,
+                     "clicked", 
+                     G_CALLBACK(btnPrevClicked),
+                     resultsHistory);
+                     
+	g_signal_connect(GTK_WIDGET(btnNext),
+				     "clicked", 
+				     G_CALLBACK(btnNextClicked),
+				     resultsHistory);
+				     
+    g_signal_connect(btnResultsError,
+                     "clicked",
+                     G_CALLBACK(btnResultsRepeatClicked),
+                     resultsHistory);
+				     
+    g_signal_connect(tvCategories,
+                     "row-activated",
+                     G_CALLBACK(categoriesClicked), 
+                     resultsHistory);
+        
+    g_signal_connect(tvActors, 
+                     "row-activated",
+                     G_CALLBACK(actorsClicked), 
+                     resultsHistory);
+    
+    g_signal_connect(entry,
+                     "activate", 
+                     G_CALLBACK(entryActivated), 
+                     resultsHistory);
+    
     CategoriesWidgets *categoriesWidgets = new CategoriesWidgets(
                                                vbLeft,
                                                swLeftTop,
@@ -1129,37 +1058,20 @@ int main( int   argc,
 	                 "changed", 
 	                 G_CALLBACK(backActorsChanged), 
 	                 actorsHistory);
+	                 
+	g_signal_connect(ivResults, 
+                     "item-activated", 
+                     G_CALLBACK(resultActivated), 
+                     actorsHistory);
+                     
+    g_signal_connect(GTK_WIDGET(rbActors),
+                     "clicked", 
+                     G_CALLBACK(rbActorsClicked),
+                     actorsHistory);
         
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
-    
-    // Add center spinner
-    spCenter = gtk_spinner_new();
-    
-    // Add results repeat button
-    hbResultsError = gtk_hbox_new(FALSE, 1);
-    btnResultsError = gtk_button_new_with_label("Repeat");
-    gtk_box_pack_start(
-        GTK_BOX(hbResultsError), 
-        btnResultsError, 
-        TRUE, 
-        FALSE, 
-        10);
-        
-    g_signal_connect(
-        btnResultsError,
-        "clicked",
-        G_CALLBACK(btnResultsRepeatClicked),
-        resultsHistory);
-    
-    // add vbox center
-    vbCenter = gtk_vbox_new(FALSE, 1);
-    // add items to vbCenter
-    gtk_box_pack_start(GTK_BOX(vbCenter), swTree, TRUE, TRUE, 1);
-    gtk_box_pack_start(GTK_BOX(vbCenter), swIcon, TRUE, TRUE, 1);
-    gtk_box_pack_start(GTK_BOX(vbCenter), spCenter, TRUE, FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(vbCenter), hbResultsError, TRUE, FALSE, 1);
-    
+            
     //hbCenter
     gtk_box_pack_start(GTK_BOX(hbCenter), vbLeft, FALSE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(hbCenter), vbCenter, TRUE, TRUE, 1);
@@ -1167,37 +1079,21 @@ int main( int   argc,
     
     gtk_box_pack_start(GTK_BOX(vbox), hbCenter, TRUE, TRUE, 1);
     
-    g_signal_connect(tvPlaylists, "row-activated", 
-        G_CALLBACK(playlistClicked), NULL);
-        
-    g_signal_connect(tvCategories,
-                     "row-activated",
-                     G_CALLBACK(categoriesClicked), 
-                     resultsHistory);
-        
-    g_signal_connect(tvActors, 
-                     "row-activated",
-                     G_CALLBACK(actorsClicked), 
-                     resultsHistory);
+    g_signal_connect(tvPlaylists,
+                     "row-activated", 
+                     G_CALLBACK(playlistClicked), 
+                     NULL);
         
     g_signal_connect(ivResults, 
-                     "item-activated", 
-                     G_CALLBACK(resultActivated), 
-                     actorsHistory);  
-    
-    g_signal_connect(ivResults, "expose-event",
-        G_CALLBACK(iconViewExposed), NULL);
+                     "expose-event",
+                     G_CALLBACK(iconViewExposed), 
+                     NULL);
     
     gtk_container_add(GTK_CONTAINER(window), vbox);
     
     gtk_window_set_default_size(GTK_WINDOW(window), 700, 400);
     
     gtk_widget_show_all(window);
-    
-    g_signal_connect(GTK_WIDGET(rbActors),
-                     "clicked", 
-                     G_CALLBACK(rbActorsClicked),
-                     actorsHistory);
     
     gtk_widget_set_visible(vbLeft, FALSE);
     gtk_widget_set_visible(vbRight, FALSE);
