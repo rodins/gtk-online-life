@@ -5,7 +5,7 @@ class CategoryItem {
     string _domain;
     public:
     CategoryItem() {
-		_domain = "http://www.online-life.cc";
+		_domain = "http://www.online-life.club";
 	}
 	
 	void set_title(string title) {

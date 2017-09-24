@@ -10,7 +10,7 @@ class Results {
 	string page;
 	public:
 	Results() {
-		domain = "http://www.online-life.in/";
+		domain = "http://www.online-life.club/";
 	}
 	
 	void getResultsPage(string p) {

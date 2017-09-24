@@ -13,7 +13,7 @@
 #include "Playlists.hpp"
 #include "Actors.hpp"
 
-#define DOMAIN "http://online-life.cc"
+#define DOMAIN "http://online-life.club"
 #define PROG_NAME "Online life"
 
 using namespace std;
