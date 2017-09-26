@@ -108,6 +108,39 @@ class ResultsHistory {
 	    gtk_widget_set_sensitive(GTK_WIDGET(rbActors), TRUE);
 	}
 	
+	void disableAllItems() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
+	    gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
+	    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
+	}
+
+    void switchToTreeView() {
+		gtk_widget_set_visible(swTree, TRUE);
+		gtk_widget_set_visible(swIcon, FALSE);
+		gtk_widget_set_visible(spCenter, FALSE);
+		gtk_widget_set_visible(hbResultsError, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spCenter));
+	}
+	
+	void setSensitiveItemsPlaylists() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
+	    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
+	    gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
+	}
+	
+	void displayPlaylists() {
+		switchToTreeView();
+		setSensitiveItemsPlaylists();
+	}
+	
 	void btnUpClicked() {
 		switchToIconView();
 		updateTitle();

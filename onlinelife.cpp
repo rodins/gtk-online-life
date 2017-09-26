@@ -79,38 +79,6 @@ void writeToFile(string filename, string input) {
 	}
 }*/
 
-void switchToTreeView() {
-	gtk_widget_set_visible(swTree, TRUE);
-	gtk_widget_set_visible(swIcon, FALSE);
-	gtk_widget_set_visible(spCenter, FALSE);
-	gtk_widget_set_visible(hbResultsError, FALSE);
-	gtk_spinner_stop(GTK_SPINNER(spCenter));
-}
-
-void disableAllItems() {
-	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
-	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
-	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
-	
-	gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
-    
-    gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
-}
-
-void setSensitiveItemsPlaylists() {
-	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), TRUE);
-	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
-	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
-	
-	gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
-    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
-    gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
-    
-    gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
-}
-
 struct ArgsStruct {
 	GdkPixbufLoader* loader;
 	GtkTreeIter iter;
@@ -278,11 +246,6 @@ void resultsNewTask(gpointer arg, gpointer arg1) {
 	gdk_threads_leave();
 }
 
-void displayPlaylists() {
-	switchToTreeView();
-	setSensitiveItemsPlaylists();
-}
-
 string detectPlayer() {
 	// TODO: add other players
 	// TODO: add selection of players if few is installed
@@ -356,10 +319,10 @@ void playlistsTask(gpointer args, gpointer args2) {
 			gdk_threads_enter();
 			playlists->parse(json);
 			if(playlists->getCount() > 0) {
-				displayPlaylists();
+				resultsHistory->displayPlaylists();
 			}else {
 				resultsHistory->showResultsRepeat(FALSE);
-				setSensitiveItemsPlaylists();
+				resultsHistory->setSensitiveItemsPlaylists();
 			}
 			gdk_threads_leave();
 		}else { //PlayItem found or nothing found
@@ -386,7 +349,7 @@ void playlistsTask(gpointer args, gpointer args2) {
 					processPlayItem(playlists->parse_play_item(json)); 
 				}else {
 					resultsHistory->showResultsRepeat(FALSE);
-				    setSensitiveItemsPlaylists();
+				    resultsHistory->setSensitiveItemsPlaylists();
 				}
 			}
 			gdk_threads_leave();
@@ -860,8 +823,6 @@ int main( int   argc,
 	g_signal_connect(G_OBJECT(exit), "clicked",
 	    G_CALLBACK(gtk_main_quit), NULL);
     
-    disableAllItems();
-    
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 1);
     
     swTree = gtk_scrolled_window_new(NULL, NULL);
@@ -985,6 +946,8 @@ int main( int   argc,
                                                     rbDownload,
                                                     btnRefresh,
                                                     PROG_NAME);
+                                                    
+    resultsHistory->disableAllItems();
 
     g_signal_connect(GTK_WIDGET(btnRefresh), 
 				     "clicked", 
