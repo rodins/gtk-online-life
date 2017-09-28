@@ -244,6 +244,8 @@ class ResultsHistory {
 		}
 	}
 	
+	private:
+	
 	static void resultsNewTask(gpointer arg, gpointer arg1) {
 		// On pre execute
 		gdk_threads_enter();
@@ -270,8 +272,6 @@ class ResultsHistory {
 		resultsHistory->onPostExecuteAppend(page);
 		gdk_threads_leave();
 	}
-	
-	private:
 	
 	void setSensitiveItemsResults() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);

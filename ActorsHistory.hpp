@@ -88,6 +88,8 @@ class ActorsHistory {
 		}
 	}
 	
+	private:
+	
 	static void actorsTask(gpointer args, gpointer args2) {
 		ActorsHistory *actorsHistory = (ActorsHistory*)args2;
 		// On pre execute
@@ -100,8 +102,6 @@ class ActorsHistory {
 		actorsHistory->onPostExecute(page);
 		gdk_threads_leave();
 	}
-	
-	private:
 	
 	void showSpActors() {
 		gtk_widget_set_visible(frInfo, FALSE);
