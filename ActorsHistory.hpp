@@ -14,6 +14,8 @@ class ActorsHistory {
     GtkWidget *spActors;
     GtkWidget *hbActorsError;
     GtkWidget *vbRight;
+    
+    GThreadPool *actorsThreadPool;
     public:
     
     ActorsHistory(GtkWidget *a, GtkWidget *pa, GtkWidget* fr, GtkWidget* li,
@@ -31,6 +33,13 @@ class ActorsHistory {
 		vbRight = vbr;
 		
 		icon = create_pixbuf("link_16.png");
+		
+		// GThreadPool for actors
+	    actorsThreadPool = g_thread_pool_new(ActorsHistory::actorsTask,
+	                                   this,
+	                                   1, // Run one thread at the time
+	                                   FALSE,
+	                                   NULL);
 	} 
 	
 	string onPreExecute() {
@@ -55,12 +64,17 @@ class ActorsHistory {
 		}
 	}
     
-    void saveActors(string title, string href) {
+    void newThread(string title, string href) {
 		if(!actors.getTitle().empty()) {
 			prevActors = actors;
 		}
 		actors.setTitle(title);
 		actors.setUrl(href);
+		newThread();
+	}
+	
+	void newThread() {
+		g_thread_pool_push(actorsThreadPool, (gpointer)1, NULL);
 	}
     
 	void changed(GtkTreeSelection *treeselection) {

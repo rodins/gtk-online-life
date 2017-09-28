@@ -41,7 +41,6 @@ GtkToolItem *rbDownload;
 GtkWidget *window;
 
 GThreadPool *imagesThreadPool;
-GThreadPool *actorsThreadPool;
 GThreadPool *playlistsThreadPool;
 
 set<int> *imageIndexes;
@@ -437,8 +436,7 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	
 	if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
 		// Fetch actors 
-		actorsHistory->saveActors(resultTitle, href);
-        g_thread_pool_push(actorsThreadPool, (gpointer)1, NULL);
+		actorsHistory->newThread(resultTitle, href);
         //g_free(href);
 	}else {
 		// Fetch playlists/playItem
@@ -537,9 +535,8 @@ static void btnCategoriesRepeatClicked(GtkWidget *widget, gpointer data) {
 }
 
 static void btnActorsRepeatClicked(GtkWidget *widget, gpointer data) {
-	g_thread_pool_push(actorsThreadPool, 
-		              (gpointer) 1,
-		               NULL);
+	ActorsHistory *actorsHistory = (ActorsHistory*) data;
+    actorsHistory->newThread();
 }
 
 gboolean iconViewExposed(GtkWidget *widget, GdkEvent *event, gpointer data) {
@@ -855,10 +852,7 @@ int main( int   argc,
     hbActorsError = gtk_hbox_new(FALSE, 1);
     spActors = gtk_spinner_new();
     btnActorsError = gtk_button_new_with_label("Repeat");
-    g_signal_connect(btnActorsError,
-                     "clicked",
-                     G_CALLBACK(btnActorsRepeatClicked), 
-                     NULL);
+    
     gtk_box_pack_start(GTK_BOX(hbActorsError), btnActorsError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbRight), spActors, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), hbActorsError, TRUE, FALSE, 1);
@@ -973,6 +967,11 @@ int main( int   argc,
                      "clicked", 
                      G_CALLBACK(rbActorsClicked),
                      actorsHistory);
+                     
+    g_signal_connect(btnActorsError,
+                     "clicked",
+                     G_CALLBACK(btnActorsRepeatClicked), 
+                     actorsHistory);
         
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
@@ -1039,12 +1038,6 @@ int main( int   argc,
                                    FALSE,
                                    NULL);
                                    
-    // GThreadPool for actors
-    actorsThreadPool = g_thread_pool_new(ActorsHistory::actorsTask,
-                                   actorsHistory,
-                                   1, // Run one thread at the time
-                                   FALSE,
-                                   NULL);
                                    
     // GThreadPool for playlists
     playlistsThreadPool = g_thread_pool_new(playlistsTask,
