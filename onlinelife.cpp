@@ -514,10 +514,7 @@ static void btnPrevClicked( GtkWidget *widget,
                       gpointer   data )
 {   
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
-	resultsHistory->btnPrevClicked();
-	
-	// New images for new indexes will be downloaded
-	imageIndexes->clear();	  
+	resultsHistory->btnPrevClicked();  
 }
 
 static void btnNextClicked( GtkWidget *widget,
@@ -525,9 +522,6 @@ static void btnNextClicked( GtkWidget *widget,
 {   
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	resultsHistory->btnNextClicked();
-    
-    // New images for new indexes will be downloaded
-	imageIndexes->clear();
 }
 
 static void entryActivated( GtkWidget *widget, 

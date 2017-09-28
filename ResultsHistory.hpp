@@ -179,7 +179,10 @@ class ResultsHistory {
 		}
 		// Display top results from backResultsStack
 		restoreFromBackStack();
-		setSensitiveItemsResults();	
+		setSensitiveItemsResults();
+		
+		// New images for new indexes will be downloaded
+	    imageIndexes->clear();		
 	}
 	
 	void btnNextClicked() {
@@ -194,6 +197,9 @@ class ResultsHistory {
 	    // Display top result from forwardResultsStack
 	    restoreFromForwardStack();
 	    setSensitiveItemsResults();
+	    
+	    // New images for new indexes will be downloaded
+	    imageIndexes->clear();	
 	}
 	
 	string onPreExecuteNew() {
