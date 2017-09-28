@@ -462,20 +462,12 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 
 static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
-	resultsHistory->setRefresh(TRUE);
-	resultsHistory->newThread();
+	resultsHistory->btnRefreshClicked();
 }
 
 static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
-	if(resultsHistory->isError()) {
-		// Update results
-	    resultsHistory->newThread();
-	    resultsHistory->setError(FALSE);
-	}else {
-		// Update playlists
-	    resultsHistory->newThreadPlaylist();
-	}
+	resultsHistory->btnResultsRepeatClicked();
 }
 
 int main( int   argc,
@@ -778,8 +770,15 @@ int main( int   argc,
                                                     btnRefresh,
                                                     imageIndexes,
                                                     PROG_NAME);
-                                                    
-    resultsHistory->disableAllItems();
+    
+    // Disable all items                                                
+    gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
+	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
+	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
+	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
+	gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
 
     g_signal_connect(GTK_WIDGET(btnRefresh), 
 				     "clicked", 

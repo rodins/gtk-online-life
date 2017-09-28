@@ -98,77 +98,6 @@ class ResultsHistory {
 		g_free(playlists);
 	}
 	
-	Playlists* getPlaylists() {
-		return playlists;
-	}
-	
-	void showSpCenter(bool isPage) {
-		gtk_widget_set_visible(swTree, FALSE);
-		// Show and hide of ivResults depends on isPage
-		gtk_widget_set_visible(swIcon, isPage);
-		// Change packing params of spCenter
-		gtk_box_set_child_packing(
-		    GTK_BOX(vbCenter),
-		    spCenter,
-		    !isPage,
-		    FALSE,
-		    1,
-		    GTK_PACK_START);
-		gtk_widget_set_visible(spCenter, TRUE);
-		gtk_widget_set_visible(hbResultsError, FALSE);
-		gtk_spinner_start(GTK_SPINNER(spCenter));
-	}
-	
-	void showResultsRepeat(bool isPage) {
-		gtk_widget_set_visible(swTree, FALSE);
-		// Show and hide of ivResults depends on isPage
-		gtk_widget_set_visible(swIcon, isPage);
-		// Change packing params of spCenter
-		gtk_box_set_child_packing(
-		    GTK_BOX(vbCenter),
-		    hbResultsError,
-		    !isPage,
-		    FALSE,
-		    1,
-		    GTK_PACK_START);
-		gtk_widget_set_visible(spCenter, FALSE);
-		gtk_spinner_stop(GTK_SPINNER(spCenter));
-		gtk_widget_set_visible(hbResultsError, TRUE);
-	}
-	
-	void switchToIconView() {
-		gtk_widget_set_visible(swTree, FALSE);
-		gtk_widget_set_visible(swIcon, TRUE);
-		gtk_widget_set_visible(spCenter, FALSE);
-		gtk_widget_set_visible(hbResultsError, FALSE);
-		gtk_spinner_stop(GTK_SPINNER(spCenter));
-	}
-	
-	void disableAllItems() {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
-	    gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
-	    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
-	}
-	
-	void setSensitiveItemsPlaylists() {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), TRUE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
-	    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
-	    gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
-	}
-	
-	void displayPlaylists() {
-		switchToTreeView();
-		setSensitiveItemsPlaylists();
-	}
-	
 	void btnUpClicked() {
 		switchToIconView();
 		updateTitle();
@@ -209,30 +138,21 @@ class ResultsHistory {
 	    imageIndexes->clear();	
 	}
 	
-	void setRefresh(bool refresh) {
-		results.setRefresh(refresh);
-	}
-		
-	void setError(bool error) {
-		results.setError(error);
+	void btnRefreshClicked() {
+		results.setRefresh(TRUE);
+	    newThread();
 	}
 	
-	bool isError() {
-		return results.isError();
+	void btnResultsRepeatClicked() {
+		if(results.isError()) {
+			// Update results
+		    newThread();
+		    results.setError(FALSE);
+		}else {
+			// Update playlists
+		    newThreadPlaylist();
+		}
 	}
-	
-	string getTitle() {
-		return results.getTitle();
-	}
-	
-	void setUrl(string url) {
-		results.setUrl(url);
-	}
-	
-	void updateTitle() {
-		string title = progName + " - " + results.getTitle();
-		gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-	}	
 	
 	void newThread() {
 		// New images for new indexes will be downloaded
@@ -279,6 +199,7 @@ class ResultsHistory {
 		}
 	}
 	
+	//TODO: remove code repeat
 	void playOrDownload(string file, string download) {
 		if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
 		    string command = detectTerminal() + "wget -P ~/Download -c " + download + " &";
@@ -378,6 +299,27 @@ class ResultsHistory {
 		}
 	}
 	
+	Playlists* getPlaylists() {
+		return playlists;
+	}
+	
+	void showSpCenter(bool isPage) {
+		gtk_widget_set_visible(swTree, FALSE);
+		// Show and hide of ivResults depends on isPage
+		gtk_widget_set_visible(swIcon, isPage);
+		// Change packing params of spCenter
+		gtk_box_set_child_packing(
+		    GTK_BOX(vbCenter),
+		    spCenter,
+		    !isPage,
+		    FALSE,
+		    1,
+		    GTK_PACK_START);
+		gtk_widget_set_visible(spCenter, TRUE);
+		gtk_widget_set_visible(hbResultsError, FALSE);
+		gtk_spinner_start(GTK_SPINNER(spCenter));
+	}
+	
 	string detectPlayer() {
 		// TODO: add other players
 		// TODO: add selection of players if few is installed
@@ -468,11 +410,11 @@ class ResultsHistory {
 		}else {
 			switchToIconView(); // TODO: why is this here?
 			showResultsRepeat(FALSE);
-			setError(TRUE);
+			results.setError(TRUE);
 		}
 		
 		if(results.isRefresh()) {
-			setRefresh(FALSE);
+			results.setRefresh(FALSE);
 		}
 	}
 	
@@ -486,7 +428,7 @@ class ResultsHistory {
 			}
 			switchToIconView(); //TODO: why is this here?
 			showResultsRepeat(TRUE);
-			setError(TRUE);
+			results.setError(TRUE);
 		}
 	}
 	
@@ -615,5 +557,58 @@ class ResultsHistory {
 		}else {
 			gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
 		}
+	}
+	
+	void showResultsRepeat(bool isPage) {
+		gtk_widget_set_visible(swTree, FALSE);
+		// Show and hide of ivResults depends on isPage
+		gtk_widget_set_visible(swIcon, isPage);
+		// Change packing params of spCenter
+		gtk_box_set_child_packing(
+		    GTK_BOX(vbCenter),
+		    hbResultsError,
+		    !isPage,
+		    FALSE,
+		    1,
+		    GTK_PACK_START);
+		gtk_widget_set_visible(spCenter, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spCenter));
+		gtk_widget_set_visible(hbResultsError, TRUE);
+	}
+	
+	void switchToIconView() {
+		gtk_widget_set_visible(swTree, FALSE);
+		gtk_widget_set_visible(swIcon, TRUE);
+		gtk_widget_set_visible(spCenter, FALSE);
+		gtk_widget_set_visible(hbResultsError, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spCenter));
+	}
+	
+	void setSensitiveItemsPlaylists() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
+	    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
+	    gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
+	}
+	
+	void displayPlaylists() {
+		switchToTreeView();
+		setSensitiveItemsPlaylists();
+	}
+	
+	string getTitle() {
+		return results.getTitle();
+	}
+	
+	void setUrl(string url) {
+		results.setUrl(url);
+	}
+	
+	void updateTitle() {
+		string title = progName + " - " + results.getTitle();
+		gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 	}
 };
