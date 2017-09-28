@@ -1,7 +1,10 @@
 // ResultsHistory.hpp
+#include "Playlists.hpp"
 
 class ResultsHistory {
     Results results;
+    Playlists *playlists;
+        
     vector<Results> backResultsStack, forwardResultsStack;
     set<string> resultsThreadsLinks;
     
@@ -26,10 +29,12 @@ class ResultsHistory {
     
     GThreadPool *resultsNewThreadPool;
     GThreadPool *resultsAppendThreadPool;
+    GThreadPool *playlistsThreadPool;
     public:
     
     ResultsHistory(GtkWidget *w,
                    GtkWidget *iv,
+                   GtkWidget *tvPlaylists,
                    GtkToolItem *bp,
                    GtkToolItem *bn,
                    GtkWidget *sw_tree,
@@ -77,6 +82,24 @@ class ResultsHistory {
 	                                   1, // Run one thread at the time
 	                                   FALSE,
 	                                   NULL);
+	                                   
+	    // GThreadPool for playlists
+	    playlistsThreadPool = g_thread_pool_new(ResultsHistory::playlistsTask,
+	                                   this,
+	                                   1, // Run one thread at the time
+	                                   FALSE,
+	                                   NULL);
+	    playlists = new Playlists(
+	        gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists))
+        );
+	}
+	
+	~ResultsHistory(){
+		g_free(playlists);
+	}
+	
+	Playlists* getPlaylists() {
+		return playlists;
 	}
 	
 	void showSpCenter(bool isPage) {
@@ -234,6 +257,18 @@ class ResultsHistory {
 		newThread();
 	}
 	
+	void newThreadPlaylist() {
+		g_thread_pool_push(playlistsThreadPool, (gpointer)"", NULL);
+	}
+	
+	void newThreadPlaylist(string resultTitle, string href) {
+		string title = progName + " - " + resultTitle;
+	    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
+	    g_thread_pool_push(playlistsThreadPool, 
+	                       (gpointer)href.c_str(), 
+	                       NULL);
+	}
+	
 	void appendThread() {
 		if(!results.getNextLink().empty()) {
 			// Search for the same link only once if it's not saved in set.
@@ -241,6 +276,16 @@ class ResultsHistory {
 				resultsThreadsLinks.insert(results.getNextLink());
 				g_thread_pool_push(resultsAppendThreadPool, (gpointer)1, NULL);
 			}
+		}
+	}
+	
+	void playOrDownload(string file, string download) {
+		if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
+		    string command = detectTerminal() + "wget -P ~/Download -c " + download + " &";
+	        system(command.c_str());
+		}else if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay))) {
+		    string command = detectPlayer() + file + " &";
+	        system(command.c_str());
 		}
 	}
 	
@@ -271,6 +316,107 @@ class ResultsHistory {
 		gdk_threads_enter();
 		resultsHistory->onPostExecuteAppend(page);
 		gdk_threads_leave();
+	}
+	
+	static void playlistsTask(gpointer args, gpointer args2) {
+		ResultsHistory *resultsHistory = (ResultsHistory *)args2;
+		Playlists *playlists = resultsHistory->getPlaylists();
+		playlists->setUrl(args);
+		string href = playlists->getUrl();
+		string id = playlists->getHrefId();
+		if(!id.empty()) {
+			string url = "http://dterod.com/js.php?id=" + id;
+			string referer = "http://dterod.com/player.php?newsid=" + id;
+			// On pre execute
+			gdk_threads_enter();
+			// Show spinner fullscreen
+			resultsHistory->showSpCenter(FALSE);
+			gdk_threads_leave();
+			
+			string js = HtmlString::getPage(url, referer);
+			string playlist_link = playlists->get_txt_link(js);
+			if(!playlist_link.empty()) { // Playlists found
+				string json = HtmlString::getPage(playlist_link);
+				gdk_threads_enter();
+				playlists->parse(json);
+				if(playlists->getCount() > 0) {
+					resultsHistory->displayPlaylists();
+				}else {
+					resultsHistory->showResultsRepeat(FALSE);
+					resultsHistory->setSensitiveItemsPlaylists();
+				}
+				gdk_threads_leave();
+			}else { //PlayItem found or nothing found
+				gdk_threads_enter();
+				PlayItem playItem = playlists->parse_play_item(js);
+				if(!playItem.comment.empty()) { // PlayItem found
+				    // get results list back
+				    resultsHistory->switchToIconView();
+				    resultsHistory->updateTitle();
+					resultsHistory->processPlayItem(playItem); 
+				}else {
+					if(resultsHistory->getTitle().find("Трейлеры") != string::npos) {
+						gdk_threads_leave();
+						// Searching for alternative trailers links
+			            string infoHtml = HtmlString::getPage(href, referer);
+			            string trailerId = playlists->getTrailerId(infoHtml); 
+			            url = "http://dterod.com/js.php?id=" + trailerId + "&trailer=1";
+			            referer = "http://dterod.com/player.php?trailer_id=" + trailerId;
+			            string json = HtmlString::getPage(url, referer);
+						gdk_threads_enter();
+						// get results list back
+				        resultsHistory->switchToIconView();
+				        resultsHistory->updateTitle();
+						resultsHistory->processPlayItem(playlists->parse_play_item(json)); 
+					}else {
+						resultsHistory->showResultsRepeat(FALSE);
+					    resultsHistory->setSensitiveItemsPlaylists();
+					}
+				}
+				gdk_threads_leave();
+			}
+		}
+	}
+	
+	string detectPlayer() {
+		// TODO: add other players
+		// TODO: add selection of players if few is installed
+		if(system("which mplayer") == 0) {
+			return "mplayer -cache 2048 ";
+		}
+		if(system("which mpv") == 0) {
+			return "mpv ";
+		}
+		if(system("which totem") == 0) {
+			return "totem ";
+		}
+		return "";
+	}
+	
+	string detectTerminal() {
+		if(system("which xterm") == 0) {
+			return "xterm -e ";
+		}
+		if(system("which urxvt") == 0) {
+			return "urxvt -e ";
+		}
+		// Not tested!
+		if(system("which Terminal") == 0) {
+			return "Terminal -e ";
+		}
+		return "";
+	}
+	
+	void processPlayItem(PlayItem item) {
+		if(!item.comment.empty()) {
+		    if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
+			    string command = detectTerminal() + "wget -P ~/Download -c " + item.download + " &";
+		        system(command.c_str());
+			}else if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay))) {
+			    string command = detectPlayer() + item.file + " &";
+		        system(command.c_str());
+			}	
+		}
 	}
 	
 	void setSensitiveItemsResults() {

@@ -25,7 +25,6 @@ map<string, GdkPixbuf*> imagesCache;
 #include "CategoriesWidgets.hpp"
 #include "Results.hpp"
 #include "ResultsHistory.hpp"
-#include "Playlists.hpp"
 #include "ActorsHistory.hpp"
 
 using namespace std;
@@ -41,7 +40,6 @@ GtkToolItem *rbDownload;
 GtkWidget *window;
 
 GThreadPool *imagesThreadPool;
-GThreadPool *playlistsThreadPool;
 
 set<int> *imageIndexes;
 
@@ -198,117 +196,6 @@ void show_error_dialog() {
 	gtk_widget_destroy(dialog);
 }
 
-string detectPlayer() {
-	// TODO: add other players
-	// TODO: add selection of players if few is installed
-	if(system("which mplayer") == 0) {
-		return "mplayer -cache 2048 ";
-	}
-	if(system("which mpv") == 0) {
-		return "mpv ";
-	}
-	if(system("which totem") == 0) {
-		return "totem ";
-	}
-	return "";
-}
-
-string detectTerminal() {
-	if(system("which xterm") == 0) {
-		return "xterm -e ";
-	}
-	if(system("which urxvt") == 0) {
-		return "urxvt -e ";
-	}
-	// Not tested!
-	if(system("which Terminal") == 0) {
-		return "Terminal -e ";
-	}
-	return "";
-}
-
-void processPlayItem(PlayItem item) {
-	if(!item.comment.empty()) {
-	    if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
-		    string command = detectTerminal() + "wget -P ~/Download -c " + item.download + " &";
-	        system(command.c_str());
-		}else if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay))) {
-		    string command = detectPlayer() + item.file + " &";
-	        system(command.c_str());
-		}	
-	}
-}
-
-void playOrDownload(string file, string download) {
-	if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
-	    string command = detectTerminal() + "wget -P ~/Download -c " + download + " &";
-        system(command.c_str());
-	}else if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay))) {
-	    string command = detectPlayer() + file + " &";
-        system(command.c_str());
-	}
-}
-
-void playlistsTask(gpointer args, gpointer args2) {
-	Playlists *playlists = (Playlists*)args2;
-	ResultsHistory *resultsHistory = playlists->getResultsHistory();
-	playlists->setUrl(args);
-	string href = playlists->getUrl();
-	string id = playlists->getHrefId();
-	if(!id.empty()) {
-		string url = "http://dterod.com/js.php?id=" + id;
-		string referer = "http://dterod.com/player.php?newsid=" + id;
-		// On pre execute
-		gdk_threads_enter();
-		// Show spinner fullscreen
-		resultsHistory->showSpCenter(FALSE);
-		gdk_threads_leave();
-		
-		string js = HtmlString::getPage(url, referer);
-		string playlist_link = playlists->get_txt_link(js);
-		if(!playlist_link.empty()) { // Playlists found
-			string json = HtmlString::getPage(playlist_link);
-			gdk_threads_enter();
-			playlists->parse(json);
-			if(playlists->getCount() > 0) {
-				resultsHistory->displayPlaylists();
-			}else {
-				resultsHistory->showResultsRepeat(FALSE);
-				resultsHistory->setSensitiveItemsPlaylists();
-			}
-			gdk_threads_leave();
-		}else { //PlayItem found or nothing found
-			gdk_threads_enter();
-			PlayItem playItem = playlists->parse_play_item(js);
-			if(!playItem.comment.empty()) { // PlayItem found
-			    // get results list back
-			    resultsHistory->switchToIconView();
-			    resultsHistory->updateTitle();
-				processPlayItem(playItem); 
-			}else {
-				if(resultsHistory->getTitle().find("Трейлеры") != string::npos) {
-					gdk_threads_leave();
-					// Searching for alternative trailers links
-		            string infoHtml = HtmlString::getPage(href, referer);
-		            string trailerId = playlists->getTrailerId(infoHtml); 
-		            url = "http://dterod.com/js.php?id=" + trailerId + "&trailer=1";
-		            referer = "http://dterod.com/player.php?trailer_id=" + trailerId;
-		            string json = HtmlString::getPage(url, referer);
-					gdk_threads_enter();
-					// get results list back
-			        resultsHistory->switchToIconView();
-			        resultsHistory->updateTitle();
-					processPlayItem(playlists->parse_play_item(json)); 
-				}else {
-					resultsHistory->showResultsRepeat(FALSE);
-				    resultsHistory->setSensitiveItemsPlaylists();
-				}
-			}
-			gdk_threads_leave();
-		}
-	}
-}
-
 void categoriesClicked(GtkTreeView *treeView,
                        GtkTreePath *path,
                        GtkTreeViewColumn *column,
@@ -384,6 +271,7 @@ void playlistClicked(GtkTreeView *treeView,
                      GtkTreePath *path,
                      GtkTreeViewColumn *column,
                      gpointer data) {
+    ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -406,7 +294,7 @@ void playlistClicked(GtkTreeView *treeView,
 	                   -1);
 	
 	if(file != NULL) {
-		playOrDownload(file, download);
+		resultsHistory->playOrDownload(file, download);
 	}
 	
 	g_free(comment);
@@ -416,6 +304,7 @@ void playlistClicked(GtkTreeView *treeView,
 
 void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	ActorsHistory *actorsHistory = (ActorsHistory*) data;
+	ResultsHistory *resultsHistory = actorsHistory->getResultsHistory();
 	// Get model from ivResults
 	GtkTreeModel *model = gtk_icon_view_get_model(GTK_ICON_VIEW(ivResults));
 	
@@ -437,16 +326,13 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
 		// Fetch actors 
 		actorsHistory->newThread(resultTitle, href);
-        //g_free(href);
 	}else {
 		// Fetch playlists/playItem
-		// Set playlists title before playlists task
-		string title = PROG_NAME + " - " + resultTitle;
-	    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-	    g_thread_pool_push(playlistsThreadPool, href, NULL);
+		resultsHistory->newThreadPlaylist(resultTitle, href);
 	}
 	
 	g_free(resultTitle);
+	g_free(href);
 }
 
 void resultActivated(GtkWidget *widget,
@@ -588,7 +474,7 @@ static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
 	    resultsHistory->setError(FALSE);
 	}else {
 		// Update playlists
-	    g_thread_pool_push(playlistsThreadPool, (gpointer)"", NULL);
+	    resultsHistory->newThreadPlaylist();
 	}
 }
 
@@ -656,6 +542,15 @@ int main( int   argc,
     vbox = gtk_vbox_new(FALSE, 1);
     
     tvPlaylists = createTreeView();
+    
+    GtkTreeStore *playlistsStore = gtk_tree_store_new(PLAYLIST_NUM_COLS, 
+						                              GDK_TYPE_PIXBUF,
+									                  G_TYPE_STRING,
+									                  G_TYPE_STRING,
+									                  G_TYPE_STRING);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(tvPlaylists),
+                            GTK_TREE_MODEL(playlistsStore));
+    g_object_unref(playlistsStore);
     
     // set model to ivResults
     // it's kind of not needed but it removes some error
@@ -868,6 +763,7 @@ int main( int   argc,
     
 	ResultsHistory *resultsHistory = new ResultsHistory(window,
                                                     ivResults,
+                                                    tvPlaylists,
                                                     btnPrev,
                                                     btnNext,
                                                     swTree,
@@ -951,7 +847,8 @@ int main( int   argc,
                                                      frInfo,
                                                      spActors,
                                                      hbActorsError,
-                                                     vbRight);
+                                                     vbRight,
+                                                     resultsHistory);
                                                      
     g_signal_connect(selection,
 	                 "changed", 
@@ -986,7 +883,7 @@ int main( int   argc,
     g_signal_connect(tvPlaylists,
                      "row-activated", 
                      G_CALLBACK(playlistClicked), 
-                     NULL);
+                     resultsHistory);
         
     g_signal_connect(ivResults, 
                      "expose-event",
@@ -1017,32 +914,10 @@ int main( int   argc,
     
     gtk_widget_set_visible(hbResultsError, FALSE);
     
-    GtkTreeStore *playlistsStore = gtk_tree_store_new(PLAYLIST_NUM_COLS, 
-						                              GDK_TYPE_PIXBUF,
-									                  G_TYPE_STRING,
-									                  G_TYPE_STRING,
-									                  G_TYPE_STRING);
-    gtk_tree_view_set_model(GTK_TREE_VIEW(tvPlaylists),
-                            GTK_TREE_MODEL(playlistsStore));
-    g_object_unref(playlistsStore);
-    
-    Playlists *playlists = new Playlists(
-        gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists)),
-        resultsHistory
-    );
-    
     // GThreadPool for downloading images
     imagesThreadPool = g_thread_pool_new(imageDownloadTask,
                                    NULL, 
                                    -1,
-                                   FALSE,
-                                   NULL);
-                                   
-                                   
-    // GThreadPool for playlists
-    playlistsThreadPool = g_thread_pool_new(playlistsTask,
-                                   playlists,
-                                   1, // Run one thread at the time
                                    FALSE,
                                    NULL);
                                    
@@ -1059,7 +934,6 @@ int main( int   argc,
     
     gdk_threads_leave ();
     
-    g_free(playlists);
     g_free(resultsHistory);
     g_free(actorsHistory);
  

@@ -11,25 +11,18 @@ class Playlists {
 	int count;
 	string url;
 	
-	ResultsHistory *resultsHistory;
 	public:
 	
-	Playlists(GtkTreeModel *model, ResultsHistory * rh) {
+	Playlists(GtkTreeModel *model) {
 		directory = create_pixbuf("folder_16.png");
 	    item = create_pixbuf("link_16.png");
 	    treestore = GTK_TREE_STORE(model);
-	    resultsHistory = rh;
-	}
-	
-	ResultsHistory* getResultsHistory() {
-		return resultsHistory;
 	}
 	
 	void setUrl(gpointer args) {
 		string href((gchar*)args);
 		if(!href.empty()) { // empty link means repeat (use saved link)
 			url = href;
-			g_free(args);
 		}
 	}
 	
