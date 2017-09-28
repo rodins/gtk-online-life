@@ -42,27 +42,7 @@ class ActorsHistory {
 	                                   NULL);
 	} 
 	
-	string onPreExecute() {
-	    showSpActors();
-	    return actors.getUrl();
-	}
 	
-	void onPostExecute(string &page) {
-		if(!page.empty()) {
-			actors.parse(page);
-			// Save to back actors map
-			if(backActors.count(prevActors.getTitle()) == 0 
-			        && prevActors.getCount() > 0
-			        && prevActors.getTitle() != actors.getTitle()) {
-			    backActors[prevActors.getTitle()] = prevActors;
-			    backActorsListAdd(prevActors.getTitle());	
-			}
-			updateActors();
-			showActors();
-		}else {
-		    showActorsError();
-		}
-	}
     
     void newThread(string title, string href) {
 		if(!actors.getTitle().empty()) {
@@ -171,5 +151,27 @@ class ActorsHistory {
 	                       TITLE_COLUMN, 
 	                       title.c_str(),
 	                       -1);
+	}
+	
+	string onPreExecute() {
+	    showSpActors();
+	    return actors.getUrl();
+	}
+	
+	void onPostExecute(string &page) {
+		if(!page.empty()) {
+			actors.parse(page);
+			// Save to back actors map
+			if(backActors.count(prevActors.getTitle()) == 0 
+			        && prevActors.getCount() > 0
+			        && prevActors.getTitle() != actors.getTitle()) {
+			    backActors[prevActors.getTitle()] = prevActors;
+			    backActorsListAdd(prevActors.getTitle());	
+			}
+			updateActors();
+			showActors();
+		}else {
+		    showActorsError();
+		}
 	}
 };
