@@ -21,6 +21,11 @@ class ResultsHistory {
     GtkToolItem *rbPlay;
     GtkToolItem *rbDownload;
     GtkToolItem *btnRefresh;
+    
+    set<int> *imageIndexes;
+    
+    GThreadPool *resultsNewThreadPool;
+    GThreadPool *resultsAppendThreadPool;
     public:
     
     ResultsHistory(GtkWidget *w,
@@ -37,6 +42,7 @@ class ResultsHistory {
                    GtkToolItem *rb_play,
                    GtkToolItem *rb_download,
                    GtkToolItem *btn_refresh,
+                   set<int> *ii,
                    string pn) {
 		window = w;
 		ivResults = iv;
@@ -55,7 +61,22 @@ class ResultsHistory {
 		rbDownload = rb_download;
 		btnRefresh = btn_refresh;
 		
+		imageIndexes = ii;
 		progName = pn;
+		
+		// GThreadPool for new results
+	    resultsNewThreadPool = g_thread_pool_new(ResultsHistory::resultsNewTask,
+	                                   this,
+	                                   1, // Run one thread at the time
+	                                   FALSE,
+	                                   NULL);
+	                                   
+	    // GThreadPool for results pages
+	    resultsAppendThreadPool = g_thread_pool_new(ResultsHistory::resultsAppendTask,
+	                                   this,
+	                                   1, // Run one thread at the time
+	                                   FALSE,
+	                                   NULL);
 	}
 	
 	void showSpCenter(bool isPage) {
@@ -414,4 +435,46 @@ class ResultsHistory {
 		}
 	}
 	
+	void newThread() {
+		// New images for new indexes will be downloaded
+	    imageIndexes->clear();
+		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	}
+	
+	void appendThread() {
+		if(!getNextLink().empty()) {
+			// Search for the same link only once if it's not saved in set.
+			if(!threadLinksContainNextLink()) {
+				insertNextLinkToThreadLinks();
+				g_thread_pool_push(resultsAppendThreadPool, (gpointer)1, NULL);
+			}
+		}
+	}
+	
+	static void resultsNewTask(gpointer arg, gpointer arg1) {
+		// On pre execute
+		gdk_threads_enter();
+		ResultsHistory *resultsHistory = (ResultsHistory*)arg1;
+	    string link = resultsHistory->onPreExecuteNew();
+	    gdk_threads_leave();
+	    // async part
+		string page = HtmlString::getResultsPage(link);
+	    gdk_threads_enter();
+	    resultsHistory->onPostExecuteNew(page);
+		gdk_threads_leave();
+	}
+	
+	static void resultsAppendTask(gpointer arg, gpointer arg1) {
+		ResultsHistory *resultsHistory = (ResultsHistory *)arg1;
+		// On pre execute
+		gdk_threads_enter();
+		string link = resultsHistory->onPreExecuteAppend();
+		gdk_threads_leave();
+		// async part
+		string page = HtmlString::getResultsPage(link);
+		// On post execute
+		gdk_threads_enter();
+		resultsHistory->onPostExecuteAppend(page);
+		gdk_threads_leave();
+	}
 };

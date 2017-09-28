@@ -56,13 +56,11 @@ GtkWidget *hbResultsError;
 GtkWidget *btnResultsError;
 
 GThreadPool *imagesThreadPool;
-GThreadPool *resultsNewThreadPool;
-GThreadPool *resultsAppendThreadPool;
 GThreadPool *actorsThreadPool;
 GThreadPool *playlistsThreadPool;
 
 set<string> resultsThreadsLinks;
-set<int> imageIndexes;
+set<int> *imageIndexes;
 
 /*string readFromFile(string filename) {
 	ifstream in(filename.c_str());
@@ -143,7 +141,7 @@ void getPixbufFromUrl(string url, GtkTreeIter iter, int index) {
 				curl_easy_strerror(res));
 		// In case of error remove index from imageIndexes 
         // to have a chance to reload image
-        imageIndexes.erase(index);
+        imageIndexes->erase(index);
 	}else { 
         GError *error = NULL;
 		gboolean ok = gdk_pixbuf_loader_close(loader, &error);
@@ -151,7 +149,7 @@ void getPixbufFromUrl(string url, GtkTreeIter iter, int index) {
 	        fprintf(stderr, "On close: %s\n", error->message);
 	        // In case of error remove index from imageIndexes 
 	        // to have a chance to reload image
-	        imageIndexes.erase(index);
+	        imageIndexes->erase(index);
             g_error_free(error);
 		}else {
 			// Setting new fully downloaded image here
@@ -215,35 +213,6 @@ void show_error_dialog() {
 	gtk_window_set_title(GTK_WINDOW(dialog), "Error");
 	gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
-}
-
-void resultsAppendTask(gpointer arg, gpointer arg1) {
-	ResultsHistory *resultsHistory = (ResultsHistory *)arg1;
-	// On pre execute
-	gdk_threads_enter();
-	string link = resultsHistory->onPreExecuteAppend();
-	gdk_threads_leave();
-	// async part
-	string page = HtmlString::getResultsPage(link);
-	// On post execute
-	gdk_threads_enter();
-	resultsHistory->onPostExecuteAppend(page);
-	gdk_threads_leave();
-}
-
-void resultsNewTask(gpointer arg, gpointer arg1) {
-	// On pre execute
-	gdk_threads_enter();
-	ResultsHistory *resultsHistory = (ResultsHistory*)arg1;
-	// New images for new indexes will be downloaded
-    imageIndexes.clear();
-    string link = resultsHistory->onPreExecuteNew();
-    gdk_threads_leave();
-    // async part
-	string page = HtmlString::getResultsPage(link);
-    gdk_threads_enter();
-    resultsHistory->onPostExecuteNew(page);
-	gdk_threads_leave();
 }
 
 string detectPlayer() {
@@ -398,7 +367,7 @@ void categoriesClicked(GtkTreeView *treeView,
 	
 	resultsHistory->updateTitle();
 	resultsHistory->setUrl(link);
-	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	resultsHistory->newThread();
 	
 	g_free(title);
 	g_free(link);
@@ -431,7 +400,7 @@ void actorsClicked(GtkTreeView *treeView,
 	resultsHistory->setTitle(title);
 	resultsHistory->updateTitle();
 	resultsHistory->setUrl(link);
-    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	resultsHistory->newThread();
 	                   
 	g_free(title);
 	g_free(link);
@@ -557,7 +526,7 @@ static void btnPrevClicked( GtkWidget *widget,
 	resultsHistory->btnPrevClicked();
 	
 	// New images for new indexes will be downloaded
-	imageIndexes.clear();	  
+	imageIndexes->clear();	  
 }
 
 static void btnNextClicked( GtkWidget *widget,
@@ -567,7 +536,7 @@ static void btnNextClicked( GtkWidget *widget,
 	resultsHistory->btnNextClicked();
     
     // New images for new indexes will be downloaded
-	imageIndexes.clear();
+	imageIndexes->clear();
 }
 
 static void entryActivated( GtkWidget *widget, 
@@ -584,7 +553,7 @@ static void entryActivated( GtkWidget *widget,
 	         to_cp1251(query);
 		resultsHistory->setBaseUrl(base_url);
 		resultsHistory->setUrl(base_url);
-	    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+		resultsHistory->newThread();
 	}		  						  
 }
 
@@ -620,8 +589,8 @@ gboolean iconViewExposed(GtkWidget *widget, GdkEvent *event, gpointer data) {
 		
 	    // Downloading images for displayed items
 		for(int i = indexDisplayFirst; i <= indexDisplayLast; i++) {
-			if(imageIndexes.count(i) == 0) {
-				imageIndexes.insert(i);
+			if(imageIndexes->count(i) == 0) {
+				imageIndexes->insert(i);
 				g_thread_pool_push(imagesThreadPool, 
 				    (gpointer)(long)(i+1),
 				     NULL);
@@ -641,27 +610,21 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 	gdouble page_size = gtk_adjustment_get_page_size(adj);
 	gdouble max_value = upper - page_size - page_size;
 	if (value > max_value) {
-		if(!resultsHistory->getNextLink().empty()) {
-			// Search for the same link only once if it's not saved in set.
-			if(!resultsHistory->threadLinksContainNextLink()) {
-				resultsHistory->insertNextLinkToThreadLinks();
-				g_thread_pool_push(resultsAppendThreadPool, (gpointer)1, NULL);
-			}
-		}
+		resultsHistory->appendThread();
 	}
 }
 
 static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	resultsHistory->setRefresh(TRUE);
-	g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	resultsHistory->newThread();
 }
 
 static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	if(resultsHistory->isError()) {
 		// Update results
-	    g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	    resultsHistory->newThread();
 	    resultsHistory->setError(FALSE);
 	}else {
 		// Update playlists
@@ -698,6 +661,8 @@ int main( int   argc,
 	GdkPixbuf *icon;
 	
 	GtkTreeSelection *selection; 
+	
+	imageIndexes = new set<int>();
 	
 	 /* Must initialize libcurl before any threads are started */ 
     curl_global_init(CURL_GLOBAL_ALL);
@@ -945,6 +910,7 @@ int main( int   argc,
                                                     rbPlay,
                                                     rbDownload,
                                                     btnRefresh,
+                                                    imageIndexes,
                                                     PROG_NAME);
                                                     
     resultsHistory->disableAllItems();
@@ -1094,20 +1060,6 @@ int main( int   argc,
     imagesThreadPool = g_thread_pool_new(imageDownloadTask,
                                    NULL, 
                                    -1,
-                                   FALSE,
-                                   NULL);
-                                   
-    // GThreadPool for new results
-    resultsNewThreadPool = g_thread_pool_new(resultsNewTask,
-                                   resultsHistory,
-                                   1, // Run one thread at the time
-                                   FALSE,
-                                   NULL);
-                                   
-    // GThreadPool for results pages
-    resultsAppendThreadPool = g_thread_pool_new(resultsAppendTask,
-                                   resultsHistory,
-                                   1, // Run one thread at the time
                                    FALSE,
                                    NULL);
                                    
