@@ -331,7 +331,6 @@ void categoriesClicked(GtkTreeView *treeView,
                        GtkTreeViewColumn *column,
                        gpointer data) {
 	ResultsHistory *resultsHistory = (ResultsHistory*)data;
-	resultsHistory->saveToBackStack();
 	
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
@@ -359,15 +358,11 @@ void categoriesClicked(GtkTreeView *treeView,
 		                   TREE_TITLE_COLUMN,
 		                   &parentTitle,
 		                   -1);
-	    resultsHistory->setTitle(string(parentTitle) + " - " + title);
+	    resultsHistory->newThread(string(parentTitle) + " - " + title, link);
 		g_free(parentTitle);
 	}else {
-		resultsHistory->setTitle(title);
+		resultsHistory->newThread(title, link);
 	}
-	
-	resultsHistory->updateTitle();
-	resultsHistory->setUrl(link);
-	resultsHistory->newThread();
 	
 	g_free(title);
 	g_free(link);
@@ -396,11 +391,7 @@ void actorsClicked(GtkTreeView *treeView,
 	                   &link, 
 	                   -1);
 	                   
-	resultsHistory->saveToBackStack();
-	resultsHistory->setTitle(title);
-	resultsHistory->updateTitle();
-	resultsHistory->setUrl(link);
-	resultsHistory->newThread();
+	resultsHistory->newThread(title, link);
 	                   
 	g_free(title);
 	g_free(link);
@@ -544,16 +535,11 @@ static void entryActivated( GtkWidget *widget,
     ResultsHistory *resultsHistory = (ResultsHistory *)data;
     string query(gtk_entry_get_text(GTK_ENTRY(widget)));
     if(!query.empty()) {
-		resultsHistory->saveToBackStack();
 	    string title = "Search: " + query;
-	    resultsHistory->setTitle(title);
-	    resultsHistory->updateTitle();
 	    string base_url = string(DOMAIN) + 
 	         "/?do=search&subaction=search&mode=simple&story=" + 
 	         to_cp1251(query);
-		resultsHistory->setBaseUrl(base_url);
-		resultsHistory->setUrl(base_url);
-		resultsHistory->newThread();
+		resultsHistory->newThreadSearch(title, base_url);
 	}		  						  
 }
 

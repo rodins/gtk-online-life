@@ -441,6 +441,23 @@ class ResultsHistory {
 		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 	}
 	
+	void newThread(string title, string url) {
+		saveToBackStack();
+		setTitle(title);
+		updateTitle();
+		setUrl(url);
+		newThread();
+	}
+	
+	void newThreadSearch(string title, string base_url) {
+		saveToBackStack();
+		setTitle(title);
+		updateTitle();
+		setUrl(base_url);
+		setBaseUrl(base_url);
+		newThread();
+	}
+	
 	void appendThread() {
 		if(!getNextLink().empty()) {
 			// Search for the same link only once if it's not saved in set.
