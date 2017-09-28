@@ -33,33 +33,17 @@ using namespace std;
 const string PROG_NAME("Online life");
 
 GtkWidget *ivResults;
-GtkWidget *tvPlaylists;
-
-GtkToolItem *btnUp;
-GtkToolItem *btnPrev;
-GtkToolItem *btnNext;
 
 GtkToolItem *rbActors;
 GtkToolItem *rbPlay;
 GtkToolItem *rbDownload;
 
-GtkToolItem *btnRefresh;
-
 GtkWidget *window;
-GtkWidget *entry;
-
-GtkWidget *swTree, *swIcon;
-
-GtkWidget *spCenter;
-GtkWidget *vbCenter;
-GtkWidget *hbResultsError;
-GtkWidget *btnResultsError;
 
 GThreadPool *imagesThreadPool;
 GThreadPool *actorsThreadPool;
 GThreadPool *playlistsThreadPool;
 
-set<string> resultsThreadsLinks;
 set<int> *imageIndexes;
 
 /*string readFromFile(string filename) {
@@ -461,7 +445,6 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 		// Set playlists title before playlists task
 		string title = PROG_NAME + " - " + resultTitle;
 	    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-	    
 	    g_thread_pool_push(playlistsThreadPool, href, NULL);
 	}
 	
@@ -615,11 +598,18 @@ static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
 int main( int   argc,
           char *argv[] )
 {   
+	GtkWidget *tvPlaylists;
+	
 	GtkWidget *frRightBottom;
 	GtkWidget *lbInfo;
 	GtkWidget *frRightTop, *frInfo;
 	GtkWidget *spActors;
     GtkWidget *hbActorsError;
+    
+    GtkWidget *spCenter;
+    GtkWidget *vbCenter;
+    GtkWidget *hbResultsError;
+    GtkWidget *btnResultsError;
     
     GtkWidget *vbLeft, *vbRight;
     GtkWidget *tvCategories, *tvActors, *tvBackActors;
@@ -631,10 +621,16 @@ int main( int   argc,
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
     GtkWidget *swRightTop, *swRightBottom;
+    GtkWidget *swTree, *swIcon;
     GtkWidget *btnCategoriesError;
     GtkWidget *btnActorsError;
     
 	GtkToolItem *btnCategories;
+	GtkToolItem *btnRefresh;
+	GtkToolItem *btnUp;
+    GtkToolItem *btnPrev;
+    GtkToolItem *btnNext;
+    GtkWidget *entry;
 	GtkToolItem *sep;
 	GtkToolItem *exit;
 	
