@@ -121,14 +121,6 @@ class ResultsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spCenter));
 	}
 	
-	void setSensitiveItemsResults() {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
-		gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
-	    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
-	    gtk_widget_set_sensitive(GTK_WIDGET(rbActors), TRUE);
-	}
-	
 	void disableAllItems() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
@@ -137,14 +129,6 @@ class ResultsHistory {
 		gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
 	    gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
 	    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
-	}
-
-    void switchToTreeView() {
-		gtk_widget_set_visible(swTree, TRUE);
-		gtk_widget_set_visible(swIcon, FALSE);
-		gtk_widget_set_visible(spCenter, FALSE);
-		gtk_widget_set_visible(hbResultsError, FALSE);
-		gtk_spinner_stop(GTK_SPINNER(spCenter));
 	}
 	
 	void setSensitiveItemsPlaylists() {
@@ -202,6 +186,109 @@ class ResultsHistory {
 	    imageIndexes->clear();	
 	}
 	
+	void setRefresh(bool refresh) {
+		results.setRefresh(refresh);
+	}
+		
+	void setError(bool error) {
+		results.setError(error);
+	}
+	
+	bool isError() {
+		return results.isError();
+	}
+	
+	string getTitle() {
+		return results.getTitle();
+	}
+	
+	void setUrl(string url) {
+		results.setUrl(url);
+	}
+	
+	void updateTitle() {
+		string title = progName + " - " + results.getTitle();
+		gtk_window_set_title(GTK_WINDOW(window), title.c_str());
+	}	
+	
+	void newThread() {
+		// New images for new indexes will be downloaded
+	    imageIndexes->clear();
+		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	}
+	
+	void newThread(string title, string url) {
+		saveToBackStack();
+		results.setTitle(title);
+		updateTitle();
+		setUrl(url);
+		newThread();
+	}
+	
+	void newThreadSearch(string title, string base_url) {
+		saveToBackStack();
+		results.setTitle(title);
+		updateTitle();
+		setUrl(base_url);
+		results.setBaseUrl(base_url);
+		newThread();
+	}
+	
+	void appendThread() {
+		if(!results.getNextLink().empty()) {
+			// Search for the same link only once if it's not saved in set.
+			if(!threadLinksContainNextLink()) {
+				resultsThreadsLinks.insert(results.getNextLink());
+				g_thread_pool_push(resultsAppendThreadPool, (gpointer)1, NULL);
+			}
+		}
+	}
+	
+	static void resultsNewTask(gpointer arg, gpointer arg1) {
+		// On pre execute
+		gdk_threads_enter();
+		ResultsHistory *resultsHistory = (ResultsHistory*)arg1;
+	    string link = resultsHistory->onPreExecuteNew();
+	    gdk_threads_leave();
+	    // async part
+		string page = HtmlString::getResultsPage(link);
+	    gdk_threads_enter();
+	    resultsHistory->onPostExecuteNew(page);
+		gdk_threads_leave();
+	}
+	
+	static void resultsAppendTask(gpointer arg, gpointer arg1) {
+		ResultsHistory *resultsHistory = (ResultsHistory *)arg1;
+		// On pre execute
+		gdk_threads_enter();
+		string link = resultsHistory->onPreExecuteAppend();
+		gdk_threads_leave();
+		// async part
+		string page = HtmlString::getResultsPage(link);
+		// On post execute
+		gdk_threads_enter();
+		resultsHistory->onPostExecuteAppend(page);
+		gdk_threads_leave();
+	}
+	
+	private:
+	
+	void setSensitiveItemsResults() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
+	    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
+	    gtk_widget_set_sensitive(GTK_WIDGET(rbActors), TRUE);
+	}
+	
+	void switchToTreeView() {
+		gtk_widget_set_visible(swTree, TRUE);
+		gtk_widget_set_visible(swIcon, FALSE);
+		gtk_widget_set_visible(spCenter, FALSE);
+		gtk_widget_set_visible(hbResultsError, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spCenter));
+	}
+	
 	string onPreExecuteNew() {
 		// Display spinner for new results
 	    showSpCenter(FALSE);
@@ -226,8 +313,8 @@ class ResultsHistory {
 		    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), path, FALSE, 0, 0);
 		    
 		    // Clear results links set if not paging
-		    clearThreadsLinks();
-			createNewModel();
+		    resultsThreadsLinks.clear();
+			results.createNewModel(ivResults);
 			switchToIconView();
 			results.show(page);
 			
@@ -238,7 +325,7 @@ class ResultsHistory {
 			setError(TRUE);
 		}
 		
-		if(isRefresh()) {
+		if(results.isRefresh()) {
 			setRefresh(FALSE);
 		}
 	}
@@ -249,7 +336,7 @@ class ResultsHistory {
 			switchToIconView();
 		}else { // error
 			if(threadLinksContainNextLink()) {
-				eraseNextLinkFromThreadLinks();
+				resultsThreadsLinks.erase(results.getNextLink());
 			}
 			switchToIconView(); //TODO: why is this here?
 			showResultsRepeat(TRUE);
@@ -257,17 +344,9 @@ class ResultsHistory {
 		}
 	}
 	
-	bool isRefresh() {
-		return results.isRefresh();
-	} 
-	
-	void setRefresh(bool refresh) {
-		results.setRefresh(refresh);
-	}
-	
 	void clearForwardResultsStack() {
 		// Do not clear if refresh button clicked
-		if(!isRefresh()) {
+		if(!results.isRefresh()) {
 			forwardResultsStack.clear();
 		    gtk_tool_item_set_tooltip_text(btnNext, 
 		                                   "Move forward in history");
@@ -290,22 +369,6 @@ class ResultsHistory {
 		}
 	}
 	
-	void clearThreadsLinks() {
-		resultsThreadsLinks.clear();
-	}
-	
-	void createNewModel() {
-		results.createNewModel(ivResults);
-	}
-		
-	void setError(bool error) {
-		results.setError(error);
-	}
-	
-	bool isError() {
-		return results.isError();
-	}
-	
 	void saveResultsPostion() {
 		GtkTreePath *path1, *path2;
 		if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
@@ -326,27 +389,6 @@ class ResultsHistory {
 	                                       results.getTitle().c_str());
 	        gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
 		}
-	}
-	
-	void setTitle(string title) {
-		results.setTitle(title);
-	}
-	
-	string getTitle() {
-		return results.getTitle();
-	}
-	
-	void setUrl(string url) {
-		results.setUrl(url);
-	}
-	
-	void updateTitle() {
-		string title = progName + " - " + results.getTitle();
-		gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-	}
-	
-	void setBaseUrl(string url) {
-		results.setBaseUrl(url);
 	}
 	
 	void saveToForwardStack() {
@@ -411,20 +453,8 @@ class ResultsHistory {
 	    updateTitle(); 
 	}
 	
-	string getNextLink() {
-		return results.getNextLink();
-	}
-	
 	bool threadLinksContainNextLink() {
 		return resultsThreadsLinks.count(results.getNextLink()) > 0;
-	}
-	
-	void insertNextLinkToThreadLinks() {
-		resultsThreadsLinks.insert(results.getNextLink());
-	}
-	
-	void eraseNextLinkFromThreadLinks() {
-		resultsThreadsLinks.erase(results.getNextLink());
 	}
 	
 	void updatePrevNextButtons() {
@@ -439,65 +469,5 @@ class ResultsHistory {
 		}else {
 			gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
 		}
-	}
-	
-	void newThread() {
-		// New images for new indexes will be downloaded
-	    imageIndexes->clear();
-		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
-	}
-	
-	void newThread(string title, string url) {
-		saveToBackStack();
-		setTitle(title);
-		updateTitle();
-		setUrl(url);
-		newThread();
-	}
-	
-	void newThreadSearch(string title, string base_url) {
-		saveToBackStack();
-		setTitle(title);
-		updateTitle();
-		setUrl(base_url);
-		setBaseUrl(base_url);
-		newThread();
-	}
-	
-	void appendThread() {
-		if(!getNextLink().empty()) {
-			// Search for the same link only once if it's not saved in set.
-			if(!threadLinksContainNextLink()) {
-				insertNextLinkToThreadLinks();
-				g_thread_pool_push(resultsAppendThreadPool, (gpointer)1, NULL);
-			}
-		}
-	}
-	
-	static void resultsNewTask(gpointer arg, gpointer arg1) {
-		// On pre execute
-		gdk_threads_enter();
-		ResultsHistory *resultsHistory = (ResultsHistory*)arg1;
-	    string link = resultsHistory->onPreExecuteNew();
-	    gdk_threads_leave();
-	    // async part
-		string page = HtmlString::getResultsPage(link);
-	    gdk_threads_enter();
-	    resultsHistory->onPostExecuteNew(page);
-		gdk_threads_leave();
-	}
-	
-	static void resultsAppendTask(gpointer arg, gpointer arg1) {
-		ResultsHistory *resultsHistory = (ResultsHistory *)arg1;
-		// On pre execute
-		gdk_threads_enter();
-		string link = resultsHistory->onPreExecuteAppend();
-		gdk_threads_leave();
-		// async part
-		string page = HtmlString::getResultsPage(link);
-		// On post execute
-		gdk_threads_enter();
-		resultsHistory->onPostExecuteAppend(page);
-		gdk_threads_leave();
 	}
 };
