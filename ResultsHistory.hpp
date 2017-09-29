@@ -1,5 +1,6 @@
 // ResultsHistory.hpp
 #include "Playlists.hpp"
+#include "ActorsHistory.hpp"
 
 class ResultsHistory {
     Results results;
@@ -30,6 +31,8 @@ class ResultsHistory {
     GThreadPool *resultsNewThreadPool;
     GThreadPool *resultsAppendThreadPool;
     GThreadPool *playlistsThreadPool;
+    
+    ActorsHistory *actorsHistory;
     public:
     
     ResultsHistory(GtkWidget *w,
@@ -48,6 +51,7 @@ class ResultsHistory {
                    GtkToolItem *rb_download,
                    GtkToolItem *btn_refresh,
                    set<int> *ii,
+                   ActorsHistory *ah,
                    string pn) {
 		window = w;
 		ivResults = iv;
@@ -92,6 +96,8 @@ class ResultsHistory {
 	    playlists = new Playlists(
 	        gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists))
         );
+        
+        actorsHistory = ah;
 	}
 	
 	~ResultsHistory(){
@@ -154,6 +160,20 @@ class ResultsHistory {
 		}
 	}
 	
+	void onClick(string resultTitle, string href) {
+		if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
+			// Fetch actors 
+			actorsHistory->newThread(resultTitle, href);
+		}else {
+			// Fetch playlists/playItem
+			string title = progName + " - " + resultTitle;
+		    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
+		    g_thread_pool_push(playlistsThreadPool, 
+		                       (gpointer)href.c_str(), 
+		                       NULL);
+		}
+	}
+	
 	void newThread() {
 		// New images for new indexes will be downloaded
 	    imageIndexes->clear();
@@ -179,14 +199,6 @@ class ResultsHistory {
 	
 	void newThreadPlaylist() {
 		g_thread_pool_push(playlistsThreadPool, (gpointer)"", NULL);
-	}
-	
-	void newThreadPlaylist(string resultTitle, string href) {
-		string title = progName + " - " + resultTitle;
-	    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-	    g_thread_pool_push(playlistsThreadPool, 
-	                       (gpointer)href.c_str(), 
-	                       NULL);
 	}
 	
 	void appendThread() {

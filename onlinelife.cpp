@@ -25,22 +25,11 @@ map<string, GdkPixbuf*> imagesCache;
 #include "CategoriesWidgets.hpp"
 #include "Results.hpp"
 #include "ResultsHistory.hpp"
-#include "ActorsHistory.hpp"
 
 using namespace std;
 
-const string PROG_NAME("Online life");
-
 GtkWidget *ivResults;
-
-GtkToolItem *rbActors;
-GtkToolItem *rbPlay;
-GtkToolItem *rbDownload;
-
-GtkWidget *window;
-
 GThreadPool *imagesThreadPool;
-
 set<int> *imageIndexes;
 
 /*string readFromFile(string filename) {
@@ -184,18 +173,6 @@ void imageDownloadTask(gpointer arg, gpointer arg1) {
 	}
 }
 
-void show_error_dialog() {
-	GtkWidget *dialog;
-	dialog = gtk_message_dialog_new(GTK_WINDOW(window),
-			GTK_DIALOG_DESTROY_WITH_PARENT,
-			GTK_MESSAGE_ERROR,
-			GTK_BUTTONS_OK,
-			"Nothing found");
-	gtk_window_set_title(GTK_WINDOW(dialog), "Error");
-	gtk_dialog_run(GTK_DIALOG(dialog));
-	gtk_widget_destroy(dialog);
-}
-
 void categoriesClicked(GtkTreeView *treeView,
                        GtkTreePath *path,
                        GtkTreeViewColumn *column,
@@ -303,8 +280,7 @@ void playlistClicked(GtkTreeView *treeView,
 }
 
 void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
-	ActorsHistory *actorsHistory = (ActorsHistory*) data;
-	ResultsHistory *resultsHistory = actorsHistory->getResultsHistory();
+	ResultsHistory *resultsHistory = (ResultsHistory*) data;
 	// Get model from ivResults
 	GtkTreeModel *model = gtk_icon_view_get_model(GTK_ICON_VIEW(ivResults));
 	
@@ -322,14 +298,8 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	                   ICON_HREF,
 	                   &href,
 	                   -1);
-	
-	if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
-		// Fetch actors 
-		actorsHistory->newThread(resultTitle, href);
-	}else {
-		// Fetch playlists/playItem
-		resultsHistory->newThreadPlaylist(resultTitle, href);
-	}
+	                   
+	resultsHistory->onClick(resultTitle, href);
 	
 	g_free(resultTitle);
 	g_free(href);
@@ -473,6 +443,7 @@ static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
 int main( int   argc,
           char *argv[] )
 {   
+	GtkWidget *window;
 	GtkWidget *tvPlaylists;
 	
 	GtkWidget *frRightBottom;
@@ -506,6 +477,9 @@ int main( int   argc,
     GtkToolItem *btnPrev;
     GtkToolItem *btnNext;
     GtkWidget *entry;
+    GtkToolItem *rbActors;
+	GtkToolItem *rbPlay;
+	GtkToolItem *rbDownload;
 	GtkToolItem *sep;
 	GtkToolItem *exit;
 	
@@ -513,6 +487,7 @@ int main( int   argc,
 	
 	GtkTreeSelection *selection; 
 	
+	const string PROG_NAME("Online life");
 	imageIndexes = new set<int>();
 	
 	 /* Must initialize libcurl before any threads are started */ 
@@ -753,6 +728,31 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbCenter), spCenter, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbCenter), hbResultsError, TRUE, FALSE, 1);
     
+    ActorsHistory *actorsHistory = new ActorsHistory(tvActors,
+                                                     tvBackActors,
+                                                     frRightBottom,
+                                                     lbInfo,
+                                                     frRightTop,
+                                                     frInfo,
+                                                     spActors,
+                                                     hbActorsError,
+                                                     vbRight);
+                                                     
+    g_signal_connect(selection,
+	                 "changed", 
+	                 G_CALLBACK(backActorsChanged), 
+	                 actorsHistory);
+	                                  
+    g_signal_connect(GTK_WIDGET(rbActors),
+                     "clicked", 
+                     G_CALLBACK(rbActorsClicked),
+                     actorsHistory);
+                     
+    g_signal_connect(btnActorsError,
+                     "clicked",
+                     G_CALLBACK(btnActorsRepeatClicked), 
+                     actorsHistory);
+    
 	ResultsHistory *resultsHistory = new ResultsHistory(window,
                                                     ivResults,
                                                     tvPlaylists,
@@ -769,6 +769,7 @@ int main( int   argc,
                                                     rbDownload,
                                                     btnRefresh,
                                                     imageIndexes,
+                                                    actorsHistory,
                                                     PROG_NAME);
     
     // Disable all items                                                
@@ -819,6 +820,11 @@ int main( int   argc,
                      "activate", 
                      G_CALLBACK(entryActivated), 
                      resultsHistory);
+                     
+    g_signal_connect(ivResults, 
+                     "item-activated", 
+                     G_CALLBACK(resultActivated), 
+                     resultsHistory);
     
     CategoriesWidgets *categoriesWidgets = new CategoriesWidgets(
                                                vbLeft,
@@ -837,37 +843,6 @@ int main( int   argc,
                      "clicked", 
                      G_CALLBACK(btnCategoriesClicked),
                      categoriesWidgets);
-    
-    ActorsHistory *actorsHistory = new ActorsHistory(tvActors,
-                                                     tvBackActors,
-                                                     frRightBottom,
-                                                     lbInfo,
-                                                     frRightTop,
-                                                     frInfo,
-                                                     spActors,
-                                                     hbActorsError,
-                                                     vbRight,
-                                                     resultsHistory);
-                                                     
-    g_signal_connect(selection,
-	                 "changed", 
-	                 G_CALLBACK(backActorsChanged), 
-	                 actorsHistory);
-	                 
-	g_signal_connect(ivResults, 
-                     "item-activated", 
-                     G_CALLBACK(resultActivated), 
-                     actorsHistory);
-                     
-    g_signal_connect(GTK_WIDGET(rbActors),
-                     "clicked", 
-                     G_CALLBACK(rbActorsClicked),
-                     actorsHistory);
-                     
-    g_signal_connect(btnActorsError,
-                     "clicked",
-                     G_CALLBACK(btnActorsRepeatClicked), 
-                     actorsHistory);
         
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);

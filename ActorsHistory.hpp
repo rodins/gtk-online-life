@@ -16,12 +16,11 @@ class ActorsHistory {
     GtkWidget *vbRight;
     
     GThreadPool *actorsThreadPool;
-    ResultsHistory *resultsHistory;
     public:
     
     ActorsHistory(GtkWidget *a, GtkWidget *pa, GtkWidget* fr, GtkWidget* li,
                   GtkWidget *frt, GtkWidget *fri, GtkWidget *sa, GtkWidget *hba,
-                  GtkWidget *vbr, ResultsHistory* rh) {
+                  GtkWidget *vbr) {
 		tvActors = a;
 		tvBackActors = pa;
 		frRightBottom = fr;
@@ -41,12 +40,7 @@ class ActorsHistory {
 	                                   1, // Run one thread at the time
 	                                   FALSE,
 	                                   NULL);
-	    resultsHistory = rh;
 	} 
-	
-	ResultsHistory* getResultsHistory() {
-		return resultsHistory;
-	}
 	
     void newThread(string title, string href) {
 		if(!actors.getTitle().empty()) {
