@@ -29,9 +29,7 @@ map<string, GdkPixbuf*> imagesCache;
 
 using namespace std;
 
-GtkWidget *ivResults;
-GThreadPool *imagesThreadPool;
-set<int> *imageIndexes;
+
 
 /*string readFromFile(string filename) {
 	ifstream in(filename.c_str());
@@ -157,7 +155,7 @@ void playlistClicked(GtkTreeView *treeView,
 void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	ResultsHistory *resultsHistory = (ResultsHistory*) data;
 	// Get model from ivResults
-	GtkTreeModel *model = gtk_icon_view_get_model(GTK_ICON_VIEW(ivResults));
+	GtkTreeModel *model = gtk_icon_view_get_model(icon_view);
 	
 	// Get iter from path
 	GtkTreeIter iter;
@@ -270,26 +268,6 @@ static void btnActorsRepeatClicked(GtkWidget *widget, gpointer data) {
     actorsHistory->newThread();
 }
 
-gboolean iconViewExposed(GtkWidget *widget, GdkEvent *event, gpointer data) {
-	ImagesDownloader *imageDownloader = (ImagesDownloader*)data;
-	GtkTreePath *path1, *path2;
-	if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
-		gint *indices1 = gtk_tree_path_get_indices(path1);
-		gint *indices2 = gtk_tree_path_get_indices(path2);
-		gint indexDisplayFirst = indices1[0];
-		gint indexDisplayLast = indices2[0];
-		
-	    // Downloading images for displayed items
-		for(int i = indexDisplayFirst; i <= indexDisplayLast; i++) {
-			imageDownloader->newThread(i);	
-		}		
-		
-		gtk_tree_path_free(path1);
-		gtk_tree_path_free(path2);
-	}
-	return FALSE;
-}
-
 void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	gdouble value = gtk_adjustment_get_value(adj);
@@ -316,6 +294,7 @@ int main( int   argc,
 {   
 	GtkWidget *window;
 	GtkWidget *tvPlaylists;
+	GtkWidget *ivResults;
 	
 	GtkWidget *frRightBottom;
 	GtkWidget *lbInfo;
@@ -359,7 +338,7 @@ int main( int   argc,
 	GtkTreeSelection *selection; 
 	
 	const string PROG_NAME("Online life");
-	imageIndexes = new set<int>();
+	set<int> *imageIndexes = new set<int>();
 	
 	 /* Must initialize libcurl before any threads are started */ 
     curl_global_init(CURL_GLOBAL_ALL);
@@ -732,10 +711,6 @@ int main( int   argc,
     
     ImagesDownloader *imagesDownloader = new ImagesDownloader(ivResults,
                                                               imageIndexes);    
-    g_signal_connect(ivResults, 
-                     "expose-event",
-                     G_CALLBACK(iconViewExposed), 
-                     imagesDownloader);
     
     gtk_container_add(GTK_CONTAINER(window), vbox);
     

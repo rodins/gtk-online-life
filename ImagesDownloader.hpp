@@ -23,15 +23,11 @@ class ImagesDownloader {
 	                                         -1,
 	                                         FALSE,
 	                                         NULL);
-	}
-	
-	void newThread(int index) {
-		if(imageIndexes->count(index) == 0) {
-			imageIndexes->insert(index);
-			g_thread_pool_push(imagesThreadPool, 
-			    (gpointer)(long)(index+1),
-			     NULL);
-		}
+	    
+	    g_signal_connect(ivResults, 
+                         "expose-event",
+                         G_CALLBACK(ImagesDownloader::iconViewExposed), 
+                         this);
 	}
 	
 	private:
@@ -160,5 +156,36 @@ class ImagesDownloader {
 		
 		//free(chunk.memory);
 		g_object_unref(loader);
+	}
+	
+	static gboolean iconViewExposed(GtkIconView *icon_view, GdkEvent *event, gpointer data) {
+		ImagesDownloader *imageDownloader = (ImagesDownloader*)data;
+		GtkTreePath *path1, *path2;
+		if(gtk_icon_view_get_visible_range(icon_view, 
+		                                   &path1,
+		                                   &path2)) {
+			gint *indices1 = gtk_tree_path_get_indices(path1);
+			gint *indices2 = gtk_tree_path_get_indices(path2);
+			gint indexDisplayFirst = indices1[0];
+			gint indexDisplayLast = indices2[0];
+			
+		    // Downloading images for displayed items
+			for(int i = indexDisplayFirst; i <= indexDisplayLast; i++) {
+				imageDownloader->newThread(i);	
+			}		
+			
+			gtk_tree_path_free(path1);
+			gtk_tree_path_free(path2);
+		}
+		return FALSE;
+	}
+	
+	void newThread(int index) {
+		if(imageIndexes->count(index) == 0) {
+			imageIndexes->insert(index);
+			g_thread_pool_push(imagesThreadPool, 
+			    (gpointer)(long)(index+1),
+			     NULL);
+		}
 	}
 };
