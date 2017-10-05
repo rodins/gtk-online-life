@@ -10,6 +10,7 @@ class Results {
 	bool error;
 	
 	GtkListStore *iconViewStore;
+	GdkPixbuf *defaultPixbuf;
 	
 	string index; // save position of iconView
 	public:
@@ -17,6 +18,9 @@ class Results {
 	Results() {
 		refresh = FALSE;
 		error = FALSE;
+		
+		// Initialize default pixbuf for ivResults here
+        defaultPixbuf = create_pixbuf("blank.png");
 	}
 	
 	bool isError() {

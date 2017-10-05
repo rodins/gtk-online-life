@@ -19,7 +19,6 @@
 #include "CreatePixbuf.hpp"
 #include "ColumnsEnum.hpp"
 
-GdkPixbuf *defaultPixbuf;
 map<string, GdkPixbuf*> imagesCache;
 
 #include "CategoriesWidgets.hpp"
@@ -741,9 +740,6 @@ int main( int   argc,
     vadjustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(swIcon));
     g_signal_connect(vadjustment, "value-changed",
         G_CALLBACK(swIconVScrollChanged), resultsHistory);
-        
-    // Initialize default pixbuf for ivResults here
-    defaultPixbuf = create_pixbuf("blank.png");
     
     gtk_main();
     
