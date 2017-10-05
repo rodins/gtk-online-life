@@ -3,7 +3,7 @@
 struct ArgsStruct {
 	GdkPixbufLoader* loader;
 	GtkTreeIter iter;
-	GtkWidget *ivResults;
+	GtkListStore *store;
 };
 
 class ImagesDownloader {
@@ -42,9 +42,7 @@ class ImagesDownloader {
 		GdkPixbuf* pixbufOrig = gdk_pixbuf_loader_get_pixbuf(args->loader);
 		if(pixbufOrig != NULL) {
 			gdk_threads_enter();
-			GtkListStore *store = GTK_LIST_STORE(gtk_icon_view_get_model
-				(GTK_ICON_VIEW(args->ivResults)));
-			gtk_list_store_set(store, &args->iter, IMAGE_COLUMN, pixbufOrig, -1);  
+			gtk_list_store_set(args->store, &args->iter, IMAGE_COLUMN, pixbufOrig, -1);  
 			gdk_threads_leave();
 		}
 		
@@ -79,12 +77,15 @@ class ImagesDownloader {
 	        gdk_threads_leave();
 	        
 		    if(count == 0) { 
-				imagesDownloader->getPixbufFromUrl(link, iter, index);
+				imagesDownloader->getPixbufFromUrl(link,
+				                                   iter, 
+				                                   index, 
+				                                   GTK_LIST_STORE(model));
 			}
 		}
 	}
 	
-	void getPixbufFromUrl(string url, GtkTreeIter iter, int index) {
+	void getPixbufFromUrl(string url, GtkTreeIter iter, int index, GtkListStore* store) {
 		CURL *curl_handle;
 		CURLcode res;
 		GdkPixbuf *pixbuf;
@@ -93,7 +94,7 @@ class ImagesDownloader {
 		struct ArgsStruct args;
 		args.loader = loader;
 		args.iter = iter;
-		args.ivResults = ivResults;
+		args.store = store;
 		
 		/* init the curl session */ 
 		curl_handle = curl_easy_init();
@@ -141,12 +142,12 @@ class ImagesDownloader {
 	            //Make copy of pixbuf to be able to free loader
 				pixbuf = GDK_PIXBUF(g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader)));
 				gdk_threads_enter();
-				GtkListStore *store;
-				imagesCache[url] = pixbuf;
-					
-				store = GTK_LIST_STORE(gtk_icon_view_get_model
-					(GTK_ICON_VIEW(ivResults))); 
-				gtk_list_store_set(store, &iter, IMAGE_COLUMN, pixbuf, -1);
+				imagesCache[url] = pixbuf; 
+				gtk_list_store_set(store, 
+				                   &iter, 
+				                   IMAGE_COLUMN, 
+				                   pixbuf,
+				                   -1);
 				gdk_threads_leave();
 	        }
 		}
@@ -184,8 +185,8 @@ class ImagesDownloader {
 		if(imageIndexes->count(index) == 0) {
 			imageIndexes->insert(index);
 			g_thread_pool_push(imagesThreadPool, 
-			    (gpointer)(long)(index+1),
-			     NULL);
+			                   (gpointer)(long)(index+1),
+			                   NULL);
 		}
 	}
 };
