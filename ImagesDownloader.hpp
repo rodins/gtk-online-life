@@ -10,12 +10,17 @@ class ImagesDownloader {
     GtkWidget *ivResults;
     GThreadPool *imagesThreadPool;
     set<int> *imageIndexes;
+    map<string, GdkPixbuf*> *imagesCache;
     
     public:
     
-    ImagesDownloader(GtkWidget *ir, set<int> *ii) {
+    ImagesDownloader(GtkWidget *ir,
+                     set<int> *ii,
+                     map<string, 
+                     GdkPixbuf*> *cache) {
 		ivResults = ir;
 		imageIndexes = ii;
+		imagesCache = cache;
 		
 		// GThreadPool for downloading images
 	    imagesThreadPool = g_thread_pool_new(ImagesDownloader::imageDownloadTask,
@@ -73,7 +78,7 @@ class ImagesDownloader {
 	        g_free(imageLink);
 	        
 	        gdk_threads_enter();
-	        int count = imagesCache.count(link);
+	        int count = imagesDownloader->imagesCache->count(link);
 	        gdk_threads_leave();
 	        
 		    if(count == 0) { 
@@ -142,7 +147,7 @@ class ImagesDownloader {
 	            //Make copy of pixbuf to be able to free loader
 				pixbuf = GDK_PIXBUF(g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader)));
 				gdk_threads_enter();
-				imagesCache[url] = pixbuf; 
+				(*imagesCache)[url] = pixbuf; 
 				gtk_list_store_set(store, 
 				                   &iter, 
 				                   IMAGE_COLUMN, 

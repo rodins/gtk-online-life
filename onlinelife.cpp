@@ -19,16 +19,12 @@
 #include "CreatePixbuf.hpp"
 #include "ColumnsEnum.hpp"
 
-map<string, GdkPixbuf*> imagesCache;
-
 #include "CategoriesWidgets.hpp"
 #include "Results.hpp"
 #include "ResultsHistory.hpp"
 #include "ImagesDownloader.hpp"
 
 using namespace std;
-
-
 
 /*string readFromFile(string filename) {
 	ifstream in(filename.c_str());
@@ -338,6 +334,7 @@ int main( int   argc,
 	
 	const string PROG_NAME("Online life");
 	set<int> *imageIndexes = new set<int>();
+	map<string, GdkPixbuf*> *imagesCache = new map<string, GdkPixbuf*>();
 	
 	 /* Must initialize libcurl before any threads are started */ 
     curl_global_init(CURL_GLOBAL_ALL);
@@ -618,6 +615,7 @@ int main( int   argc,
                                                     rbDownload,
                                                     btnRefresh,
                                                     imageIndexes,
+                                                    imagesCache,
                                                     actorsHistory,
                                                     PROG_NAME);
     
@@ -709,7 +707,8 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbox), hbCenter, TRUE, TRUE, 1);
     
     ImagesDownloader *imagesDownloader = new ImagesDownloader(ivResults,
-                                                              imageIndexes);    
+                                                              imageIndexes,
+                                                              imagesCache);    
     
     gtk_container_add(GTK_CONTAINER(window), vbox);
     

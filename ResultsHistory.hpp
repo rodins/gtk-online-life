@@ -51,6 +51,7 @@ class ResultsHistory {
                    GtkToolItem *rb_download,
                    GtkToolItem *btn_refresh,
                    set<int> *ii,
+                   map<string, GdkPixbuf*> *cache,
                    ActorsHistory *ah,
                    string pn) {
 		window = w;
@@ -71,6 +72,7 @@ class ResultsHistory {
 		btnRefresh = btn_refresh;
 		
 		imageIndexes = ii;
+		results.setImagesCache(cache);
 		progName = pn;
 		
 		// GThreadPool for new results

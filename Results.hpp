@@ -12,6 +12,7 @@ class Results {
 	GtkListStore *iconViewStore;
 	GdkPixbuf *defaultPixbuf;
 	
+	map<string, GdkPixbuf*> *imagesCache;
 	string index; // save position of iconView
 	public:
 	
@@ -21,6 +22,10 @@ class Results {
 		
 		// Initialize default pixbuf for ivResults here
         defaultPixbuf = create_pixbuf("blank.png");
+	}
+	
+	void setImagesCache(map<string, GdkPixbuf*> *cache) {
+		imagesCache = cache;
 	}
 	
 	bool isError() {
@@ -119,8 +124,8 @@ class Results {
 		
 		gtk_list_store_append(iconViewStore, &iter);
 		
-		if(imagesCache.count(image) > 0) {
-			pixbuf = imagesCache[image];
+		if(imagesCache->count(image) > 0) {
+			pixbuf = imagesCache->operator[](image);
 		}else {
 			pixbuf = defaultPixbuf;
 		}
