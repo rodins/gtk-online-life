@@ -450,6 +450,7 @@ class ResultsHistory {
 			forwardResultsStack.clear();
 		    gtk_tool_item_set_tooltip_text(btnNext, 
 		                                   "Move forward in history");
+		    gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 		}
 	}
 	

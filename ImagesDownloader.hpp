@@ -159,7 +159,9 @@ class ImagesDownloader {
 		g_object_unref(loader);
 	}
 	
-	static gboolean iconViewExposed(GtkIconView *icon_view, GdkEvent *event, gpointer data) {
+	static gboolean iconViewExposed(GtkIconView *icon_view, 
+	                                GdkEvent *event, 
+	                                gpointer data) {
 		ImagesDownloader *imageDownloader = (ImagesDownloader*)data;
 		GtkTreePath *path1, *path2;
 		if(gtk_icon_view_get_visible_range(icon_view, 
@@ -172,21 +174,17 @@ class ImagesDownloader {
 			
 		    // Downloading images for displayed items
 			for(int i = indexDisplayFirst; i <= indexDisplayLast; i++) {
-				imageDownloader->newThread(i);	
+				if(imageDownloader->imageIndexes->count(i) == 0) {
+					imageDownloader->imageIndexes->insert(i);
+					g_thread_pool_push(imageDownloader->imagesThreadPool, 
+			                           (gpointer)(long)(i+1),
+			                           NULL);
+				}	
 			}		
 			
 			gtk_tree_path_free(path1);
 			gtk_tree_path_free(path2);
 		}
 		return FALSE;
-	}
-	
-	void newThread(int index) {
-		if(imageIndexes->count(index) == 0) {
-			imageIndexes->insert(index);
-			g_thread_pool_push(imagesThreadPool, 
-			                   (gpointer)(long)(index+1),
-			                   NULL);
-		}
 	}
 };
