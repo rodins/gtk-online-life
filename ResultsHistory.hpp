@@ -3,10 +3,10 @@
 #include "ActorsHistory.hpp"
 
 class ResultsHistory {
-    Results results;
+    Results *results;
     Playlists *playlists;
         
-    vector<Results> backResultsStack, forwardResultsStack;
+    vector<Results*> backResultsStack, forwardResultsStack;
     set<string> resultsThreadsLinks;
     
     GtkWidget *ivResults;
@@ -33,6 +33,7 @@ class ResultsHistory {
     GThreadPool *playlistsThreadPool;
     
     ActorsHistory *actorsHistory;
+    map<string, GdkPixbuf*> *imagesCache;
     public:
     
     ResultsHistory(GtkWidget *w,
@@ -72,7 +73,8 @@ class ResultsHistory {
 		btnRefresh = btn_refresh;
 		
 		imageIndexes = ii;
-		results.setImagesCache(cache);
+		imagesCache = cache;
+		results = NULL;
 		progName = pn;
 		
 		// GThreadPool for new results
@@ -147,15 +149,15 @@ class ResultsHistory {
 	}
 	
 	void btnRefreshClicked() {
-		results.setRefresh(TRUE);
+		results->setRefresh(TRUE);
 	    newThread();
 	}
 	
 	void btnResultsRepeatClicked() {
-		if(results.isError()) {
+		if(results->isError()) {
 			// Update results
 		    newThread();
-		    results.setError(FALSE);
+		    results->setError(FALSE);
 		}else {
 			// Update playlists
 		    newThreadPlaylist();
@@ -178,26 +180,28 @@ class ResultsHistory {
 	
 	void newThread(string title, string url) {
 		saveToBackStack();
-		results.setTitle(title);
+		results = new Results(imagesCache);
+		results->setTitle(title);
 		updateTitle();
-		setUrl(url);
+		results->setUrl(url);
 		newThread();
 	}
 	
 	void newThreadSearch(string title, string base_url) {
 		saveToBackStack();
-		results.setTitle(title);
+		results = new Results(imagesCache);
+		results->setTitle(title);
 		updateTitle();
-		setUrl(base_url);
-		results.setBaseUrl(base_url);
+		results->setUrl(base_url);
+		results->setBaseUrl(base_url);
 		newThread();
 	}
 	
 	void appendThread() {
-		if(!results.getNextLink().empty()) {
+		if(!results->getNextLink().empty()) {
 			// Search for the same link only once if it's not saved in set.
 			if(!threadLinksContainNextLink()) {
-				resultsThreadsLinks.insert(results.getNextLink());
+				resultsThreadsLinks.insert(results->getNextLink());
 				g_thread_pool_push(resultsAppendThreadPool, (gpointer)1, NULL);
 			}
 		}
@@ -213,8 +217,6 @@ class ResultsHistory {
 	        system(command.c_str());
 		}
 	}
-	
-	
 	
 	private:
 	
@@ -282,7 +284,7 @@ class ResultsHistory {
 				    resultsHistory->updateTitle();
 					resultsHistory->processPlayItem(playItem); 
 				}else {
-					if(resultsHistory->results.getTitle().find("Трейлеры") != string::npos) {
+					if(resultsHistory->results->getTitle().find("Трейлеры") != string::npos) {
 						gdk_threads_leave();
 						// Searching for alternative trailers links
 			            string infoHtml = HtmlString::getPage(href, referer);
@@ -386,13 +388,13 @@ class ResultsHistory {
 	string onPreExecuteNew() {
 		// Display spinner for new results
 	    showSpCenter(FALSE);
-	    return results.getUrl();
+	    return results->getUrl();
 	}
 	
 	string onPreExecuteAppend() {
 		// Display spinner at the bottom of list
 	    showSpCenter(TRUE);
-	    return results.getNextLink();
+	    return results->getNextLink();
 	}
 	
 	void onPostExecuteNew(string &page) {
@@ -408,39 +410,39 @@ class ResultsHistory {
 		    
 		    // Clear results links set if not paging
 		    resultsThreadsLinks.clear();
-			results.createNewModel(ivResults);
+			results->createNewModel(ivResults);
 			switchToIconView();
-			results.show(page);
+			results->show(page);
 			
 			setSensitiveItemsResults();
 		}else {
 			switchToIconView(); // TODO: why is this here?
 			showResultsRepeat(FALSE);
-			results.setError(TRUE);
+			results->setError(TRUE);
 		}
 		
-		if(results.isRefresh()) {
-			results.setRefresh(FALSE);
+		if(results->isRefresh()) {
+			results->setRefresh(FALSE);
 		}
 	}
 	
 	void onPostExecuteAppend(string &page) {
 		if(!page.empty()) {
-			results.show(page);
+			results->show(page);
 			switchToIconView();
 		}else { // error
 			if(threadLinksContainNextLink()) {
-				resultsThreadsLinks.erase(results.getNextLink());
+				resultsThreadsLinks.erase(results->getNextLink());
 			}
 			switchToIconView(); //TODO: why is this here?
 			showResultsRepeat(TRUE);
-			results.setError(TRUE);
+			results->setError(TRUE);
 		}
 	}
 	
 	void clearForwardResultsStack() {
 		// Do not clear if refresh button clicked
-		if(!results.isRefresh()) {
+		if(!results->isRefresh()) {
 			forwardResultsStack.clear();
 		    gtk_tool_item_set_tooltip_text(btnNext, 
 		                                   "Move forward in history");
@@ -453,7 +455,7 @@ class ResultsHistory {
 		int eraseIndex = -1;
 		// If back stack has title, remove results with it.
 		for(unsigned i = 0; i < backResultsStack.size(); i++) {
-			if(backResultsStack[i].getTitle() == results.getTitle()) {
+			if(backResultsStack[i]->getTitle() == results->getTitle()) {
 				eraseIndex = i;
 				break;
 			}
@@ -468,7 +470,7 @@ class ResultsHistory {
 		GtkTreePath *path1, *path2;
 		if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
 			string index(gtk_tree_path_to_string(path1));
-	        results.setIndex(index);
+	        results->setIndex(index);
 			gtk_tree_path_free(path1);
 		    gtk_tree_path_free(path2);
 		}
@@ -476,12 +478,12 @@ class ResultsHistory {
 	
 	void saveToBackStack() {
 		// Save position and copy to save variable
-		if(!results.getTitle().empty()) {
+		if(results != NULL && !results->getTitle().empty()) {
 			saveResultsPostion();
 	        backResultsStack.push_back(results);
 	        // Set tooltip with results title
 	        gtk_tool_item_set_tooltip_text(btnPrev, 
-	                                       results.getTitle().c_str());
+	                                       results->getTitle().c_str());
 	        gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
 		}
 	}
@@ -491,7 +493,7 @@ class ResultsHistory {
 		forwardResultsStack.push_back(results); 
 		// Set tooltip with results title
         gtk_tool_item_set_tooltip_text(btnNext, 
-                                       results.getTitle().c_str());
+                                       results->getTitle().c_str());
         gtk_widget_set_sensitive(GTK_WIDGET(btnNext), TRUE);
 	}
 	
@@ -501,9 +503,9 @@ class ResultsHistory {
 	    resultsThreadsLinks.clear(); 
 	    
 		// Update ivResults with history results
-		results.setModel(ivResults);
+		results->setModel(ivResults);
 		// Scroll to saved position after updating model
-		string index = results.getIndex();
+		string index = results->getIndex();
 		GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
 		gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), path1, FALSE, 0, 0);
 	    gtk_tree_path_free(path1);
@@ -518,7 +520,7 @@ class ResultsHistory {
 			gtk_tool_item_set_tooltip_text(btnPrev, 
 										   backResultsStack
 											   .back()
-											   .getTitle().c_str());
+											   ->getTitle().c_str());
 		}else {
 			// Set tooltip with results title
 		    gtk_tool_item_set_tooltip_text(btnPrev, "Move back in history");
@@ -537,7 +539,7 @@ class ResultsHistory {
 		    gtk_tool_item_set_tooltip_text(btnNext, 
 		                                   forwardResultsStack
 		                                       .back()
-		                                       .getTitle().c_str());                                   
+		                                       ->getTitle().c_str());                                   
 		}else {
 			// Set tooltip with results title
 		    gtk_tool_item_set_tooltip_text(btnNext, "Move forward in history");
@@ -549,7 +551,7 @@ class ResultsHistory {
 	}
 	
 	bool threadLinksContainNextLink() {
-		return resultsThreadsLinks.count(results.getNextLink()) > 0;
+		return resultsThreadsLinks.count(results->getNextLink()) > 0;
 	}
 	
 	void updatePrevNextButtons() {
@@ -606,12 +608,8 @@ class ResultsHistory {
 		setSensitiveItemsPlaylists();
 	}
 	
-	void setUrl(string url) {
-		results.setUrl(url);
-	}
-	
 	void updateTitle() {
-		string title = progName + " - " + results.getTitle();
+		string title = progName + " - " + results->getTitle();
 		gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 	}
 	

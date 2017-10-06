@@ -202,35 +202,31 @@ GtkWidget *createTreeView(void) {
 }
 
 static void btnCategoriesClicked(GtkWidget *widget,
-                      gpointer  data)
-{
+                                 gpointer data) {
 	CategoriesWidgets *categoriesWidgets = (CategoriesWidgets *)data;
 	categoriesWidgets->btnCategoriesClicked();	
 }
 
 static void btnUpClicked( GtkWidget *widget,
-                      gpointer   data )
-{
+                          gpointer data ) {
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	resultsHistory->btnUpClicked();
 }
 
-static void btnPrevClicked( GtkWidget *widget,
-                      gpointer   data )
-{   
+static void btnPrevClicked( GtkToolButton *widget,
+                            gpointer data ) {   
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	resultsHistory->btnPrevClicked();  
 }
 
-static void btnNextClicked( GtkWidget *widget,
-                      gpointer   data)
-{   
+static void btnNextClicked( GtkToolButton *widget,
+                            gpointer data) {   
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	resultsHistory->btnNextClicked();
 }
 
 static void entryActivated( GtkWidget *widget, 
-                      gpointer data) {
+                            gpointer data) {
     ResultsHistory *resultsHistory = (ResultsHistory *)data;
     string query(gtk_entry_get_text(GTK_ENTRY(widget)));
     if(!query.empty()) {
@@ -643,7 +639,7 @@ int main( int   argc,
                      G_CALLBACK(btnPrevClicked),
                      resultsHistory);
                      
-	g_signal_connect(GTK_WIDGET(btnNext),
+	g_signal_connect(btnNext,
 				     "clicked", 
 				     G_CALLBACK(btnNextClicked),
 				     resultsHistory);

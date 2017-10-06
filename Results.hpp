@@ -16,16 +16,14 @@ class Results {
 	string index; // save position of iconView
 	public:
 	
-	Results() {
+	Results(map<string, GdkPixbuf*> *cache) {
 		refresh = FALSE;
 		error = FALSE;
 		
 		// Initialize default pixbuf for ivResults here
         defaultPixbuf = create_pixbuf("blank.png");
-	}
-	
-	void setImagesCache(map<string, GdkPixbuf*> *cache) {
-		imagesCache = cache;
+        
+        imagesCache = cache;
 	}
 	
 	bool isError() {
