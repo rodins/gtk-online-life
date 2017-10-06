@@ -16,7 +16,11 @@ class Results {
 	string index; // save position of iconView
 	public:
 	
-	Results(map<string, GdkPixbuf*> *cache) {
+	Results(string title, string url, map<string, GdkPixbuf*> *cache) {
+		this->title = title;
+		this->url = url;
+		this->base_url = url;
+		
 		refresh = FALSE;
 		error = FALSE;
 		

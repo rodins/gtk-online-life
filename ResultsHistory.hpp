@@ -180,20 +180,15 @@ class ResultsHistory {
 	
 	void newThread(string title, string url) {
 		saveToBackStack();
-		results = new Results(imagesCache);
-		results->setTitle(title);
+		results = new Results(title, url, imagesCache);
 		updateTitle();
-		results->setUrl(url);
 		newThread();
 	}
 	
 	void newThreadSearch(string title, string base_url) {
 		saveToBackStack();
-		results = new Results(imagesCache);
-		results->setTitle(title);
+		results = new Results(title, base_url, imagesCache);
 		updateTitle();
-		results->setUrl(base_url);
-		results->setBaseUrl(base_url);
 		newThread();
 	}
 	
@@ -202,7 +197,7 @@ class ResultsHistory {
 			// Search for the same link only once if it's not saved in set.
 			if(!threadLinksContainNextLink()) {
 				resultsThreadsLinks.insert(results->getNextLink());
-				g_thread_pool_push(resultsAppendThreadPool, (gpointer)1, NULL);
+				g_thread_pool_push(resultsAppendThreadPool, (gpointer)results, NULL);
 			}
 		}
 	}
@@ -234,16 +229,17 @@ class ResultsHistory {
 	}
 	
 	static void resultsAppendTask(gpointer arg, gpointer arg1) {
+		Results *resultsAppend = (Results*) arg;
 		ResultsHistory *resultsHistory = (ResultsHistory *)arg1;
 		// On pre execute
 		gdk_threads_enter();
-		string link = resultsHistory->onPreExecuteAppend();
+		resultsHistory->onPreExecuteAppend();
 		gdk_threads_leave();
 		// async part
-		string page = HtmlString::getResultsPage(link);
+		string page = HtmlString::getResultsPage(resultsAppend->getNextLink());
 		// On post execute
 		gdk_threads_enter();
-		resultsHistory->onPostExecuteAppend(page);
+		resultsHistory->onPostExecuteAppend(page, resultsAppend);
 		gdk_threads_leave();
 	}
 	
@@ -391,10 +387,9 @@ class ResultsHistory {
 	    return results->getUrl();
 	}
 	
-	string onPreExecuteAppend() {
+	void onPreExecuteAppend() {
 		// Display spinner at the bottom of list
 	    showSpCenter(TRUE);
-	    return results->getNextLink();
 	}
 	
 	void onPostExecuteNew(string &page) {
@@ -426,17 +421,17 @@ class ResultsHistory {
 		}
 	}
 	
-	void onPostExecuteAppend(string &page) {
+	void onPostExecuteAppend(string &page, Results *resultsAppend) {
 		if(!page.empty()) {
-			results->show(page);
+			resultsAppend->show(page);
 			switchToIconView();
 		}else { // error
 			if(threadLinksContainNextLink()) {
-				resultsThreadsLinks.erase(results->getNextLink());
+				resultsThreadsLinks.erase(resultsAppend->getNextLink());
 			}
 			switchToIconView(); //TODO: why is this here?
 			showResultsRepeat(TRUE);
-			results->setError(TRUE);
+			resultsAppend->setError(TRUE);
 		}
 	}
 	
