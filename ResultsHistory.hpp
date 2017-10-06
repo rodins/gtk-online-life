@@ -176,12 +176,6 @@ class ResultsHistory {
 		}
 	}
 	
-	void newThread() {
-		// New images for new indexes will be downloaded
-	    imageIndexes->clear();
-		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
-	}
-	
 	void newThread(string title, string url) {
 		saveToBackStack();
 		results.setTitle(title);
@@ -197,10 +191,6 @@ class ResultsHistory {
 		setUrl(base_url);
 		results.setBaseUrl(base_url);
 		newThread();
-	}
-	
-	void newThreadPlaylist() {
-		g_thread_pool_push(playlistsThreadPool, (gpointer)"", NULL);
 	}
 	
 	void appendThread() {
@@ -223,6 +213,8 @@ class ResultsHistory {
 	        system(command.c_str());
 		}
 	}
+	
+	
 	
 	private:
 	
@@ -290,7 +282,7 @@ class ResultsHistory {
 				    resultsHistory->updateTitle();
 					resultsHistory->processPlayItem(playItem); 
 				}else {
-					if(resultsHistory->getTitle().find("Трейлеры") != string::npos) {
+					if(resultsHistory->results.getTitle().find("Трейлеры") != string::npos) {
 						gdk_threads_leave();
 						// Searching for alternative trailers links
 			            string infoHtml = HtmlString::getPage(href, referer);
@@ -614,10 +606,6 @@ class ResultsHistory {
 		setSensitiveItemsPlaylists();
 	}
 	
-	string getTitle() {
-		return results.getTitle();
-	}
-	
 	void setUrl(string url) {
 		results.setUrl(url);
 	}
@@ -625,5 +613,15 @@ class ResultsHistory {
 	void updateTitle() {
 		string title = progName + " - " + results.getTitle();
 		gtk_window_set_title(GTK_WINDOW(window), title.c_str());
+	}
+	
+	void newThread() {
+		// New images for new indexes will be downloaded
+	    imageIndexes->clear();
+		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+	}
+	
+	void newThreadPlaylist() {
+		g_thread_pool_push(playlistsThreadPool, (gpointer)"", NULL);
 	}
 };
