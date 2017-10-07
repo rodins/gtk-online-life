@@ -156,7 +156,7 @@ class ResultsHistory {
 	void btnResultsRepeatClicked() {
 		if(results->isError()) {
 			// Update results
-		    newThread();
+		    newThread(); // TODO: on append thread should only append
 		    results->setError(FALSE);
 		}else {
 			// Update playlists
@@ -438,6 +438,9 @@ class ResultsHistory {
 	void clearForwardResultsStack() {
 		// Do not clear if refresh button clicked
 		if(!results->isRefresh()) {
+			for(unsigned i = 0; i < forwardResultsStack.size(); i++) {
+				g_free(forwardResultsStack[i]);
+			}
 			forwardResultsStack.clear();
 		    gtk_tool_item_set_tooltip_text(btnNext, 
 		                                   "Move forward in history");
