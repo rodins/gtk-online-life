@@ -165,7 +165,7 @@ class ResultsHistory {
 			    newThread();
 			break;
 			case RESULTS_APPEND_ERROR:
-			    newThread(); // TODO: on append thread should only append
+			    appendThreadOnError();
 			break;
 			case PLAYLISTS_ERROR:
 		        newThreadPlaylist();
@@ -635,5 +635,11 @@ class ResultsHistory {
 	
 	void newThreadPlaylist() {
 		g_thread_pool_push(playlistsThreadPool, (gpointer)"", NULL);
+	}
+	
+	void appendThreadOnError() {
+		g_thread_pool_push(resultsAppendThreadPool,
+		                   (gpointer)resultsAppendError,
+		                   NULL);
 	}
 };
