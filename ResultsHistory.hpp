@@ -122,13 +122,8 @@ class ResultsHistory {
 	}
 	
 	void btnPrevClicked() {
-			// If results repeat button not displayed
-		if(!gtk_widget_get_visible(hbResultsError)) {
-			// Save current results to forwardResultsStack
-			saveToForwardStack();
-		}else {
-			switchToIconView();
-		}
+		// Save current results to forwardResultsStack
+		saveToForwardStack();
 		// Display top results from backResultsStack
 		restoreFromBackStack();
 		setSensitiveItemsResults();
@@ -138,14 +133,8 @@ class ResultsHistory {
 	}
 	
 	void btnNextClicked() {
-		// If results repeat button not displayed
-		if(!gtk_widget_get_visible(hbResultsError)) {
-			// Save current results to backResultsStack
-			saveToBackStack();
-		}else {
-			// If repeat button displayed
-		    switchToIconView();
-		}
+		// Save current results to backResultsStack
+		saveToBackStack();
 	    // Display top result from forwardResultsStack
 	    restoreFromForwardStack();
 	    setSensitiveItemsResults();
@@ -174,7 +163,6 @@ class ResultsHistory {
 			    // Nothing to do. Do not want compiler warning.
 			break;
 		}
-		error = NONE_ERROR;
 	}
 	
 	void onClick(string resultTitle, string href) {
@@ -416,7 +404,11 @@ class ResultsHistory {
 			
 			// Scroll to the top of the list
 		    GtkTreePath *path = gtk_tree_path_new_first();
-		    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), path, FALSE, 0, 0);
+		    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults),
+		                                 path, 
+		                                 FALSE, 
+		                                 0, 
+		                                 0);
 		    
 		    // Clear results links set if not paging
 		    resultsThreadsLinks.clear();
@@ -454,6 +446,7 @@ class ResultsHistory {
 	void clearForwardResultsStack() {
 		// Do not clear if refresh button clicked
 		if(!results->isRefresh()) {
+			// Free saved results first
 			for(unsigned i = 0; i < forwardResultsStack.size(); i++) {
 				g_free(forwardResultsStack[i]);
 			}
@@ -492,23 +485,33 @@ class ResultsHistory {
 	
 	void saveToBackStack() {
 		// Save position and copy to save variable
-		if(results != NULL && !results->getTitle().empty()) {
-			saveResultsPostion();
-	        backResultsStack.push_back(results);
-	        // Set tooltip with results title
-	        gtk_tool_item_set_tooltip_text(btnPrev, 
-	                                       results->getTitle().c_str());
-	        gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
+		if(results != NULL) {
+			if(error != RESULTS_NEW_ERROR) {
+				saveResultsPostion();
+		        backResultsStack.push_back(results);
+		        // Set tooltip with results title
+		        gtk_tool_item_set_tooltip_text(btnPrev, 
+		                                       results->getTitle().c_str());
+		        gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
+			}else {
+				g_free(results);
+				results = NULL;
+			}
 		}
 	}
 	
 	void saveToForwardStack() {
-		saveResultsPostion();
-		forwardResultsStack.push_back(results); 
-		// Set tooltip with results title
-        gtk_tool_item_set_tooltip_text(btnNext, 
-                                       results->getTitle().c_str());
-        gtk_widget_set_sensitive(GTK_WIDGET(btnNext), TRUE);
+		if(error != RESULTS_NEW_ERROR) {
+			saveResultsPostion();
+			forwardResultsStack.push_back(results); 
+			// Set tooltip with results title
+	        gtk_tool_item_set_tooltip_text(btnNext, 
+	                                       results->getTitle().c_str());
+	        gtk_widget_set_sensitive(GTK_WIDGET(btnNext), TRUE);
+		}else {
+			g_free(results);
+			results = NULL;
+		}
 	}
 	
 	void savedRecovery() {
@@ -543,6 +546,7 @@ class ResultsHistory {
 		
 		savedRecovery();
 	    updateTitle();
+	    switchToIconView();
 	}
 	
 	void restoreFromForwardStack() {
@@ -562,6 +566,7 @@ class ResultsHistory {
 	    
 	    savedRecovery();
 	    updateTitle(); 
+	    switchToIconView();
 	}
 	
 	bool threadLinksContainNextLink() {
@@ -630,6 +635,8 @@ class ResultsHistory {
 	void newThread() {
 		// New images for new indexes will be downloaded
 	    imageIndexes->clear();
+	    error = NONE_ERROR;
+	    resultsAppendError = NULL;
 		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
 	}
 	
