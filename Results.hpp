@@ -7,7 +7,6 @@ class Results {
 	string title;
 	string url;
 	bool refresh;
-	bool error;
 	
 	GtkListStore *iconViewStore;
 	GdkPixbuf *defaultPixbuf;
@@ -22,20 +21,11 @@ class Results {
 		this->base_url = url;
 		
 		refresh = FALSE;
-		error = FALSE;
 		
 		// Initialize default pixbuf for ivResults here
         defaultPixbuf = create_pixbuf("blank.png");
         
         imagesCache = cache;
-	}
-	
-	bool isError() {
-		return error;
-	}
-	
-	void setError(bool e) {
-		error = e;
 	}
 	
 	bool isRefresh() {

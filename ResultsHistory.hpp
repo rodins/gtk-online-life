@@ -1,9 +1,11 @@
 // ResultsHistory.hpp
 #include "Playlists.hpp"
 #include "ActorsHistory.hpp"
+#include "ErrorType.hpp"
 
 class ResultsHistory {
     Results *results;
+    Results *resultsAppendError;
     Playlists *playlists;
         
     vector<Results*> backResultsStack, forwardResultsStack;
@@ -34,6 +36,8 @@ class ResultsHistory {
     
     ActorsHistory *actorsHistory;
     map<string, GdkPixbuf*> *imagesCache;
+    
+    ErrorType error;
     public:
     
     ResultsHistory(GtkWidget *w,
@@ -102,6 +106,8 @@ class ResultsHistory {
         );
         
         actorsHistory = ah;
+        
+        error = NONE_ERROR;
 	}
 	
 	~ResultsHistory(){
@@ -154,14 +160,21 @@ class ResultsHistory {
 	}
 	
 	void btnResultsRepeatClicked() {
-		if(results->isError()) {
-			// Update results
-		    newThread(); // TODO: on append thread should only append
-		    results->setError(FALSE);
-		}else {
-			// Update playlists
-		    newThreadPlaylist();
+		switch(error) {
+			case RESULTS_NEW_ERROR:
+			    newThread();
+			break;
+			case RESULTS_APPEND_ERROR:
+			    newThread(); // TODO: on append thread should only append
+			break;
+			case PLAYLISTS_ERROR:
+		        newThreadPlaylist();
+			break;
+			case NONE_ERROR:
+			    // Nothing to do. Do not want compiler warning.
+			break;
 		}
+		error = NONE_ERROR;
 	}
 	
 	void onClick(string resultTitle, string href) {
@@ -269,6 +282,7 @@ class ResultsHistory {
 				}else {
 					resultsHistory->showResultsRepeat(FALSE);
 					resultsHistory->setSensitiveItemsPlaylists();
+					resultsHistory->error = PLAYLISTS_ERROR;
 				}
 				gdk_threads_leave();
 			}else { //PlayItem found or nothing found
@@ -296,6 +310,7 @@ class ResultsHistory {
 					}else {
 						resultsHistory->showResultsRepeat(FALSE);
 					    resultsHistory->setSensitiveItemsPlaylists();
+					    resultsHistory->error = PLAYLISTS_ERROR;
 					}
 				}
 				gdk_threads_leave();
@@ -413,7 +428,7 @@ class ResultsHistory {
 		}else {
 			switchToIconView(); // TODO: why is this here?
 			showResultsRepeat(FALSE);
-			results->setError(TRUE);
+			error = RESULTS_NEW_ERROR;
 		}
 		
 		if(results->isRefresh()) {
@@ -431,7 +446,8 @@ class ResultsHistory {
 			}
 			switchToIconView(); //TODO: why is this here?
 			showResultsRepeat(TRUE);
-			resultsAppend->setError(TRUE);
+			error = RESULTS_APPEND_ERROR;
+			resultsAppendError = resultsAppend;
 		}
 	}
 	
