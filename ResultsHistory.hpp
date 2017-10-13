@@ -330,28 +330,28 @@ class ResultsHistory {
 	string detectPlayer() {
 		// TODO: add other players
 		// TODO: add selection of players if few is installed
-		if(system("which mplayer") == 0) {
-			return "mplayer -cache 2048 ";
+		if(system("which totem") == 0) {
+			return "totem ";
 		}
 		if(system("which mpv") == 0) {
 			return "mpv ";
 		}
-		if(system("which totem") == 0) {
-			return "totem ";
+		if(system("which mplayer") == 0) {
+			return "mplayer -cache 2048 ";
 		}
 		return "";
 	}
 	
 	string detectTerminal() {
-		if(system("which xterm") == 0) {
-			return "xterm -e ";
+		// Not tested!
+		if(system("which Terminal") == 0) {
+			return "Terminal -e ";
 		}
 		if(system("which urxvt") == 0) {
 			return "urxvt -e ";
 		}
-		// Not tested!
-		if(system("which Terminal") == 0) {
-			return "Terminal -e ";
+		if(system("which xterm") == 0) {
+			return "xterm -e ";
 		}
 		return "";
 	}
