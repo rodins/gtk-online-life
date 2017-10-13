@@ -486,7 +486,7 @@ class ResultsHistory {
 	void saveToBackStack() {
 		// Save position and copy to save variable
 		if(results != NULL) {
-			if(error != RESULTS_NEW_ERROR) {
+			if(!results->isEmpty()) {
 				saveResultsPostion();
 		        backResultsStack.push_back(results);
 		        // Set tooltip with results title
@@ -501,7 +501,7 @@ class ResultsHistory {
 	}
 	
 	void saveToForwardStack() {
-		if(error != RESULTS_NEW_ERROR) {
+		if(!results->isEmpty()) {
 			saveResultsPostion();
 			forwardResultsStack.push_back(results); 
 			// Set tooltip with results title

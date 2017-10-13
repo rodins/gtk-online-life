@@ -13,6 +13,8 @@ class Results {
 	
 	map<string, GdkPixbuf*> *imagesCache;
 	string index; // save position of iconView
+	
+	int count;
 	public:
 	
 	Results(string title, string url, map<string, GdkPixbuf*> *cache) {
@@ -26,6 +28,8 @@ class Results {
         defaultPixbuf = create_pixbuf("blank.png");
         
         imagesCache = cache;
+        
+        count = 0;
 	}
 	
 	bool isRefresh() {
@@ -55,6 +59,7 @@ class Results {
 		
 		setModel(ivResults);
 		
+		count = 0;
 		// Want to keep my copy of model
 		//g_object_unref(iconViewStore);
 	}
@@ -108,6 +113,10 @@ class Results {
 		);
 	}
 	
+	bool isEmpty() {
+		return count == 0;
+	}
+	
 	private:
 	
 	void appendToStore(string title, string href, string image) {
@@ -133,6 +142,7 @@ class Results {
                            ICON_IMAGE_LINK, 
                            image.c_str(), 
                            -1);
+        count++;
 	}
 	
 	//Parse search results
