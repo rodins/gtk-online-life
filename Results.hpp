@@ -143,6 +143,7 @@ class Results {
                            image.c_str(), 
                            -1);
         count++;
+        cout << count << ": " << title << endl;
 	}
 	
 	//Parse search results
@@ -177,10 +178,11 @@ class Results {
 					//cout << "Href: " << href << endl;
 					//Find image
 					size_t image_begin = div.find("src=");
-					size_t image_end = div.find(".jpg", image_begin + 1);
+					size_t image_end = div.find("&", image_begin + 1);
 					if(image_begin != string::npos && image_end != string::npos) {
 						size_t image_length = image_end - image_begin;
-						string image = div.substr(image_begin+5, image_length-1);
+						string image = div.substr(image_begin+5, image_length-5);
+						//cout << "Image: " << image << endl;
 						unescape_html(title);
 					    appendToStore(to_utf8(title),
 					                  href,
