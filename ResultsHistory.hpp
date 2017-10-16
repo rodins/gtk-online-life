@@ -6,6 +6,8 @@
 class ResultsHistory {
     Results *results;
     Results *resultsAppendError;
+    Results *curlArg;
+    
     Playlists *playlists;
         
     vector<Results*> backResultsStack, forwardResultsStack;
@@ -181,14 +183,14 @@ class ResultsHistory {
 	
 	void newThread(string title, string url) {
 		saveToBackStack();
-		results = new Results(title, url, imagesCache);
+		results = new Results(title, url, imagesCache, ivResults);
 		updateTitle();
 		newThread();
 	}
 	
 	void newThreadSearch(string title, string base_url) {
 		saveToBackStack();
-		results = new Results(title, base_url, imagesCache);
+		results = new Results(title, base_url, imagesCache, ivResults);
 		updateTitle();
 		newThread();
 	}
@@ -214,18 +216,42 @@ class ResultsHistory {
 		}
 	}
 	
+	void parser(Results *res, int count, string div, set<string> &titles) {
+		// Prepare to show results when first result item comes
+		if(count == 0) {
+			if(res->isRefresh()) {
+				res->clearModel();
+			}
+			switchToIconView();
+			setSensitiveItemsResults();
+		}
+		
+		res->parser(div, titles);
+	}
+	
 	private:
 	
 	static void resultsNewTask(gpointer arg, gpointer arg1) {
 		// On pre execute
 		gdk_threads_enter();
 		ResultsHistory *resultsHistory = (ResultsHistory*)arg1;
-	    string link = resultsHistory->onPreExecuteNew();
+		// Display spinner for new results
+	    resultsHistory->showSpCenter(FALSE);
+	    
+	    // Scroll to the top of the list
+	    GtkTreePath *path = gtk_tree_path_new_first();
+	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(resultsHistory->ivResults),
+	                                 path, 
+	                                 FALSE, 
+	                                 0, 
+	                                 0);
+	    
 	    gdk_threads_leave();
 	    // async part
-		string page = HtmlString::getResultsPage(link);
+		resultsHistory->getResultsFromNet(resultsHistory->results->getUrl(), 
+		                                  resultsHistory->results);
 	    gdk_threads_enter();
-	    resultsHistory->onPostExecuteNew(page);
+	    resultsHistory->onPostExecuteNew();
 		gdk_threads_leave();
 	}
 	
@@ -234,13 +260,15 @@ class ResultsHistory {
 		ResultsHistory *resultsHistory = (ResultsHistory *)arg1;
 		// On pre execute
 		gdk_threads_enter();
-		resultsHistory->onPreExecuteAppend();
+		// Display spinner at the bottom of list
+		resultsHistory->showSpCenter(TRUE);;
 		gdk_threads_leave();
 		// async part
-		string page = HtmlString::getResultsPage(resultsAppend->getNextLink());
+		resultsHistory->getResultsFromNet(resultsAppend->getNextLink(),
+		                                  resultsAppend);
 		// On post execute
 		gdk_threads_enter();
-		resultsHistory->onPostExecuteAppend(page, resultsAppend);
+		resultsHistory->onPostExecuteAppend(resultsAppend);
 		gdk_threads_leave();
 	}
 	
@@ -384,39 +412,15 @@ class ResultsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spCenter));
 	}
 	
-	string onPreExecuteNew() {
-		// Display spinner for new results
-	    showSpCenter(FALSE);
-	    return results->getUrl();
-	}
-	
-	void onPreExecuteAppend() {
-		// Display spinner at the bottom of list
-	    showSpCenter(TRUE);
-	}
-	
-	void onPostExecuteNew(string &page) {
-		if(!page.empty()) {
+	void onPostExecuteNew() {
+		if(!results->isEmpty()) {
 			//TODO: maybe I need to clear it while saving....
 			// clear forward results stack on fetching new results
 		    clearForwardResultsStack();
 			removeBackStackDuplicate();
 			
-			// Scroll to the top of the list
-		    GtkTreePath *path = gtk_tree_path_new_first();
-		    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults),
-		                                 path, 
-		                                 FALSE, 
-		                                 0, 
-		                                 0);
-		    
 		    // Clear results links set if not paging
 		    resultsThreadsLinks.clear();
-			results->createNewModel(ivResults);
-			switchToIconView();
-			results->show(page);
-			
-			setSensitiveItemsResults();
 		}else {
 			switchToIconView(); // TODO: why is this here?
 			showResultsRepeat(FALSE);
@@ -428,11 +432,8 @@ class ResultsHistory {
 		}
 	}
 	
-	void onPostExecuteAppend(string &page, Results *resultsAppend) {
-		if(!page.empty()) {
-			resultsAppend->show(page);
-			switchToIconView();
-		}else { // error
+	void onPostExecuteAppend(Results *resultsAppend) {
+		if(resultsAppend->isEmpty()) { // error
 			if(threadLinksContainNextLink()) {
 				resultsThreadsLinks.erase(resultsAppend->getNextLink());
 			}
@@ -648,5 +649,129 @@ class ResultsHistory {
 		g_thread_pool_push(resultsAppendThreadPool,
 		                   (gpointer)resultsAppendError,
 		                   NULL);
+	}
+	
+	static int results_writer(char *data, size_t size, size_t nmemb,
+	                      ResultsHistory *resultsHistory)
+	{
+	    if (resultsHistory == NULL)
+	       return 0;
+	    static int count = 0;    
+	    static bool isBegin = FALSE;
+	    static bool pagerBeginFound = FALSE;
+	    static string partial_item;
+	    static set<string> titles;
+	    //cout << "DATA: " << data << endl;
+	    string strData(data);
+	    string itemBegin = "tom-pos"; // same as line below, but shorter
+	    string itemEnd = "</a>";
+	    // Find begining
+	    //size_t begin = strData.find("<div class=\"custom-poster\"");
+	    size_t item_begin;
+	    size_t item_end;
+	    size_t pager_begin = strData.find("class=\"navigation\"");
+	    size_t pager_end = strData.find("</div>", pager_begin+1);
+	    
+	    // Find end
+	    string strEnd("</table>");
+	    size_t end = strData.find(strEnd);
+	    
+	    // Find only end part of item
+	    if(isBegin) {
+			item_end = strData.find(itemEnd);
+			if(item_end != string::npos) {
+				string item_end_part = strData.substr(0, item_end + itemEnd.size());
+				isBegin = FALSE;
+				partial_item += item_end_part;
+				//cout << "PARTIAL ITEM: " << partial_item << endl;
+				gdk_threads_enter();
+				resultsHistory->parser(resultsHistory->curlArg,
+				                       count,
+				                       partial_item, 
+				                       titles);
+				gdk_threads_leave();
+				count++;
+				item_begin = strData.find(itemBegin, item_end);
+			    item_end = strData.find(itemEnd, item_begin);
+			}
+		}else {
+			item_begin = strData.find(itemBegin);
+			item_end = strData.find(itemEnd, item_begin);
+		}
+	    
+	    // Find whole item
+	    while(item_begin != string::npos && item_end != string::npos && item_begin < item_end) {
+			string whole_item = strData.substr(item_begin, item_end - item_begin + itemEnd.size());
+			//cout << "WHOLE ITEM: " << whole_item << endl;
+			gdk_threads_enter();
+			// Switch to icon view when first result item comes
+			resultsHistory->parser(resultsHistory->curlArg,
+			                       count,
+			                       whole_item, 
+			                       titles);
+			gdk_threads_leave();
+			count++;
+			item_begin = strData.find(itemBegin, item_end);
+			item_end = strData.find(itemEnd, item_begin);
+		}
+		
+		// Find only begining part of item
+		if(item_begin != string::npos && item_end == string::npos) {
+			string item_begin_part = strData.substr(item_begin);
+			//cout << "BEGIN PART: " << item_begin_part << endl;
+			isBegin = TRUE;
+			partial_item = item_begin_part;
+		}
+		
+		static string partial_pager;
+		
+		// Detect pager
+		// TODO: fix pager for search (find begin and end separately);
+		if(pager_end != string::npos && pager_begin != string::npos) {
+			size_t pager_length = pager_end - pager_begin;
+			string pager = strData.substr(pager_begin+2, pager_length-2);
+			cout << "Whole pager: " << pager << endl;
+			resultsHistory->curlArg->parse_pager(pager);
+		}else if(pager_begin != string::npos) {
+			pagerBeginFound = TRUE;
+			partial_pager = strData.substr(pager_begin);
+		}else if(pager_end != string::npos && pagerBeginFound) {
+			pagerBeginFound = FALSE;
+			partial_pager += strData.substr(0, pager_end);
+			cout << "Partial pager: " << partial_pager << endl;
+			resultsHistory->curlArg->parse_pager(partial_pager);
+		}
+	    
+		// Detect end
+		if(end != string::npos && count > 0) {
+			count = 0;
+			titles.clear();
+			return CURL_READFUNC_ABORT; 
+		}
+	
+	    return size*nmemb;
+	}
+	
+	void getResultsFromNet(string url, Results *res) {
+		CURL *curl_handle;
+		curlArg = res;		
+		/* init the curl session */
+		curl_handle = curl_easy_init();		
+		if(curl_handle) {
+			/* remove crash bug */
+			curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1);		    
+		    /* set url to get here */
+			curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());			
+			/* send all data to this function */			
+			curl_easy_setopt(curl_handle, 
+			                 CURLOPT_WRITEFUNCTION, 
+			                 ResultsHistory::results_writer);
+			curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);			
+			curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, this);			
+			/* get it */
+			curl_easy_perform(curl_handle);
+			/* cleanup curl stuff */
+			curl_easy_cleanup(curl_handle);
+		}
 	}
 };

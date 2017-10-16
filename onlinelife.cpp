@@ -18,10 +18,10 @@
 #include "HtmlString.hpp"
 #include "CreatePixbuf.hpp"
 #include "ColumnsEnum.hpp"
-
-#include "CategoriesWidgets.hpp"
 #include "Results.hpp"
 #include "ResultsHistory.hpp"
+#include "CategoriesWidgets.hpp"
+
 #include "ImagesDownloader.hpp"
 
 using namespace std;
