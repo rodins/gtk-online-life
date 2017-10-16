@@ -154,7 +154,6 @@ class Results {
 	}
 	
 	void parse_pager(string pager) {
-		cout << "Parse pager entered..." << endl;
 		prev_link = next_link = current_page = "";
 		// Find spans
         string begin_span = "<span>";

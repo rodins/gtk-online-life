@@ -651,24 +651,29 @@ class ResultsHistory {
 		                   NULL);
 	}
 	
+	void find_item(int &count, string &div, set<string> &titles) {
+		size_t item_begin = div.find("<div class=\"custom-poster\"");
+		size_t item_end = div.find("</a>", item_begin+3);
+		if(item_begin != string::npos && item_end != string::npos) {
+			string item = div.substr(item_begin, item_end - item_begin + 4);
+			gdk_threads_enter();
+			parser(curlArg, count, item, titles);
+			count++;
+			gdk_threads_leave();
+		}
+	}
+	
 	static int results_writer(char *data, size_t size, size_t nmemb,
 	                      ResultsHistory *resultsHistory)
 	{
 	    if (resultsHistory == NULL)
 	       return 0;
 	    static int count = 0;    
-	    static bool isBegin = FALSE;
 	    static bool pagerBeginFound = FALSE;
-	    static string partial_item;
 	    static set<string> titles;
 	    //cout << "DATA: " << data << endl;
 	    string strData(data);
-	    string itemBegin = "tom-pos"; // same as line below, but shorter
-	    string itemEnd = "</a>";
 	    // Find begining
-	    //size_t begin = strData.find("<div class=\"custom-poster\"");
-	    size_t item_begin;
-	    size_t item_end;
 	    size_t pager_begin = strData.find("class=\"navigation\"");
 	    size_t pager_end = strData.find("</div>", pager_begin+1);
 	    
@@ -676,51 +681,26 @@ class ResultsHistory {
 	    string strEnd("</table>");
 	    size_t end = strData.find(strEnd);
 	    
-	    // Find only end part of item
-	    if(isBegin) {
-			item_end = strData.find(itemEnd);
-			if(item_end != string::npos) {
-				string item_end_part = strData.substr(0, item_end + itemEnd.size());
-				isBegin = FALSE;
-				partial_item += item_end_part;
-				//cout << "PARTIAL ITEM: " << partial_item << endl;
-				gdk_threads_enter();
-				resultsHistory->parser(resultsHistory->curlArg,
-				                       count,
-				                       partial_item, 
-				                       titles);
-				gdk_threads_leave();
-				count++;
-				item_begin = strData.find(itemBegin, item_end);
-			    item_end = strData.find(itemEnd, item_begin);
-			}
-		}else {
-			item_begin = strData.find(itemBegin);
-			item_end = strData.find(itemEnd, item_begin);
-		}
-	    
-	    // Find whole item
-	    while(item_begin != string::npos && item_end != string::npos && item_begin < item_end) {
-			string whole_item = strData.substr(item_begin, item_end - item_begin + itemEnd.size());
-			//cout << "WHOLE ITEM: " << whole_item << endl;
-			gdk_threads_enter();
-			// Switch to icon view when first result item comes
-			resultsHistory->parser(resultsHistory->curlArg,
-			                       count,
-			                       whole_item, 
-			                       titles);
-			gdk_threads_leave();
-			count++;
-			item_begin = strData.find(itemBegin, item_end);
-			item_end = strData.find(itemEnd, item_begin);
+	    // Find div
+	    static string partial_div;
+	    static bool divBeginFound = FALSE;
+	    size_t div_begin = strData.find("<div");
+	    size_t div_end = strData.find("</div>", div_begin+3);
+	    while(div_begin != string::npos && div_end != string::npos) {
+			string div = strData.substr(div_begin, div_end - div_begin + 6);
+			//cout << "Whole div: " << div << endl;
+			resultsHistory->find_item(count, div, titles);
+			div_begin = strData.find("<div", div_end+4);
+	        div_end = strData.find("</div>", div_begin+3);
 		}
 		
-		// Find only begining part of item
-		if(item_begin != string::npos && item_end == string::npos) {
-			string item_begin_part = strData.substr(item_begin);
-			//cout << "BEGIN PART: " << item_begin_part << endl;
-			isBegin = TRUE;
-			partial_item = item_begin_part;
+		if(div_begin != string::npos) {
+			divBeginFound = TRUE;
+			partial_div = strData.substr(div_begin);
+		}else if(div_end != string::npos && divBeginFound) {
+			partial_div += strData.substr(0, div_end);
+			//cout << "Partial div: " << partial_div << endl;
+			resultsHistory->find_item(count, partial_div, titles);
 		}
 		
 		static string partial_pager;
@@ -730,7 +710,7 @@ class ResultsHistory {
 		if(pager_end != string::npos && pager_begin != string::npos) {
 			size_t pager_length = pager_end - pager_begin;
 			string pager = strData.substr(pager_begin+2, pager_length-2);
-			cout << "Whole pager: " << pager << endl;
+			//cout << "Whole pager: " << pager << endl;
 			resultsHistory->curlArg->parse_pager(pager);
 		}else if(pager_begin != string::npos) {
 			pagerBeginFound = TRUE;
@@ -738,7 +718,7 @@ class ResultsHistory {
 		}else if(pager_end != string::npos && pagerBeginFound) {
 			pagerBeginFound = FALSE;
 			partial_pager += strData.substr(0, pager_end);
-			cout << "Partial pager: " << partial_pager << endl;
+			//cout << "Partial pager: " << partial_pager << endl;
 			resultsHistory->curlArg->parse_pager(partial_pager);
 		}
 	    
