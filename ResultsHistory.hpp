@@ -690,6 +690,12 @@ class ResultsHistory {
 	    static string partial_div;
 	    static bool divBeginFound = FALSE;
 	    
+	    size_t starting_point = strData.find("tom-pos");
+	    // If starting point is not found, don't parse divs
+	    if(starting_point == string::npos && count == 0) {
+			return size*nmemb;
+		}
+	    
 	    size_t div_end_first = strData.find("</div>");
 	    size_t div_begin = strData.find("<div");
 	    size_t div_end = strData.find("</div>", div_begin+3);
