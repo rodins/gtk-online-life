@@ -143,6 +143,12 @@ class Results {
 						size_t image_length = image_end - image_begin;
 						string image = div.substr(image_begin+5, image_length-5);
 						unescape_html(title);
+						// Remove newlines from image
+						size_t pos = image.find("\r\n");
+						while(pos != string::npos) {
+							image.erase(pos, 2);
+							pos = image.find("\r\n", pos+1);
+						}
 					    appendToStore(to_utf8(title),
 					                  href,
 					                  image + "&w=165&h=236&zc=1");
