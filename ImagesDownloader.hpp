@@ -138,9 +138,9 @@ class ImagesDownloader {
 			gboolean ok = gdk_pixbuf_loader_close(loader, &error);
 			if(!ok) {
 		        fprintf(stderr, "On close: %s\n", error->message);
-		        // In case of error remove index from imageIndexes 
-		        // to have a chance to reload image
-		        imageIndexes->erase(index);
+		        // In case of loader error do not reload image
+		        // Do not erase index
+		        //imageIndexes->erase(index);
 	            g_error_free(error);
 			}else {
 				// Setting new fully downloaded image here
