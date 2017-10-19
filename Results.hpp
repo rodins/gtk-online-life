@@ -1,8 +1,7 @@
 
 class Results {
-    string prev_link, next_link;
+    string next_link;
 	string base_url;
-	string current_page;
 	string title;
 	string url;
 	bool refresh;
@@ -90,16 +89,8 @@ class Results {
 		return base_url;
 	}
 	
-	string& getPrevLink() {
-		return prev_link;
-	}
-	
 	string& getNextLink() {
 		return next_link;
-	}
-	
-	string getCurrentPage() {
-		return current_page;
 	}
 	
 	void setModel(GtkWidget *ivResults) {
@@ -160,35 +151,7 @@ class Results {
 	}
 	
 	void parse_pager(string pager) {
-		prev_link = next_link = current_page = "";
-		// Find spans
-        string begin_span = "<span>";
-        string end_span = "</span>";
-        size_t span_begin = pager.find(begin_span);
-        size_t span_end = pager.find(end_span);
-        int count_span = 0;
-        string spans[2];
-        int pages[2];
-        while(span_end != string::npos && span_begin != string::npos) {
-			size_t span_length = span_end - span_begin;
-			spans[count_span] = pager.substr(span_begin+6, span_length-6);
-			pages[count_span] = atoi(spans[count_span].c_str());
-			count_span++;
-			span_begin = pager.find(begin_span, span_end);
-            span_end = pager.find(end_span, span_begin);
-		}
-		current_page = "";
-		if(count_span == 1) {
-			current_page = spans[0];
-		}else {
-			if(pages[0] != 0) {
-				current_page = spans[0];
-			}
-			if(pages[1] != 0) {
-				current_page = spans[1];
-			}
-		}
-        
+		next_link = "";
         //Find menu pager anchors
         // <a href="http://google.com.ua">Google</a>
         string begin = "<a href";
@@ -225,10 +188,6 @@ class Results {
 				
 				if(title == "Вперед") {
 					next_link = base_url + "&search_start=" + page_num;
-				}
-				
-				if(title == "Назад") {
-					prev_link = base_url + "&search_start=" + page_num;
 				}
 			}
 			
@@ -276,10 +235,6 @@ class Results {
 			
 			if(title == "Вперед") {
 				next_link = link;
-			}
-			
-			if(title == "Назад") {
-				prev_link = link;
 			}
 		}
 	}
