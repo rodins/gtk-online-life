@@ -248,53 +248,11 @@ class ResultsHistory {
 	    
 	    gdk_threads_leave();
 	    // async part
-		
-		CURL *curl_handle;
-		resultsHistory->curlArg = resultsHistory->results;
-		CURLcode res;		
-		/* init the curl session */
-		curl_handle = curl_easy_init();		
-		if(curl_handle) {
-			/* remove crash bug */
-			curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1);		    
-		    /* set url to get here */
-			curl_easy_setopt(curl_handle, 
-			                 CURLOPT_URL,
-			                 resultsHistory->results->getUrl().c_str());			
-			/* send all data to this function */			
-			curl_easy_setopt(curl_handle, 
-			                 CURLOPT_WRITEFUNCTION, 
-			                 ResultsHistory::results_writer);
-			curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);			
-			curl_easy_setopt(curl_handle,
-			                 CURLOPT_WRITEDATA, 
-			                 resultsHistory);			
-			/* get it */
-			res = curl_easy_perform(curl_handle);
-			
-			gdk_threads_enter();
-			// CURLE_WRITE_ERROR is OK because of return CURL_READFUNC_ABORT
-			// in callback function
-			if(res == CURLE_WRITE_ERROR) {
-				//TODO: maybe I need to clear it while saving....
-				// clear forward results stack on fetching new results
-			    resultsHistory->clearForwardResultsStack();
-				resultsHistory->removeBackStackDuplicate();
-				
-			    // Clear results links set if not paging
-			    resultsHistory->resultsThreadsLinks.clear();
-			}else { //error
-				resultsHistory->showResultsRepeat(FALSE);
-				resultsHistory->error = RESULTS_NEW_ERROR;
-			}
-			
-			if(resultsHistory->results->isRefresh()) {
-				resultsHistory->results->setRefresh(FALSE);
-			}
-			
-			/* cleanup curl stuff */
-			curl_easy_cleanup(curl_handle);
-		}                                  
+		CURLcode res = resultsHistory->getResultsFromNet(
+		                                  resultsHistory->results->getUrl(),
+		                                  resultsHistory->results);
+		gdk_threads_enter();
+		resultsHistory->onPostExecuteNew(res);                                 
 		gdk_threads_leave();
 	}
 	
@@ -307,11 +265,11 @@ class ResultsHistory {
 		resultsHistory->showSpCenter(TRUE);;
 		gdk_threads_leave();
 		// async part
-		resultsHistory->getResultsFromNet(resultsAppend->getNextLink(),
+		CURLcode res = resultsHistory->getResultsFromNet(resultsAppend->getNextLink(),
 		                                  resultsAppend);
 		// On post execute
 		gdk_threads_enter();
-		resultsHistory->onPostExecuteAppend(resultsAppend);
+		resultsHistory->onPostExecuteAppend(resultsAppend, res);
 		gdk_threads_leave();
 	}
 	
@@ -455,8 +413,31 @@ class ResultsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spCenter));
 	}
 	
-	void onPostExecuteAppend(Results *resultsAppend) {
-		if(resultsAppend->isEmpty()) { // error
+	void onPostExecuteNew(CURLcode res) {
+		// CURLE_WRITE_ERROR is OK because of return CURL_READFUNC_ABORT
+		// in callback function
+		if(res == CURLE_WRITE_ERROR) {
+			//TODO: maybe I need to clear it while saving....
+			// clear forward results stack on fetching new results
+		    clearForwardResultsStack();
+			removeBackStackDuplicate();
+			
+		    // Clear results links set if not paging
+		    resultsThreadsLinks.clear();
+		}else { //error
+			showResultsRepeat(FALSE);
+			error = RESULTS_NEW_ERROR;
+		}
+		//TODO: fix refresh on error problem
+		if(results->isRefresh()) {
+			results->setRefresh(FALSE);
+		}
+	}
+	
+	void onPostExecuteAppend(Results *resultsAppend, CURLcode res) {
+		// CURLE_WRITE_ERROR is OK because of return CURL_READFUNC_ABORT
+	    // in callback function
+		if(res != CURLE_WRITE_ERROR) { // error
 			if(threadLinksContainNextLink()) {
 				resultsThreadsLinks.erase(resultsAppend->getNextLink());
 			}
@@ -761,7 +742,7 @@ class ResultsHistory {
 	    return size*nmemb;
 	}
 	
-	void getResultsFromNet(string url, Results *resArg) {
+	CURLcode getResultsFromNet(string url, Results *resArg) {
 		CURL *curl_handle;
 		curlArg = resArg;
 		CURLcode res;		
@@ -780,11 +761,11 @@ class ResultsHistory {
 			curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, this);			
 			/* get it */
 			res = curl_easy_perform(curl_handle);
-			if(res != CURLE_OK) {
-				
-			}
+
 			/* cleanup curl stuff */
 			curl_easy_cleanup(curl_handle);
+			
 		}
+		return res;
 	}
 };
