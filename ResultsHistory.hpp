@@ -424,14 +424,16 @@ class ResultsHistory {
 			
 		    // Clear results links set if not paging
 		    resultsThreadsLinks.clear();
+		    
+		    // Attempt to fix refresh on error problem
+			if(results->isRefresh()) {
+				results->setRefresh(FALSE);
+			}
 		}else { //error
 			showResultsRepeat(FALSE);
 			error = RESULTS_NEW_ERROR;
 		}
-		//TODO: fix refresh on error problem
-		if(results->isRefresh()) {
-			results->setRefresh(FALSE);
-		}
+		
 	}
 	
 	void onPostExecuteAppend(Results *resultsAppend, CURLcode res) {
