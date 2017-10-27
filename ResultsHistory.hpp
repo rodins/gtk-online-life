@@ -414,9 +414,7 @@ class ResultsHistory {
 	}
 	
 	void onPostExecuteNew(CURLcode res) {
-		// CURLE_WRITE_ERROR is OK because of return CURL_READFUNC_ABORT
-		// in callback function
-		if(res == CURLE_WRITE_ERROR) {
+		if(res == CURLE_OK) {
 			//TODO: maybe I need to clear it while saving....
 			// clear forward results stack on fetching new results
 		    clearForwardResultsStack();
@@ -437,9 +435,7 @@ class ResultsHistory {
 	}
 	
 	void onPostExecuteAppend(Results *resultsAppend, CURLcode res) {
-		// CURLE_WRITE_ERROR is OK because of return CURL_READFUNC_ABORT
-	    // in callback function
-		if(res != CURLE_WRITE_ERROR) { // error
+		if(res != CURLE_OK) { // error
 			if(threadLinksContainNextLink()) {
 				resultsThreadsLinks.erase(resultsAppend->getNextLink());
 			}
@@ -738,7 +734,7 @@ class ResultsHistory {
 		if(end != string::npos && count > 0) {
 			count = 0;
 			titles.clear();
-			return CURL_READFUNC_ABORT; 
+			//return CURL_READFUNC_ABORT; 
 		}
 	
 	    return size*nmemb;
