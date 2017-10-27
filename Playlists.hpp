@@ -14,8 +14,8 @@ class Playlists {
 	public:
 	
 	Playlists(GtkTreeModel *model) {
-		directory = create_pixbuf("images/folder_16.png");
-	    item = create_pixbuf("images/link_16.png");
+		directory = IconsFactory::getFolderIcon();
+	    item = IconsFactory::getLinkIcon();
 	    treestore = GTK_TREE_STORE(model);
 	}
 	

@@ -43,7 +43,7 @@ class Actors {
     
     void parse(string &page) {
 		count = 0;
-		item = create_pixbuf("images/link_16.png");
+		item = IconsFactory::getLinkIcon();
 		store = gtk_list_store_new(TREE_NUM_COLS, 
                                    GDK_TYPE_PIXBUF,
                                    G_TYPE_STRING,

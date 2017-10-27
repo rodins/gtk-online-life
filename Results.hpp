@@ -23,7 +23,7 @@ class Results {
 		refresh = FALSE;
 		
 		// Initialize default pixbuf for ivResults here
-        defaultPixbuf = create_pixbuf("images/blank.png");
+        defaultPixbuf = IconsFactory::getBlankIcon();
         
         imagesCache = cache;
         

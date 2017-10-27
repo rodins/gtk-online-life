@@ -32,7 +32,7 @@ class ActorsHistory {
 		hbActorsError = hba;
 		vbRight = vbr;
 		
-		icon = create_pixbuf("images/link_16.png");
+		icon = IconsFactory::getLinkIcon();
 		
 		// GThreadPool for actors
 	    actorsThreadPool = g_thread_pool_new(ActorsHistory::actorsTask,
