@@ -12,8 +12,8 @@ class CategoriesParser {
 	
 	CategoriesParser(string page) {
 		
-		categoryIcon = create_pixbuf("folder_16.png");
-	    itemIcon = create_pixbuf("link_16.png");
+		categoryIcon = create_pixbuf("images/folder_16.png");
+	    itemIcon = create_pixbuf("images/link_16.png");
 	    
 	    treestore = gtk_tree_store_new(TREE_NUM_COLS, 
 		                               GDK_TYPE_PIXBUF,

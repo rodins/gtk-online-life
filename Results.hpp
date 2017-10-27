@@ -23,7 +23,7 @@ class Results {
 		refresh = FALSE;
 		
 		// Initialize default pixbuf for ivResults here
-        defaultPixbuf = create_pixbuf("blank.png");
+        defaultPixbuf = create_pixbuf("images/blank.png");
         
         imagesCache = cache;
         

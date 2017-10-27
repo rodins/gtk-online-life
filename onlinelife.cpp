@@ -345,7 +345,7 @@ int main( int   argc,
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
     gtk_window_set_title(GTK_WINDOW(window), PROG_NAME.c_str());
     gtk_container_set_border_width(GTK_CONTAINER(window), 5);
-    icon = create_pixbuf("online_life.png");
+    icon = create_pixbuf("images/online_life.png");
 	gtk_window_set_icon(GTK_WINDOW(window), icon);
     
     vbox = gtk_vbox_new(FALSE, 1);
