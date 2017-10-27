@@ -32,7 +32,7 @@ class Playlists {
 	
 	string getHrefId() {
 		//Find id
-		string domain("http://www.online-life.");
+		string domain = DomainFactory::getWwwDomainNoSuffix();
 		size_t id_begin = url.find(domain);
 		// Make parser domain end independent
 		if(id_begin != string::npos) {

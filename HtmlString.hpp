@@ -143,7 +143,7 @@ class HtmlString {
 	}
 	
 	static string getCategoriesPage() {
-		return getPage(DOMAIN, "", CATEGORIES);
+		return getPage(DomainFactory::getDomain(), "", CATEGORIES);
 	}
 	
 	static string getActorsPage(string link) {

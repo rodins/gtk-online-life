@@ -12,8 +12,7 @@
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
-#define DOMAIN "http://online-life.club"
-
+#include "DomainFactory.hpp"
 #include "Converter.hpp"
 #include "HtmlString.hpp"
 #include "IconsFactory.hpp"
@@ -231,7 +230,7 @@ static void entryActivated( GtkWidget *widget,
     string query(gtk_entry_get_text(GTK_ENTRY(widget)));
     if(!query.empty()) {
 	    string title = "Search: " + query;
-	    string base_url = string(DOMAIN) + 
+	    string base_url = DomainFactory::getDomain() + 
 	         "/?do=search&subaction=search&mode=simple&story=" + 
 	         to_cp1251(query);
 		resultsHistory->newThreadSearch(title, base_url);

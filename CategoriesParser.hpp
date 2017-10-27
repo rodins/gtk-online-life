@@ -7,7 +7,6 @@ class CategoriesParser {
 	GtkTreeStore *treestore;
 	GtkTreeIter topLevel, child;
 	
-	string domain;
 	public:
 	
 	CategoriesParser(string page) {
@@ -19,8 +18,6 @@ class CategoriesParser {
 		                               GDK_TYPE_PIXBUF,
 					                   G_TYPE_STRING, 
 					                   G_TYPE_STRING);
-				  
-	    domain = "http://www.online-life.club";
 	    parse_categories(page);
 	}
 	
@@ -38,7 +35,7 @@ class CategoriesParser {
 			string nav = page.substr(nav_begin, nav_length);
 			
 			// Add to top level
-			addToTopLevel("Главная", domain);
+			addToTopLevel("Главная", DomainFactory::getWwwDomain());
 			
 			// Find nodrop items
 			// Find new, popular, best
@@ -157,8 +154,8 @@ class CategoriesParser {
 	}
 	
 	string addDomainTo(string link) {
-		if(link.find(domain) == string::npos) {
-			return domain + link;
+		if(link.find(DomainFactory::getWwwDomain()) == string::npos) {
+			return DomainFactory::getWwwDomain() + link;
 		}else {
 			return link;
 		}
