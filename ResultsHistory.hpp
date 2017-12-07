@@ -6,7 +6,6 @@
 class ResultsHistory {
     Results *results;
     Results *resultsAppendError;
-    Results *curlArg;
     
     Playlists *playlists;
         
@@ -183,14 +182,14 @@ class ResultsHistory {
 	
 	void newThread(string title, string url) {
 		saveToBackStack();
-		results = new Results(title, url, imagesCache, ivResults);
+		results = new Results(title, url, imagesCache, ivResults, this);
 		updateTitle();
 		newThread();
 	}
 	
 	void newThreadSearch(string title, string base_url) {
 		saveToBackStack();
-		results = new Results(title, base_url, imagesCache, ivResults);
+		results = new Results(title, base_url, imagesCache, ivResults, this);
 		updateTitle();
 		newThread();
 	}
@@ -653,30 +652,31 @@ class ResultsHistory {
 		                   NULL);
 	}
 	
-	void find_item(int &count, string &div, set<string> &titles) {
+	void find_item(Results *res, int &count, string &div, set<string> &titles) {
 		size_t item_begin = div.find("<div class=\"custom-poster\"");
 		size_t item_end = div.find("</a>", item_begin+3);
 		if(item_begin != string::npos && item_end != string::npos) {
 			string item = div.substr(item_begin, item_end - item_begin + 4);
 			gdk_threads_enter();
-			parser(curlArg, count, item, titles);
+			parser(res, count, item, titles);
 			count++;
 			gdk_threads_leave();
 		}
 	}
 	
-	void find_pager(string &div) {
+	void find_pager(Results *res, string &div) {
 		size_t pager_begin = div.find("class=\"navigation\"");
 	    size_t pager_end = div.find("</div>", pager_begin+1);
 	    if(pager_begin != string::npos && pager_end != string::npos) {
 			string pager = div.substr(pager_begin, pager_end - pager_begin + 6);
-			curlArg->parse_pager(pager);
+			res->parse_pager(pager);
 		}
 	}
 	
 	static int results_writer(char *data, size_t size, size_t nmemb,
-	                      ResultsHistory *resultsHistory)
+	                      Results *results)
 	{
+		ResultsHistory *resultsHistory = results->getResultsHistory();
 	    if (resultsHistory == NULL)
 	       return 0;
 	    static int count = 0;    
@@ -709,8 +709,11 @@ class ResultsHistory {
 			if(count == 0) {
 				end = string::npos;
 			}
-			resultsHistory->find_item(count, partial_div, titles);
-			resultsHistory->find_pager(partial_div);
+			resultsHistory->find_item(results,
+			                          count,
+			                          partial_div,
+			                          titles);
+			resultsHistory->find_pager(results, partial_div);
 		}
 	    
 	    while(div_begin != string::npos && div_end != string::npos) {
@@ -719,8 +722,11 @@ class ResultsHistory {
 			if(count == 0) {
 				end = string::npos;
 			}
-			resultsHistory->find_item(count, div, titles);
-			resultsHistory->find_pager(div);
+			resultsHistory->find_item(results,
+			                          count,
+			                          div,
+			                          titles);
+			resultsHistory->find_pager(results, div);
 			div_begin = strData.find("<div", div_end+4);
 	        div_end = strData.find("</div>", div_begin+3);
 		}
@@ -742,7 +748,7 @@ class ResultsHistory {
 	
 	CURLcode getResultsFromNet(string url, Results *resArg) {
 		CURL *curl_handle;
-		curlArg = resArg;
+	    
 		CURLcode res;		
 		/* init the curl session */
 		curl_handle = curl_easy_init();		
@@ -756,7 +762,7 @@ class ResultsHistory {
 			                 CURLOPT_WRITEFUNCTION, 
 			                 ResultsHistory::results_writer);
 			curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);			
-			curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, this);			
+			curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, resArg);			
 			/* get it */
 			res = curl_easy_perform(curl_handle);
 

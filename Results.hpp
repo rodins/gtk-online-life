@@ -1,3 +1,4 @@
+class ResultsHistory;
 
 class Results {
     string next_link;
@@ -5,6 +6,7 @@ class Results {
 	string title;
 	string url;
 	bool refresh;
+	ResultsHistory *resultsHistory;
 	
 	GtkListStore *iconViewStore;
 	GdkPixbuf *defaultPixbuf;
@@ -15,10 +17,15 @@ class Results {
 	int count;
 	public:
 	
-	Results(string title, string url, map<string, GdkPixbuf*> *cache, GtkWidget *ivResults) {
+	Results(string title, 
+	        string url, 
+	        map<string, GdkPixbuf*> *cache, 
+	        GtkWidget *ivResults,
+	        ResultsHistory *resultsHistory) {
 		this->title = title;
 		this->url = url;
 		this->base_url = url;
+		this->resultsHistory = resultsHistory;
 		
 		refresh = FALSE;
 		
@@ -43,6 +50,10 @@ class Results {
 	
 	~Results(){
 		g_free(iconViewStore);
+	}
+	
+	ResultsHistory* getResultsHistory() {
+		return resultsHistory;
 	}
 	
 	bool isRefresh() {
