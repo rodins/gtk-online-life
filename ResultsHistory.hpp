@@ -652,19 +652,19 @@ class ResultsHistory {
 		                   NULL);
 	}
 	
-	void find_item(Results *res, int &count, string &div, set<string> &titles) {
+	static void find_item(Results *res, int &count, string &div, set<string> &titles) {
 		size_t item_begin = div.find("<div class=\"custom-poster\"");
 		size_t item_end = div.find("</a>", item_begin+3);
 		if(item_begin != string::npos && item_end != string::npos) {
 			string item = div.substr(item_begin, item_end - item_begin + 4);
 			gdk_threads_enter();
-			parser(res, count, item, titles);
+			res->getResultsHistory()->parser(res, count, item, titles);
 			count++;
 			gdk_threads_leave();
 		}
 	}
 	
-	void find_pager(Results *res, string &div) {
+	static void find_pager(Results *res, string &div) {
 		size_t pager_begin = div.find("class=\"navigation\"");
 	    size_t pager_end = div.find("</div>", pager_begin+1);
 	    if(pager_begin != string::npos && pager_end != string::npos) {
@@ -676,8 +676,7 @@ class ResultsHistory {
 	static int results_writer(char *data, size_t size, size_t nmemb,
 	                      Results *results)
 	{
-		ResultsHistory *resultsHistory = results->getResultsHistory();
-	    if (resultsHistory == NULL)
+	    if (results == NULL)
 	       return 0;
 	    static int count = 0;    
 	    static set<string> titles;
@@ -709,11 +708,11 @@ class ResultsHistory {
 			if(count == 0) {
 				end = string::npos;
 			}
-			resultsHistory->find_item(results,
-			                          count,
-			                          partial_div,
-			                          titles);
-			resultsHistory->find_pager(results, partial_div);
+			find_item(results,
+			          count,
+			          partial_div,
+			          titles);
+			find_pager(results, partial_div);
 		}
 	    
 	    while(div_begin != string::npos && div_end != string::npos) {
@@ -722,11 +721,11 @@ class ResultsHistory {
 			if(count == 0) {
 				end = string::npos;
 			}
-			resultsHistory->find_item(results,
-			                          count,
-			                          div,
-			                          titles);
-			resultsHistory->find_pager(results, div);
+			find_item(results,
+			          count,
+			          div,
+			          titles);
+			find_pager(results, div);
 			div_begin = strData.find("<div", div_end+4);
 	        div_end = strData.find("</div>", div_begin+3);
 		}
