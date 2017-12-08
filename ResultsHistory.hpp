@@ -3,6 +3,30 @@
 #include "ActorsHistory.hpp"
 #include "ErrorType.hpp"
 
+struct ResultsArgs {
+	string title;
+	string link;
+	Results *results;
+	
+	// For new task
+	ResultsArgs(string title, string link) {
+		this->title = title;
+		this->link = link;
+		results = NULL;
+	} 
+	
+	// For append task or refresh
+	ResultsArgs(Results *results) {
+		this->title = results->getTitle();
+		if(results->isRefresh()) {
+			this->link = results->getUrl();
+		}else {
+			this->link = results->getNextLink();
+		}
+		this->results = results;
+	}
+};
+
 class ResultsHistory {
     Results *results;
     Results *resultsAppendError;
@@ -39,6 +63,9 @@ class ResultsHistory {
     map<string, GdkPixbuf*> *imagesCache;
     
     ErrorType error;
+    
+    string repeatTitle, repeatLink;
+    
     public:
     
     ResultsHistory(GtkWidget *w,
@@ -146,13 +173,14 @@ class ResultsHistory {
 	
 	void btnRefreshClicked() {
 		results->setRefresh(TRUE);
-	    newThread();
+		ResultsArgs *resultsArgs = new ResultsArgs(results);
+	    newThread(resultsArgs);
 	}
 	
 	void btnResultsRepeatClicked() {
 		switch(error) {
 			case RESULTS_NEW_ERROR:
-			    newThread();
+			    newThread(repeatTitle, repeatLink);
 			break;
 			case RESULTS_APPEND_ERROR:
 			    appendThreadOnError();
@@ -182,16 +210,18 @@ class ResultsHistory {
 	
 	void newThread(string title, string url) {
 		saveToBackStack();
-		results = new Results(title, url, imagesCache, ivResults, this);
-		updateTitle();
-		newThread();
+		//results = new Results(title, url, imagesCache, ivResults, this);
+		ResultsArgs *resultsArgs = new ResultsArgs(title, url);
+		updateTitle(title);
+		newThread(resultsArgs);
 	}
 	
 	void newThreadSearch(string title, string base_url) {
 		saveToBackStack();
-		results = new Results(title, base_url, imagesCache, ivResults, this);
-		updateTitle();
-		newThread();
+		//results = new Results(title, base_url, imagesCache, ivResults, this);
+		ResultsArgs *resultsArgs = new ResultsArgs(title, base_url);
+		updateTitle(title);
+		newThread(resultsArgs);
 	}
 	
 	void appendThread() {
@@ -215,41 +245,56 @@ class ResultsHistory {
 		}
 	}
 	
-	void parser(Results *res, int count, string div, set<string> &titles) {
+	void parser(ResultsArgs *resultsArgs, int count, string div, set<string> &titles) {
 		// Prepare to show results when first result item comes
 		if(count == 0) {
-			if(res->isRefresh()) {
-				res->clearModel();
-			}
+			// Scroll to the top of the list
+		    GtkTreePath *path = gtk_tree_path_new_first();
+		    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults),
+		                                 path, 
+		                                 FALSE, 
+		                                 0, 
+		                                 0);
+	    
 			switchToIconView();
 			setSensitiveItemsResults();
+			
+			if(resultsArgs->results == NULL) {
+				// Create new results object
+				results = new Results(resultsArgs->title,
+				                      resultsArgs->link,
+				                      imagesCache, 
+				                      ivResults, 
+				                      this);
+			}else if(resultsArgs->results->isRefresh()) {
+				// Clear existing model on refresh
+				resultsArgs->results->clearModel();	
+			}
 		}
 		
-		res->parser(div, titles);
+		if(resultsArgs->results == NULL && results != NULL) {
+			results->parser(div, titles);
+		}else {
+			resultsArgs->results->parser(div, titles);
+		}
 	}
 	
 	private:
 	
 	static void resultsNewTask(gpointer arg, gpointer arg1) {
+		ResultsArgs *resultsArgs = (ResultsArgs*)arg;
 		// On pre execute
 		gdk_threads_enter();
 		ResultsHistory *resultsHistory = (ResultsHistory*)arg1;
 		// Display spinner for new results
 	    resultsHistory->showSpCenter(FALSE);
-	    
-	    // Scroll to the top of the list
-	    GtkTreePath *path = gtk_tree_path_new_first();
-	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(resultsHistory->ivResults),
-	                                 path, 
-	                                 FALSE, 
-	                                 0, 
-	                                 0);
-	    
+	    // Save title and link to be able to repeat the call 
+	    resultsHistory->repeatTitle = resultsArgs->title;
+	    resultsHistory->repeatLink = resultsArgs->link;
 	    gdk_threads_leave();
 	    // async part
-		CURLcode res = resultsHistory->getResultsFromNet(
-		                                  resultsHistory->results->getUrl(),
-		                                  resultsHistory->results);
+		CURLcode res = resultsHistory->getResultsFromNet(resultsArgs);
+		
 		gdk_threads_enter();
 		resultsHistory->onPostExecuteNew(res);                                 
 		gdk_threads_leave();
@@ -258,14 +303,14 @@ class ResultsHistory {
 	static void resultsAppendTask(gpointer arg, gpointer arg1) {
 		Results *resultsAppend = (Results*) arg;
 		ResultsHistory *resultsHistory = (ResultsHistory *)arg1;
+		ResultsArgs *resultsArgs = new ResultsArgs(resultsAppend);
 		// On pre execute
 		gdk_threads_enter();
 		// Display spinner at the bottom of list
 		resultsHistory->showSpCenter(TRUE);;
 		gdk_threads_leave();
 		// async part
-		CURLcode res = resultsHistory->getResultsFromNet(resultsAppend->getNextLink(),
-		                                  resultsAppend);
+		CURLcode res = resultsHistory->getResultsFromNet(resultsArgs);
 		// On post execute
 		gdk_threads_enter();
 		resultsHistory->onPostExecuteAppend(resultsAppend, res);
@@ -438,7 +483,6 @@ class ResultsHistory {
 			if(threadLinksContainNextLink()) {
 				resultsThreadsLinks.erase(resultsAppend->getNextLink());
 			}
-			switchToIconView(); //TODO: why is this here?
 			showResultsRepeat(TRUE);
 			error = RESULTS_APPEND_ERROR;
 			resultsAppendError = resultsAppend;
@@ -634,12 +678,17 @@ class ResultsHistory {
 		gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 	}
 	
-	void newThread() {
+	void updateTitle(string resultsTitle) {
+		string title = progName + " - " + results->getTitle();
+		gtk_window_set_title(GTK_WINDOW(window), title.c_str());
+	}
+	
+	void newThread(ResultsArgs *resultsArgs) {
 		// New images for new indexes will be downloaded
 	    imageIndexes->clear();
 	    error = NONE_ERROR;
 	    resultsAppendError = NULL;
-		g_thread_pool_push(resultsNewThreadPool, (gpointer)1, NULL);
+		g_thread_pool_push(resultsNewThreadPool, resultsArgs, NULL);
 	}
 	
 	void newThreadPlaylist() {
@@ -652,13 +701,19 @@ class ResultsHistory {
 		                   NULL);
 	}
 	
-	static void find_item(Results *res, int &count, string &div, set<string> &titles) {
+	static void find_item(ResultsArgs *resultsArgs, 
+	                      int &count, 
+	                      string &div, 
+	                      set<string> &titles) {
 		size_t item_begin = div.find("<div class=\"custom-poster\"");
 		size_t item_end = div.find("</a>", item_begin+3);
 		if(item_begin != string::npos && item_end != string::npos) {
 			string item = div.substr(item_begin, item_end - item_begin + 4);
 			gdk_threads_enter();
-			res->getResultsHistory()->parser(res, count, item, titles);
+			resultsArgs->results->getResultsHistory()->parser(resultsArgs,
+			                                                  count,
+			                                                  item,
+			                                                  titles);
 			count++;
 			gdk_threads_leave();
 		}
@@ -674,10 +729,11 @@ class ResultsHistory {
 	}
 	
 	static int results_writer(char *data, size_t size, size_t nmemb,
-	                      Results *results)
+	                      ResultsArgs *resultsArgs)
 	{
-	    if (results == NULL)
+	    if (resultsArgs == NULL)
 	       return 0;
+	    
 	    static int count = 0;    
 	    static set<string> titles;
 	    
@@ -708,11 +764,11 @@ class ResultsHistory {
 			if(count == 0) {
 				end = string::npos;
 			}
-			find_item(results,
+			find_item(resultsArgs,
 			          count,
 			          partial_div,
 			          titles);
-			find_pager(results, partial_div);
+			find_pager(resultsArgs->results, partial_div);
 		}
 	    
 	    while(div_begin != string::npos && div_end != string::npos) {
@@ -721,11 +777,11 @@ class ResultsHistory {
 			if(count == 0) {
 				end = string::npos;
 			}
-			find_item(results,
+			find_item(resultsArgs,
 			          count,
 			          div,
 			          titles);
-			find_pager(results, div);
+			find_pager(resultsArgs->results, div);
 			div_begin = strData.find("<div", div_end+4);
 	        div_end = strData.find("</div>", div_begin+3);
 		}
@@ -745,7 +801,7 @@ class ResultsHistory {
 	    return size*nmemb;
 	}
 	
-	CURLcode getResultsFromNet(string url, Results *resArg) {
+	CURLcode getResultsFromNet(ResultsArgs *resultsArgs) {
 		CURL *curl_handle;
 	    
 		CURLcode res;		
@@ -755,13 +811,17 @@ class ResultsHistory {
 			/* remove crash bug */
 			curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1);		    
 		    /* set url to get here */
-			curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());			
+			curl_easy_setopt(curl_handle, 
+			                 CURLOPT_URL, 
+			                 resultsArgs->link.c_str());			
 			/* send all data to this function */			
 			curl_easy_setopt(curl_handle, 
 			                 CURLOPT_WRITEFUNCTION, 
 			                 ResultsHistory::results_writer);
 			curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);			
-			curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, resArg);			
+			curl_easy_setopt(curl_handle,
+			                 CURLOPT_WRITEDATA, 
+			                 resultsArgs);			
 			/* get it */
 			res = curl_easy_perform(curl_handle);
 
@@ -769,6 +829,7 @@ class ResultsHistory {
 			curl_easy_cleanup(curl_handle);
 			
 		}
+		g_free(resultsArgs);
 		return res;
 	}
 };
