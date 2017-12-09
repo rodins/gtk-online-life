@@ -232,7 +232,7 @@ class ResultsHistory {
 	void appendThread() {
 		if(!results->getNextLink().empty()) {
 			// Search for the same link only once if it's not saved in set.
-			if(!threadLinksContainNextLink()) {
+			if(resultsThreadsLinks.count(results->getNextLink()) == 0) {
 				resultsThreadsLinks.insert(results->getNextLink());
 				g_thread_pool_push(resultsAppendThreadPool, (gpointer)results, NULL);
 			}
@@ -487,9 +487,6 @@ class ResultsHistory {
 	
 	void onPostExecuteAppend(Results *resultsAppend, CURLcode res) {
 		if(res != CURLE_OK) { // error
-			if(threadLinksContainNextLink()) {
-				resultsThreadsLinks.erase(resultsAppend->getNextLink());
-			}
 			showResultsRepeat(TRUE);
 			error = RESULTS_APPEND_ERROR;
 			resultsAppendError = resultsAppend;
@@ -620,10 +617,6 @@ class ResultsHistory {
 	    savedRecovery();
 	    updateTitle(); 
 	    switchToIconView();
-	}
-	
-	bool threadLinksContainNextLink() {
-		return resultsThreadsLinks.count(results->getNextLink()) > 0;
 	}
 	
 	void updatePrevNextButtons() {
