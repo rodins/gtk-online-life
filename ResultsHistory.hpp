@@ -3,20 +3,24 @@
 #include "ActorsHistory.hpp"
 #include "ErrorType.hpp"
 
+class ResultsHistory;
+
 struct ResultsArgs {
 	string title;
 	string link;
 	Results *results;
+	ResultsHistory *resultsHistory;
 	
 	// For new task
-	ResultsArgs(string title, string link) {
+	ResultsArgs(string title, string link, ResultsHistory *resultsHistory) {
 		this->title = title;
 		this->link = link;
+		this->resultsHistory = resultsHistory;
 		results = NULL;
 	} 
 	
 	// For append task or refresh
-	ResultsArgs(Results *results) {
+	ResultsArgs(Results *results, ResultsHistory *resultsHistory) {
 		this->title = results->getTitle();
 		if(results->isRefresh()) {
 			this->link = results->getUrl();
@@ -24,6 +28,7 @@ struct ResultsArgs {
 			this->link = results->getNextLink();
 		}
 		this->results = results;
+		this->resultsHistory = resultsHistory;
 	}
 };
 
@@ -173,7 +178,7 @@ class ResultsHistory {
 	
 	void btnRefreshClicked() {
 		results->setRefresh(TRUE);
-		ResultsArgs *resultsArgs = new ResultsArgs(results);
+		ResultsArgs *resultsArgs = new ResultsArgs(results, this);
 	    newThread(resultsArgs);
 	}
 	
@@ -211,7 +216,7 @@ class ResultsHistory {
 	void newThread(string title, string url) {
 		saveToBackStack();
 		//results = new Results(title, url, imagesCache, ivResults, this);
-		ResultsArgs *resultsArgs = new ResultsArgs(title, url);
+		ResultsArgs *resultsArgs = new ResultsArgs(title, url, this);
 		updateTitle(title);
 		newThread(resultsArgs);
 	}
@@ -219,7 +224,7 @@ class ResultsHistory {
 	void newThreadSearch(string title, string base_url) {
 		saveToBackStack();
 		//results = new Results(title, base_url, imagesCache, ivResults, this);
-		ResultsArgs *resultsArgs = new ResultsArgs(title, base_url);
+		ResultsArgs *resultsArgs = new ResultsArgs(title, base_url, this);
 		updateTitle(title);
 		newThread(resultsArgs);
 	}
@@ -245,17 +250,19 @@ class ResultsHistory {
 		}
 	}
 	
+	void scrollToTopOfList() {
+		// Scroll to the top of the list on new results (not append to list)
+	    GtkTreePath *path = gtk_tree_path_new_first();
+	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults),
+	                                 path, 
+	                                 FALSE, 
+	                                 0, 
+	                                 0);
+	}
+	
 	void parser(ResultsArgs *resultsArgs, int count, string div, set<string> &titles) {
 		// Prepare to show results when first result item comes
 		if(count == 0) {
-			// Scroll to the top of the list
-		    GtkTreePath *path = gtk_tree_path_new_first();
-		    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults),
-		                                 path, 
-		                                 FALSE, 
-		                                 0, 
-		                                 0);
-	    
 			switchToIconView();
 			setSensitiveItemsResults();
 			
@@ -264,19 +271,18 @@ class ResultsHistory {
 				results = new Results(resultsArgs->title,
 				                      resultsArgs->link,
 				                      imagesCache, 
-				                      ivResults, 
-				                      this);
+				                      ivResults);
+				// Save link to results also in resultsArgs                      
+				resultsArgs->results = results;
+				scrollToTopOfList();
 			}else if(resultsArgs->results->isRefresh()) {
 				// Clear existing model on refresh
 				resultsArgs->results->clearModel();	
+				scrollToTopOfList();
 			}
 		}
 		
-		if(resultsArgs->results == NULL && results != NULL) {
-			results->parser(div, titles);
-		}else {
-			resultsArgs->results->parser(div, titles);
-		}
+		resultsArgs->results->parser(div, titles);
 	}
 	
 	private:
@@ -303,7 +309,8 @@ class ResultsHistory {
 	static void resultsAppendTask(gpointer arg, gpointer arg1) {
 		Results *resultsAppend = (Results*) arg;
 		ResultsHistory *resultsHistory = (ResultsHistory *)arg1;
-		ResultsArgs *resultsArgs = new ResultsArgs(resultsAppend);
+		ResultsArgs *resultsArgs = new ResultsArgs(resultsAppend, 
+		                                           resultsHistory);
 		// On pre execute
 		gdk_threads_enter();
 		// Display spinner at the bottom of list
@@ -679,7 +686,7 @@ class ResultsHistory {
 	}
 	
 	void updateTitle(string resultsTitle) {
-		string title = progName + " - " + results->getTitle();
+		string title = progName + " - " + resultsTitle;
 		gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 	}
 	
@@ -688,7 +695,7 @@ class ResultsHistory {
 	    imageIndexes->clear();
 	    error = NONE_ERROR;
 	    resultsAppendError = NULL;
-		g_thread_pool_push(resultsNewThreadPool, resultsArgs, NULL);
+		g_thread_pool_push(resultsNewThreadPool, (gpointer)resultsArgs, NULL);
 	}
 	
 	void newThreadPlaylist() {
@@ -704,16 +711,16 @@ class ResultsHistory {
 	static void find_item(ResultsArgs *resultsArgs, 
 	                      int &count, 
 	                      string &div, 
-	                      set<string> &titles) {
+	                      set<string> &titles) {				  
 		size_t item_begin = div.find("<div class=\"custom-poster\"");
 		size_t item_end = div.find("</a>", item_begin+3);
 		if(item_begin != string::npos && item_end != string::npos) {
 			string item = div.substr(item_begin, item_end - item_begin + 4);
 			gdk_threads_enter();
-			resultsArgs->results->getResultsHistory()->parser(resultsArgs,
-			                                                  count,
-			                                                  item,
-			                                                  titles);
+			resultsArgs->resultsHistory->parser(resultsArgs,
+			                                    count,
+			                                    item,
+			                                    titles);
 			count++;
 			gdk_threads_leave();
 		}
@@ -814,11 +821,11 @@ class ResultsHistory {
 			curl_easy_setopt(curl_handle, 
 			                 CURLOPT_URL, 
 			                 resultsArgs->link.c_str());			
-			/* send all data to this function */			
+			/* send all data to this function */		
 			curl_easy_setopt(curl_handle, 
 			                 CURLOPT_WRITEFUNCTION, 
 			                 ResultsHistory::results_writer);
-			curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);			
+			curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);	
 			curl_easy_setopt(curl_handle,
 			                 CURLOPT_WRITEDATA, 
 			                 resultsArgs);			
