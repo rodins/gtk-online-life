@@ -430,9 +430,6 @@ int main( int   argc,
 	gtk_container_add(GTK_CONTAINER(entryItem), entry);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), entryItem, -1);
     
-    sep = gtk_separator_tool_item_new();
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
-    
     rbActors = gtk_radio_tool_button_new_from_stock(NULL, "gtk-info");
     rbPlay = gtk_radio_tool_button_new_with_stock_from_widget(
         GTK_RADIO_TOOL_BUTTON(rbActors), "gtk-media-play");
