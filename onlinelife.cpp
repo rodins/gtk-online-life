@@ -115,7 +115,7 @@ void playlistClicked(GtkTreeView *treeView,
                      GtkTreePath *path,
                      GtkTreeViewColumn *column,
                      gpointer data) {
-    ResultsHistory *resultsHistory = (ResultsHistory *)data;
+    //ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -137,9 +137,9 @@ void playlistClicked(GtkTreeView *treeView,
 	                   &download,
 	                   -1);
 	
-	if(file != NULL) {
+	/*if(file != NULL) {
 		resultsHistory->playOrDownload(file, download);
-	}
+	}*/
 	
 	g_free(comment);
 	g_free(file);
@@ -237,9 +237,9 @@ static void entryActivated( GtkWidget *widget,
 	}		  						  
 }
 
-static void rbActorsClicked(GtkWidget *widget, gpointer data) {
+static void btnActorsClicked(GtkWidget *widget, gpointer data) {
 	ActorsHistory *actorsHistory = (ActorsHistory*)data;
-	actorsHistory->rbActorsClicked(widget);
+	actorsHistory->btnActorsClicked(widget);
 }
 
 static void backActorsChanged(GtkTreeSelection *treeselection, gpointer data) {
@@ -279,6 +279,21 @@ static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
 	resultsHistory->btnResultsRepeatClicked();
 }
 
+static void btnLinksErrorClicked(GtkWidget *widget, gpointer data) {
+	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+	resultsHistory->btnLinksErrorClicked();
+}
+
+static void btnGetLinksClicked(GtkWidget *widget, gpointer data) {
+	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+	resultsHistory->btnGetLinksClicked();
+}
+
+static void btnListEpisodesClicked(GtkWidget *widget, gpointer data) {
+	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+	resultsHistory->btnListEpisodesClicked();
+}
+
 int main( int   argc,
           char *argv[] )
 {   
@@ -288,8 +303,8 @@ int main( int   argc,
 	
 	GtkWidget *frRightBottom;
 	GtkWidget *lbInfo;
-	GtkWidget *frRightTop, *frInfo;
-	GtkWidget *spActors;
+	GtkWidget *frRightTop, *frInfo, *frLinks;
+	GtkWidget *spActors, *spLinks;
     GtkWidget *hbActorsError;
     
     GtkWidget *spCenter;
@@ -311,15 +326,18 @@ int main( int   argc,
     GtkWidget *btnCategoriesError;
     GtkWidget *btnActorsError;
     
+    GtkWidget *btnGetLinks, *btnListEpisodes, *btnLinksError;
+    GtkWidget *hbLinks;
+    
 	GtkToolItem *btnCategories;
 	GtkToolItem *btnRefresh;
 	GtkToolItem *btnUp;
     GtkToolItem *btnPrev;
     GtkToolItem *btnNext;
     GtkWidget *entry;
-    GtkToolItem *rbActors;
-	GtkToolItem *rbPlay;
-	GtkToolItem *rbDownload;
+    GtkToolItem *btnActors;
+	//GtkToolItem *rbPlay;
+	//GtkToolItem *rbDownload;
 	GtkToolItem *sep;
 	GtkToolItem *exit;
 	
@@ -430,26 +448,25 @@ int main( int   argc,
 	gtk_container_add(GTK_CONTAINER(entryItem), entry);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), entryItem, -1);
     
-    rbActors = gtk_radio_tool_button_new_from_stock(NULL, "gtk-info");
-    rbPlay = gtk_radio_tool_button_new_with_stock_from_widget(
-        GTK_RADIO_TOOL_BUTTON(rbActors), "gtk-media-play");
+    btnActors = gtk_tool_button_new_from_stock("gtk-info");
+    /*rbPlay = gtk_radio_tool_button_new_from_stock(NULL, "gtk-media-play");
     rbDownload = gtk_radio_tool_button_new_with_stock_from_widget(
-        GTK_RADIO_TOOL_BUTTON(rbPlay), "gtk-goto-bottom");
+        GTK_RADIO_TOOL_BUTTON(rbPlay), "gtk-goto-bottom");*/
         
-    gtk_tool_item_set_tooltip_text(rbActors, "Process item: show actors");
-    gtk_tool_item_set_tooltip_text(rbPlay, "Process item: play");
-    gtk_tool_item_set_tooltip_text(rbDownload, "Process item: download");
+    gtk_tool_item_set_tooltip_text(btnActors, "Show/hide info");
+    //gtk_tool_item_set_tooltip_text(rbPlay, "Process item: play");
+    //gtk_tool_item_set_tooltip_text(rbDownload, "Process item: download");
     
     // Default is "play"
-    gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay), TRUE); 
+    //gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay), TRUE); 
     
-    sep = gtk_separator_tool_item_new();
+    /*sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), rbPlay, -1);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), rbDownload, -1);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), rbDownload, -1);*/
     sep = gtk_separator_tool_item_new();
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), rbActors, -1);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnActors, -1);
     
     sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
@@ -553,10 +570,25 @@ int main( int   argc,
     spActors = gtk_spinner_new();
     btnActorsError = gtk_button_new_with_label("Repeat");
     
+    // Links frame in actors pane
+    frLinks = gtk_frame_new("Links");
+    btnGetLinks = gtk_button_new_with_label("Get links");
+    btnListEpisodes = gtk_button_new_with_label("List episodes");
+    btnLinksError = gtk_button_new_with_label("Repeat");
+    spLinks = gtk_spinner_new();
+    hbLinks = gtk_hbox_new(FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(hbLinks), spLinks, TRUE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbLinks), btnLinksError, TRUE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbLinks), btnGetLinks, TRUE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbLinks), btnListEpisodes, TRUE, FALSE, 10);
+    gtk_container_add(GTK_CONTAINER(frLinks), hbLinks);
+    
     gtk_box_pack_start(GTK_BOX(hbActorsError), btnActorsError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbRight), spActors, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), hbActorsError, TRUE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbRight), frLinks, FALSE, FALSE, 1);
     gtk_widget_set_size_request(spActors, 32, 32);
+    gtk_widget_set_size_request(spLinks, 32, 32);
     
     // add vbox center
     vbCenter = gtk_vbox_new(FALSE, 1);
@@ -581,9 +613,9 @@ int main( int   argc,
 	                 G_CALLBACK(backActorsChanged), 
 	                 actorsHistory);
 	                                  
-    g_signal_connect(GTK_WIDGET(rbActors),
+    g_signal_connect(btnActors,
                      "clicked", 
-                     G_CALLBACK(rbActorsClicked),
+                     G_CALLBACK(btnActorsClicked),
                      actorsHistory);
                      
     g_signal_connect(btnActorsError,
@@ -592,33 +624,35 @@ int main( int   argc,
                      actorsHistory);
     
 	ResultsHistory *resultsHistory = new ResultsHistory(window,
-                                                    ivResults,
-                                                    tvPlaylists,
-                                                    btnPrev,
-                                                    btnNext,
-                                                    swTree,
-                                                    swIcon,
-                                                    spCenter,
-                                                    vbCenter,
-                                                    hbResultsError,
-                                                    btnUp,
-                                                    rbActors,
-                                                    rbPlay,
-                                                    rbDownload,
-                                                    btnRefresh,
-                                                    imageIndexes,
-                                                    imagesCache,
-                                                    actorsHistory,
-                                                    PROG_NAME);
+                                                        ivResults,
+                                                        tvPlaylists,
+                                                        btnPrev,
+                                                        btnNext,
+                                                        swTree,
+                                                        swIcon,
+                                                        spCenter,
+                                                        vbCenter,
+                                                        hbResultsError,
+                                                        btnUp,
+                                                        btnActors,
+                                                        spLinks,
+                                                        btnLinksError,
+                                                        btnGetLinks,
+                                                        btnListEpisodes,
+                                                        btnRefresh,
+                                                        imageIndexes,
+                                                        imagesCache,
+                                                        actorsHistory,
+                                                        PROG_NAME);
     
     // Disable all items                                                
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
-	gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
+	gtk_widget_set_sensitive(GTK_WIDGET(btnActors), FALSE);
+    //gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
+    //gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
 
     g_signal_connect(GTK_WIDGET(btnRefresh), 
 				     "clicked", 
@@ -669,6 +703,21 @@ int main( int   argc,
                      "row-activated", 
                      G_CALLBACK(playlistClicked), 
                      resultsHistory);
+                     
+    g_signal_connect(btnLinksError,
+                     "clicked",
+                     G_CALLBACK(btnLinksErrorClicked),
+                     resultsHistory);
+                     
+    g_signal_connect(btnGetLinks,
+                     "clicked",
+                     G_CALLBACK(btnGetLinksClicked),
+                     resultsHistory);
+                     
+    g_signal_connect(btnListEpisodes,
+                     "clicked",
+                     G_CALLBACK(btnListEpisodesClicked),
+                     resultsHistory);                 
     
     CategoriesWidgets *categoriesWidgets = new CategoriesWidgets(
                                                vbLeft,
@@ -723,6 +772,10 @@ int main( int   argc,
     
     gtk_widget_set_visible(spActors, FALSE);
     gtk_widget_set_visible(hbActorsError, FALSE);
+    
+    gtk_widget_set_visible(btnLinksError, FALSE);
+    gtk_widget_set_visible(btnGetLinks, FALSE);
+    gtk_widget_set_visible(btnListEpisodes, FALSE);
     
     gtk_widget_set_visible(hbResultsError, FALSE);
                                    

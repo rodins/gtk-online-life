@@ -74,11 +74,10 @@ class ActorsHistory {
 	    }
 	}
 	
-	void rbActorsClicked(GtkWidget *widget) {
+	void btnActorsClicked(GtkWidget *widget) {
 		//Toggle visibility of actors list (vbRight)
 		if(!gtk_widget_get_visible(vbRight)) {
-			if(actors.getCount() > 0 && 
-			  gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(widget))) {
+			if(actors.getCount() > 0) {
 				gtk_widget_set_visible(vbRight, TRUE);
 			}
 		}else {

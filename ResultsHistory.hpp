@@ -1,4 +1,6 @@
 // ResultsHistory.hpp
+#include "PlayItem.hpp"
+#include "PlaylistsUtils.hpp"
 #include "Playlists.hpp"
 #include "ActorsHistory.hpp"
 #include "ErrorType.hpp"
@@ -32,6 +34,22 @@ struct ResultsArgs {
 	}
 };
 
+struct GetLinksArgs {
+	string js;
+	string href;
+	string referer;
+};
+
+struct ListEpisodesArgs {
+	string title;
+	string playlist_link;
+};
+
+struct DetectArgs {
+	string title;
+	string href;
+};
+
 class ResultsHistory {
     Results *results;
     Results *resultsAppendError;
@@ -53,16 +71,20 @@ class ResultsHistory {
 	GtkWidget *hbResultsError;
 	
 	GtkToolItem *btnUp;
-	GtkToolItem *rbActors;
-    GtkToolItem *rbPlay;
-    GtkToolItem *rbDownload;
+	GtkToolItem *btnActors;
+    GtkWidget *spLinks;
+    GtkWidget *btnLinksError;
+    GtkWidget *btnGetLinks;
+    GtkWidget *btnListEpisodes;
     GtkToolItem *btnRefresh;
     
     set<int> *imageIndexes;
     
     GThreadPool *resultsNewThreadPool;
     GThreadPool *resultsAppendThreadPool;
-    GThreadPool *playlistsThreadPool;
+    GThreadPool *detectThreadPool;
+    GThreadPool *getLinksThreadPool;
+    GThreadPool *listEpisodesThreadPool;
     
     ActorsHistory *actorsHistory;
     map<string, GdkPixbuf*> *imagesCache;
@@ -70,6 +92,9 @@ class ResultsHistory {
     ErrorType error;
     
     string repeatTitle, repeatLink;
+    
+    ListEpisodesArgs *listEpisodesArgs;
+    GetLinksArgs *getLinksArgs;
     
     public:
     
@@ -85,8 +110,10 @@ class ResultsHistory {
                    GtkWidget *hb_results_error,
                    GtkToolItem *btn_up,
                    GtkToolItem *rb_actors,
-                   GtkToolItem *rb_play,
-                   GtkToolItem *rb_download,
+                   GtkWidget *spLinks,
+				   GtkWidget *btnLinksError,
+				   GtkWidget *btnGetLinks,
+				   GtkWidget *btnListEpisodes,
                    GtkToolItem *btn_refresh,
                    set<int> *ii,
                    map<string, GdkPixbuf*> *cache,
@@ -104,9 +131,11 @@ class ResultsHistory {
 		hbResultsError = hb_results_error;
 		
 		btnUp = btn_up;
-		rbActors = rb_actors;
-		rbPlay = rb_play;
-		rbDownload = rb_download;
+		btnActors = rb_actors;
+		this->spLinks = spLinks;
+		this->btnLinksError = btnLinksError;
+		this->btnGetLinks = btnGetLinks;
+		this->btnListEpisodes = btnListEpisodes;
 		btnRefresh = btn_refresh;
 		
 		imageIndexes = ii;
@@ -128,12 +157,28 @@ class ResultsHistory {
 	                                   FALSE,
 	                                   NULL);
 	                                   
-	    // GThreadPool for playlists
-	    playlistsThreadPool = g_thread_pool_new(ResultsHistory::playlistsTask,
+	    // GThreadPool for detect
+	    detectThreadPool = g_thread_pool_new(ResultsHistory::detectTask,
 	                                   this,
 	                                   1, // Run one thread at the time
 	                                   FALSE,
 	                                   NULL);
+	                                   
+	    // GThreadPool for getLinks
+	    getLinksThreadPool = g_thread_pool_new(ResultsHistory::getLinksTask,
+	                                   this,
+	                                   1, // Run one thread at the time
+	                                   FALSE,
+	                                   NULL);
+	                                   
+	    // GThreadPool for listEpisodes
+	    listEpisodesThreadPool = g_thread_pool_new(ResultsHistory::listEpisodesTask,
+	                                   this,
+	                                   1, // Run one thread at the time
+	                                   FALSE,
+	                                   NULL);                               
+	                                   
+	                                   
 	    playlists = new Playlists(
 	        gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists))
         );
@@ -200,7 +245,18 @@ class ResultsHistory {
 	}
 	
 	void onClick(string resultTitle, string href) {
-		if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbActors))){
+		// Always show info, call actors thread
+		actorsHistory->newThread(resultTitle, href);
+	    
+		// Detect is this movie or serial
+	    DetectArgs *detectArgs = new DetectArgs();
+	    detectArgs->title = resultTitle;
+	    detectArgs->href = href;
+		g_thread_pool_push(detectThreadPool, 
+		                   (gpointer)detectArgs, 
+		                   NULL);
+		
+		/*if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(btnActors))){
 			// Fetch actors 
 			actorsHistory->newThread(resultTitle, href);
 		}else {
@@ -210,7 +266,7 @@ class ResultsHistory {
 		    g_thread_pool_push(playlistsThreadPool, 
 		                       (gpointer)href.c_str(), 
 		                       NULL);
-		}
+		}*/
 	}
 	
 	void newThread(string title, string url) {
@@ -240,7 +296,7 @@ class ResultsHistory {
 	}
 	
 	//TODO: remove code repeat
-	void playOrDownload(string file, string download) {
+	/*void playOrDownload(string file, string download) {
 		if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
 		    string command = detectTerminal() + "wget -P ~/Download -c " + download + " &";
 	        system(command.c_str());
@@ -248,17 +304,7 @@ class ResultsHistory {
 		    string command = detectPlayer() + file + " &";
 	        system(command.c_str());
 		}
-	}
-	
-	void scrollToTopOfList() {
-		// Scroll to the top of the list on new results (not append to list)
-	    GtkTreePath *path = gtk_tree_path_new_first();
-	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults),
-	                                 path, 
-	                                 FALSE, 
-	                                 0, 
-	                                 0);
-	}
+	}*/
 	
 	void parser(ResultsArgs *resultsArgs, int count, string div, set<string> &titles) {
 		// Prepare to show results when first result item comes
@@ -285,7 +331,33 @@ class ResultsHistory {
 		resultsArgs->results->parser(div, titles);
 	}
 	
+	void btnGetLinksClicked() {
+		g_thread_pool_push(getLinksThreadPool, 
+		                   (gpointer)getLinksArgs, 
+		                   NULL);
+	}
+	
+	void btnListEpisodesClicked() {
+	    g_thread_pool_push(listEpisodesThreadPool, 
+		                   (gpointer)listEpisodesArgs, 
+		                   NULL);
+	}
+	
+	void btnLinksErrorClicked() {
+		cout << "Not yet implemented" << endl;
+	}
+	
 	private:
+	
+	void scrollToTopOfList() {
+		// Scroll to the top of the list on new results (not append to list)
+	    GtkTreePath *path = gtk_tree_path_new_first();
+	    gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults),
+	                                 path, 
+	                                 FALSE, 
+	                                 0, 
+	                                 0);
+	}
 	
 	static void resultsNewTask(gpointer arg, gpointer arg1) {
 		ResultsArgs *resultsArgs = (ResultsArgs*)arg;
@@ -324,7 +396,156 @@ class ResultsHistory {
 		gdk_threads_leave();
 	}
 	
-	static void playlistsTask(gpointer args, gpointer args2) {
+    // Info links frame functions
+    void showSpLinks() {
+		gtk_widget_set_visible(btnGetLinks, FALSE);
+		gtk_widget_set_visible(btnListEpisodes, FALSE);
+		gtk_widget_set_visible(btnLinksError, FALSE);
+		gtk_widget_set_visible(spLinks, TRUE);
+		gtk_spinner_start(GTK_SPINNER(spLinks));
+	}
+	
+	void showListEpisodesButton() {
+		gtk_widget_set_visible(btnGetLinks, FALSE);
+		gtk_widget_set_visible(btnListEpisodes, TRUE);
+		gtk_widget_set_visible(btnLinksError, FALSE);
+		gtk_widget_set_visible(spLinks, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spLinks));
+	}
+	
+	void showGetLinksButton() {
+		gtk_widget_set_visible(btnGetLinks, TRUE);
+		gtk_widget_set_visible(btnListEpisodes, FALSE);
+		gtk_widget_set_visible(btnLinksError, FALSE);
+		gtk_widget_set_visible(spLinks, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spLinks));
+	}
+	
+	void showLinksErrorButton() {
+		gtk_widget_set_visible(btnGetLinks, FALSE);
+		gtk_widget_set_visible(btnListEpisodes, FALSE);
+		gtk_widget_set_visible(btnLinksError, TRUE);
+		gtk_widget_set_visible(spLinks, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spLinks));
+	}
+	
+	//TODO: setLinksErrorArgs...
+	
+	void showCopyLinksDialog(PlayItem playItem) {
+		//TODO: write dialog here
+		cout << "Not yet implemented..." << endl;
+	}
+	
+	static void detectTask(gpointer args, gpointer args2) {
+	    ResultsHistory *resultsHistory = (ResultsHistory *)args2;
+	    DetectArgs *detectArgs = (DetectArgs *)args;
+		string id = PlaylistsUtils::getHrefId(detectArgs->href);	
+		if(!id.empty()) {
+			string url = PlaylistsUtils::getUrl(id);
+			string referer = PlaylistsUtils::getReferer(id);
+			// On pre execute
+			gdk_threads_enter();
+			// Show links spinner
+			resultsHistory->showSpLinks();
+			gdk_threads_leave();
+			
+			string js = HtmlString::getPage(url, referer);
+			
+			gdk_threads_enter();
+			if(!js.empty()) {
+				string playlist_link = PlaylistsUtils::get_txt_link(js);
+				if(!playlist_link.empty()) { // Playlists found
+					resultsHistory->showListEpisodesButton();
+					// Free previous object before creating new one
+					g_free(resultsHistory->listEpisodesArgs);
+					resultsHistory->listEpisodesArgs = new ListEpisodesArgs();
+					resultsHistory->listEpisodesArgs->title = detectArgs->title;
+					resultsHistory->listEpisodesArgs->playlist_link = playlist_link;
+				}else {
+					// Free previous object before creating new one
+					g_free(resultsHistory->getLinksArgs);
+					resultsHistory->getLinksArgs = new GetLinksArgs();
+					resultsHistory->getLinksArgs->js = js;
+					resultsHistory->getLinksArgs->href = detectArgs->href;
+					resultsHistory->getLinksArgs->referer = referer; 
+					resultsHistory->showGetLinksButton();
+				}
+			}else {
+				resultsHistory->showLinksErrorButton();
+				//TODO: setLinksErrorArgs()...
+			}
+			gdk_threads_leave();
+		}
+		g_free(detectArgs);
+	}
+	
+	static void getLinksTask(gpointer args, gpointer args2) {
+		ResultsHistory *resultsHistory = (ResultsHistory *)args2;
+		GetLinksArgs *getLinksArgs = (GetLinksArgs *)args;
+		// On pre execute
+		gdk_threads_enter();
+		// Show links spinner
+		resultsHistory->showSpLinks();
+		gdk_threads_leave();
+		PlayItem playItem = PlaylistsUtils::parse_play_item(getLinksArgs->js);
+		if(!playItem.comment.empty()) { // PlayItem found
+			gdk_threads_enter();
+		    resultsHistory->showCopyLinksDialog(playItem);
+		    resultsHistory->showGetLinksButton();
+		    gdk_threads_leave();
+		}else {
+			gdk_threads_enter();
+			size_t trailersFound = resultsHistory->results->getTitle().find("Трейлеры");
+			gdk_threads_leave();
+			if(trailersFound != string::npos) {
+				// Searching for alternative trailers links
+	            string infoHtml = HtmlString::getPage(getLinksArgs->href,
+	                                                  getLinksArgs->referer);
+	            string trailerId = PlaylistsUtils::getTrailerId(infoHtml); 
+	            string url = PlaylistsUtils::getTrailerUrl(trailerId);
+	            string referer = PlaylistsUtils::getTrailerReferer(trailerId);
+	            string json = HtmlString::getPage(url, referer);
+				gdk_threads_enter();
+		        resultsHistory->showCopyLinksDialog(PlaylistsUtils::parse_play_item(json));
+		        resultsHistory->showGetLinksButton();
+				gdk_threads_leave();
+			}else {
+				gdk_threads_enter();
+				resultsHistory->showLinksErrorButton();
+				//TODO: setLinksErrorArgs()...
+			    gdk_threads_leave();
+			}
+		}
+	} 
+	
+	static void listEpisodesTask(gpointer args, gpointer args2) {
+		ResultsHistory *resultsHistory = (ResultsHistory *)args2;
+		Playlists *playlists = resultsHistory->getPlaylists();
+		ListEpisodesArgs *listEpisodesArgs = (ListEpisodesArgs *)args;
+		
+		// On pre execute
+		gdk_threads_enter();
+		// Set title
+		resultsHistory->updateTitle(listEpisodesArgs->title);
+		// Show spinner fullscreen
+		resultsHistory->showSpCenter(FALSE);
+		gdk_threads_leave();
+		
+		string json = HtmlString::getPage(listEpisodesArgs->playlist_link);
+		
+		gdk_threads_enter();
+		playlists->parse(json);
+		if(playlists->getCount() > 0) {
+			resultsHistory->displayPlaylists();
+		}else {
+			resultsHistory->showResultsRepeat(FALSE);
+			resultsHistory->setSensitiveItemsPlaylists();
+			resultsHistory->error = PLAYLISTS_ERROR;
+		}
+		gdk_threads_leave();
+	}
+	
+	/*static void playlistsTask(gpointer args, gpointer args2) {
 		ResultsHistory *resultsHistory = (ResultsHistory *)args2;
 		Playlists *playlists = resultsHistory->getPlaylists();
 		playlists->setUrl(args);
@@ -360,7 +581,7 @@ class ResultsHistory {
 				    // get results list back
 				    resultsHistory->switchToIconView();
 				    resultsHistory->updateTitle();
-					resultsHistory->processPlayItem(playItem); 
+					//resultsHistory->processPlayItem(playItem); 
 				}else {
 					if(resultsHistory->results->getTitle().find("Трейлеры") != string::npos) {
 						gdk_threads_leave();
@@ -374,7 +595,7 @@ class ResultsHistory {
 						// get results list back
 				        resultsHistory->switchToIconView();
 				        resultsHistory->updateTitle();
-						resultsHistory->processPlayItem(playlists->parse_play_item(json)); 
+						//resultsHistory->processPlayItem(playlists->parse_play_item(json)); 
 					}else {
 						resultsHistory->showResultsRepeat(FALSE);
 					    resultsHistory->setSensitiveItemsPlaylists();
@@ -384,7 +605,7 @@ class ResultsHistory {
 				gdk_threads_leave();
 			}
 		}
-	}
+	}*/
 	
 	Playlists* getPlaylists() {
 		return playlists;
@@ -436,7 +657,7 @@ class ResultsHistory {
 		return "";
 	}
 	
-	void processPlayItem(PlayItem item) {
+	/*void processPlayItem(PlayItem item) {
 		if(!item.comment.empty()) {
 		    if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(rbDownload))){
 			    string command = detectTerminal() + "wget -P ~/Download -c " + item.download + " &";
@@ -446,14 +667,14 @@ class ResultsHistory {
 		        system(command.c_str());
 			}	
 		}
-	}
+	}*/
 	
 	void setSensitiveItemsResults() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
-		gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
-	    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
-	    gtk_widget_set_sensitive(GTK_WIDGET(rbActors), TRUE);
+		//gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
+	    //gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
+	    gtk_widget_set_sensitive(GTK_WIDGET(btnActors), TRUE);
 	}
 	
 	void switchToTreeView() {
@@ -663,9 +884,9 @@ class ResultsHistory {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), TRUE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
-	    gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
-	    gtk_widget_set_sensitive(GTK_WIDGET(rbActors), FALSE);
+		//gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), TRUE);
+	    //gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), TRUE);
+	    gtk_widget_set_sensitive(GTK_WIDGET(btnActors), FALSE);
 	}
 	
 	void displayPlaylists() {
@@ -692,7 +913,9 @@ class ResultsHistory {
 	}
 	
 	void newThreadPlaylist() {
-		g_thread_pool_push(playlistsThreadPool, (gpointer)"", NULL);
+		g_thread_pool_push(listEpisodesThreadPool,
+		                   (gpointer)listEpisodesArgs, 
+		                   NULL);
 	}
 	
 	void appendThreadOnError() {
