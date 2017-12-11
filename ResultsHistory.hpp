@@ -90,9 +90,11 @@ class ResultsHistory {
     map<string, GdkPixbuf*> *imagesCache;
     
     ErrorType error;
+    LinksErrorType linksError;
     
     string repeatTitle, repeatLink;
     
+    DetectArgs *detectArgs;
     ListEpisodesArgs *listEpisodesArgs;
     GetLinksArgs *getLinksArgs;
     
@@ -186,6 +188,9 @@ class ResultsHistory {
         actorsHistory = ah;
         
         error = NONE_ERROR;
+        detectArgs = NULL;
+        listEpisodesArgs = NULL;
+        getLinksArgs = NULL;
 	}
 	
 	~ResultsHistory(){
@@ -248,13 +253,7 @@ class ResultsHistory {
 		// Always show info, call actors thread
 		actorsHistory->newThread(resultTitle, href);
 	    
-		// Detect is this movie or serial
-	    DetectArgs *detectArgs = new DetectArgs();
-	    detectArgs->title = resultTitle;
-	    detectArgs->href = href;
-		g_thread_pool_push(detectThreadPool, 
-		                   (gpointer)detectArgs, 
-		                   NULL);
+		detectThread(resultTitle, href);
 		
 		/*if(gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(btnActors))){
 			// Fetch actors 
@@ -344,10 +343,31 @@ class ResultsHistory {
 	}
 	
 	void btnLinksErrorClicked() {
-		cout << "Not yet implemented" << endl;
+		switch(linksError) {
+			case DETECT_TASK:
+			    g_thread_pool_push(detectThreadPool, 
+		                   (gpointer)detectArgs, 
+		                   NULL);
+			break;
+			case GET_LINKS_TASK:
+			    btnGetLinksClicked();
+			break;
+		}
 	}
 	
 	private:
+	
+	void detectThread(string resultTitle, string href) {
+		// Detect is this movie or serial
+		// Free previous detect args before creating new one
+		g_free(detectArgs);
+	    detectArgs = new DetectArgs();
+	    detectArgs->title = resultTitle;
+	    detectArgs->href = href;
+		g_thread_pool_push(detectThreadPool, 
+		                   (gpointer)detectArgs, 
+		                   NULL);
+	}
 	
 	void scrollToTopOfList() {
 		// Scroll to the top of the list on new results (not append to list)
@@ -472,11 +492,10 @@ class ResultsHistory {
 				}
 			}else {
 				resultsHistory->showLinksErrorButton();
-				//TODO: setLinksErrorArgs()...
+				resultsHistory->linksError = DETECT_TASK;
 			}
 			gdk_threads_leave();
 		}
-		g_free(detectArgs);
 	}
 	
 	static void getLinksTask(gpointer args, gpointer args2) {
@@ -512,7 +531,7 @@ class ResultsHistory {
 			}else {
 				gdk_threads_enter();
 				resultsHistory->showLinksErrorButton();
-				//TODO: setLinksErrorArgs()...
+				resultsHistory->linksError = GET_LINKS_TASK;
 			    gdk_threads_leave();
 			}
 		}
