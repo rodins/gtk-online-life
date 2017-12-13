@@ -115,7 +115,7 @@ void playlistClicked(GtkTreeView *treeView,
                      GtkTreePath *path,
                      GtkTreeViewColumn *column,
                      gpointer data) {
-    //ResultsHistory *resultsHistory = (ResultsHistory *)data;
+    ResultsHistory *resultsHistory = (ResultsHistory *)data;
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -137,9 +137,13 @@ void playlistClicked(GtkTreeView *treeView,
 	                   &download,
 	                   -1);
 	
-	/*if(file != NULL) {
-		resultsHistory->playOrDownload(file, download);
-	}*/
+	if(file != NULL) {
+		PlayItem playItem;
+		playItem.comment = comment;
+		playItem.file = file;
+		playItem.download = download;
+		resultsHistory->showCopyLinksDialog(playItem);
+	}
 	
 	g_free(comment);
 	g_free(file);

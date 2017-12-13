@@ -68,7 +68,7 @@ class PlaylistsUtils {
 		return "";
 	}
 	
-	static PlayItem parse_play_item(string &page) {
+	static PlayItem parse_play_item(string &page, bool isUtf8 = TRUE) {
 		PlayItem play_item;
 		string comment, file, download;
 		//Search for file
@@ -95,7 +95,11 @@ class PlaylistsUtils {
 		if(comment_begin != string::npos && comment_end != string::npos) {
 			size_t comment_length = comment_end - comment_begin;
 			comment = page.substr(comment_begin+11, comment_length-11);
-			play_item.comment = comment;
+			if(isUtf8) {
+				play_item.comment = comment;
+			}else {
+				play_item.comment = to_utf8(comment);
+			}
 		}
 		
 		return play_item;

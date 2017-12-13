@@ -50,6 +50,11 @@ struct DetectArgs {
 	string href;
 };
 
+enum LinkResponse {
+	LINK_RESPONSE_PLAY,
+	LINK_RESPONSE_DOWNLOAD
+};
+
 class ResultsHistory {
     Results *results;
     Results *resultsAppendError;
@@ -355,6 +360,35 @@ class ResultsHistory {
 		}
 	}
 	
+	void showCopyLinksDialog(PlayItem playItem) {
+		GtkWidget *dialog, *label, *content_area; 
+		dialog = gtk_dialog_new_with_buttons ("Copy to clipboard...",
+                                              GTK_WINDOW(window),
+                                              (GtkDialogFlags)(GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT),
+                                              "Play link",
+                                              LINK_RESPONSE_PLAY,
+                                              "Download link",
+                                              LINK_RESPONSE_DOWNLOAD,
+                                              NULL);
+          
+        content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+	    label = gtk_label_new (playItem.comment.c_str());
+	    
+	    /* Add the label, and show everything we've added to the dialog. */
+	    gtk_container_add (GTK_CONTAINER (content_area), label);
+        gtk_widget_show_all(dialog);  
+        gint linkResponse = gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        switch(linkResponse) {
+			case LINK_RESPONSE_PLAY:
+			    cout << "Copy file: " << playItem.file << endl;
+			break;
+			case LINK_RESPONSE_DOWNLOAD:
+			    cout << "Copy download: " << playItem.download << endl;
+			break;
+		}
+	}
+	
 	private:
 	
 	void detectThread(string resultTitle, string href) {
@@ -449,13 +483,6 @@ class ResultsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
-	//TODO: setLinksErrorArgs...
-	
-	void showCopyLinksDialog(PlayItem playItem) {
-		//TODO: write dialog here
-		cout << "Not yet implemented..." << endl;
-	}
-	
 	static void detectTask(gpointer args, gpointer args2) {
 	    ResultsHistory *resultsHistory = (ResultsHistory *)args2;
 	    DetectArgs *detectArgs = (DetectArgs *)args;
@@ -506,11 +533,11 @@ class ResultsHistory {
 		// Show links spinner
 		resultsHistory->showSpLinks();
 		gdk_threads_leave();
-		PlayItem playItem = PlaylistsUtils::parse_play_item(getLinksArgs->js);
+		PlayItem playItem = PlaylistsUtils::parse_play_item(getLinksArgs->js, FALSE);
 		if(!playItem.comment.empty()) { // PlayItem found
 			gdk_threads_enter();
+			resultsHistory->showGetLinksButton();
 		    resultsHistory->showCopyLinksDialog(playItem);
-		    resultsHistory->showGetLinksButton();
 		    gdk_threads_leave();
 		}else {
 			gdk_threads_enter();
@@ -525,8 +552,8 @@ class ResultsHistory {
 	            string referer = PlaylistsUtils::getTrailerReferer(trailerId);
 	            string json = HtmlString::getPage(url, referer);
 				gdk_threads_enter();
+				resultsHistory->showGetLinksButton();
 		        resultsHistory->showCopyLinksDialog(PlaylistsUtils::parse_play_item(json));
-		        resultsHistory->showGetLinksButton();
 				gdk_threads_leave();
 			}else {
 				gdk_threads_enter();
