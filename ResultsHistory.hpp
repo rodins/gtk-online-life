@@ -379,12 +379,27 @@ class ResultsHistory {
         gtk_widget_show_all(dialog);  
         gint linkResponse = gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
+        
+        // For pasting with "paste" or ctrl-v
+        GtkClipboard* clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+        // For pasting with middle mouse button (in urxvt)
+        GtkClipboard* clipboardX = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
         switch(linkResponse) {
 			case LINK_RESPONSE_PLAY:
-			    cout << "Copy file: " << playItem.file << endl;
+			    gtk_clipboard_set_text(clipboard,
+			                           playItem.file.c_str(),
+			                           playItem.file.size());
+			    gtk_clipboard_set_text(clipboardX,
+			                           playItem.file.c_str(),
+			                           playItem.file.size());
 			break;
 			case LINK_RESPONSE_DOWNLOAD:
-			    cout << "Copy download: " << playItem.download << endl;
+			    gtk_clipboard_set_text(clipboard,
+			                           playItem.download.c_str(),
+			                           playItem.download.size());
+			    gtk_clipboard_set_text(clipboardX,
+			                           playItem.file.c_str(),
+			                           playItem.file.size());
 			break;
 		}
 	}
