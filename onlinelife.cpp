@@ -340,8 +340,6 @@ int main( int   argc,
     GtkToolItem *btnNext;
     GtkWidget *entry;
     GtkToolItem *btnActors;
-	//GtkToolItem *rbPlay;
-	//GtkToolItem *rbDownload;
 	GtkToolItem *sep;
 	GtkToolItem *exit;
 	
@@ -453,21 +451,9 @@ int main( int   argc,
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), entryItem, -1);
     
     btnActors = gtk_tool_button_new_from_stock("gtk-info");
-    /*rbPlay = gtk_radio_tool_button_new_from_stock(NULL, "gtk-media-play");
-    rbDownload = gtk_radio_tool_button_new_with_stock_from_widget(
-        GTK_RADIO_TOOL_BUTTON(rbPlay), "gtk-goto-bottom");*/
         
     gtk_tool_item_set_tooltip_text(btnActors, "Show/hide info");
-    //gtk_tool_item_set_tooltip_text(rbPlay, "Process item: play");
-    //gtk_tool_item_set_tooltip_text(rbDownload, "Process item: download");
     
-    // Default is "play"
-    //gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(rbPlay), TRUE); 
-    
-    /*sep = gtk_separator_tool_item_new();
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), rbPlay, -1);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), rbDownload, -1);*/
     sep = gtk_separator_tool_item_new();
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnActors, -1);
@@ -547,7 +533,6 @@ int main( int   argc,
     frRightBottom = gtk_frame_new("Actors history");
     
     // Add categories spinner and error
-    //vbLeft = gtk_vbox_new(FALSE, 1);
     hbCategoriesError = gtk_hbox_new(FALSE, 1); // for Repeat button normal size
     spCategories = gtk_spinner_new();
     btnCategoriesError = gtk_button_new_with_label("Repeat");
@@ -655,8 +640,6 @@ int main( int   argc,
 	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnActors), FALSE);
-    //gtk_widget_set_sensitive(GTK_WIDGET(rbPlay), FALSE);
-    //gtk_widget_set_sensitive(GTK_WIDGET(rbDownload), FALSE);
 
     g_signal_connect(GTK_WIDGET(btnRefresh), 
 				     "clicked", 
