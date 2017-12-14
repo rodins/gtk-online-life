@@ -142,7 +142,7 @@ void playlistClicked(GtkTreeView *treeView,
 		playItem.comment = comment;
 		playItem.file = file;
 		playItem.download = download;
-		resultsHistory->showCopyLinksDialog(playItem);
+		resultsHistory->linksSizeDialogThread(playItem);
 	}
 	
 	g_free(comment);

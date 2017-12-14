@@ -149,4 +149,41 @@ class HtmlString {
 	static string getActorsPage(string link) {
 		return getPage(link, "", ACTORS);
 	}
+	
+	static string getSizeOfLink(string link) {
+		CURL *curl;
+		CURLcode res;
+		double filesize = 0.0;
+		
+		curl_global_init(CURL_GLOBAL_DEFAULT);
+		
+		curl = curl_easy_init();
+		if(curl) {
+			curl_easy_setopt(curl, CURLOPT_URL, link.c_str());
+			/* No download if the file */ 
+			curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+			curl_easy_setopt(curl, CURLOPT_HEADER, 0L);
+			/* Switch on full protocol/debug output */ 
+			/*curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);*/
+			
+			res = curl_easy_perform(curl);
+			
+			if(CURLE_OK == res) {
+				/* https://curl.haxx.se/libcurl/c/curl_easy_getinfo.html */ 
+				res = curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD,
+									  &filesize);
+				if((CURLE_OK == res) && (filesize>0.0)) {
+					int nSize = (int)filesize/1024/1024;
+					if(nSize != 0) {
+					    return SSTR(nSize);	
+					}
+				}
+			}
+			
+			/* always cleanup */ 
+			curl_easy_cleanup(curl);
+		}
+		
+		return "";
+	}
 };
