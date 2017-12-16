@@ -127,6 +127,16 @@ class ActorsHistory {
 			updateActors();
 			g_free(value);
 	    }
+	    
+	    //Links button change
+	    switch(actors.getLinksMode()) {
+			case LINKS_MODE_MOVIE:
+			    showGetLinksButton();
+			break;
+			case LINKS_MODE_SERIAL:
+			    showListEpisodesButton();
+			break;
+		}
 	}
 	
 	void btnActorsClicked(GtkWidget *widget) {
