@@ -1,10 +1,22 @@
 //ActorsHistory.hpp
 #include "Actors.hpp"
 
+enum LinkResponse {
+	LINK_RESPONSE_PLAY,
+	LINK_RESPONSE_DOWNLOAD,
+	LINK_RESPONSE_CANCEL
+};
+
+enum LinksErrorType {
+	DETECT_TASK,
+    GET_LINKS_TASK
+};
+
 class ActorsHistory {
     Actors actors, prevActors;
     map <string, Actors> backActors;
     
+    GtkWidget *window;
     GtkWidget *tvActors, *tvBackActors;
     GtkWidget *frRightBottom;
     GdkPixbuf *icon;
@@ -16,11 +28,33 @@ class ActorsHistory {
     GtkWidget *vbRight;
     
     GThreadPool *actorsThreadPool;
+    GThreadPool *getLinksThreadPool;
+    GThreadPool *linksSizeThreadPool;
+    
+    GtkWidget *spLinks;
+    GtkWidget *btnLinksError;
+    GtkWidget *btnGetLinks;
+    GtkWidget *btnListEpisodes;
+    
+    LinksErrorType linksError;
+    
     public:
     
-    ActorsHistory(GtkWidget *a, GtkWidget *pa, GtkWidget* fr, GtkWidget* li,
-                  GtkWidget *frt, GtkWidget *fri, GtkWidget *sa, GtkWidget *hba,
-                  GtkWidget *vbr) {
+    ActorsHistory(GtkWidget *window,
+                  GtkWidget *a,
+                  GtkWidget *pa,
+                  GtkWidget* fr, 
+                  GtkWidget* li,
+                  GtkWidget *frt, 
+                  GtkWidget *fri, 
+                  GtkWidget *sa, 
+                  GtkWidget *hba,
+                  GtkWidget *vbr,
+                  GtkWidget *spLinks,
+				  GtkWidget *btnLinksError,
+				  GtkWidget *btnGetLinks,
+				  GtkWidget *btnListEpisodes) {
+		this->window = window;			  
 		tvActors = a;
 		tvBackActors = pa;
 		frRightBottom = fr;
@@ -32,6 +66,11 @@ class ActorsHistory {
 		hbActorsError = hba;
 		vbRight = vbr;
 		
+		this->spLinks = spLinks;
+		this->btnLinksError = btnLinksError;
+		this->btnGetLinks = btnGetLinks;
+		this->btnListEpisodes = btnListEpisodes;
+		
 		icon = IconsFactory::getLinkIcon();
 		
 		// GThreadPool for actors
@@ -40,14 +79,30 @@ class ActorsHistory {
 	                                   1, // Run one thread at the time
 	                                   FALSE,
 	                                   NULL);
+	                                   
+	    // GThreadPool for getLinks
+	    getLinksThreadPool = g_thread_pool_new(ActorsHistory::getLinksTask,
+	                                   this,
+	                                   1, // Run one thread at the time
+	                                   FALSE,
+	                                   NULL);
+	                                   
+	    // GThreadPool for links sizes
+	    linksSizeThreadPool = g_thread_pool_new(ActorsHistory::linksSizeTask,
+	                                   this,
+	                                   1, // Run one thread at the time
+	                                   FALSE,
+	                                   NULL); 
 	} 
 	
-    void newThread(string title, string href) {
+    void newThread(string resultsTitle, string title, string href) {
 		if(!actors.getTitle().empty()) {
 			prevActors = actors;
 		}
+		actors.setResultsTitle(resultsTitle);// for trailers detection
 		actors.setTitle(title);
 		actors.setUrl(href);
+		//TODO: maybe I should call detectThread as separate thread
 		newThread();
 	}
 	
@@ -85,7 +140,228 @@ class ActorsHistory {
 		}
 	}
 	
+	void linksSizeDialogThread(PlayItem playItem) {
+		PlayItem *playItemArg = new PlayItem();
+		playItemArg->comment = playItem.comment;
+		playItemArg->file = playItem.file;
+		playItemArg->download = playItem.download;
+		g_thread_pool_push(linksSizeThreadPool, 
+		                   (gpointer)playItemArg, 
+		                   NULL);
+	}
+	
+	ListEpisodesArgs getCurrentActorsListEpisodesArgs() {
+		return actors.getListEpisodesArgs();
+	}
+	
+	void btnGetLinksClicked() {
+		g_thread_pool_push(getLinksThreadPool, 
+		                   (gpointer)1, 
+		                   NULL);
+	}
+	
+	void btnLinksErrorClicked() {
+		switch(linksError) {
+			case DETECT_TASK:
+			    newThread();
+			break;
+			case GET_LINKS_TASK:
+			    btnGetLinksClicked();
+			break;
+		}
+	}
+	
 	private:
+	
+	// Info links frame functions
+    void showSpLinks() {
+		gtk_widget_set_visible(btnGetLinks, FALSE);
+		gtk_widget_set_visible(btnListEpisodes, FALSE);
+		gtk_widget_set_visible(btnLinksError, FALSE);
+		gtk_widget_set_visible(spLinks, TRUE);
+		gtk_spinner_start(GTK_SPINNER(spLinks));
+	}
+	
+	void showListEpisodesButton() {
+		gtk_widget_set_visible(btnGetLinks, FALSE);
+		gtk_widget_set_visible(btnListEpisodes, TRUE);
+		gtk_widget_set_visible(btnLinksError, FALSE);
+		gtk_widget_set_visible(spLinks, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spLinks));
+	}
+	
+	void showGetLinksButton() {
+		gtk_widget_set_visible(btnGetLinks, TRUE);
+		gtk_widget_set_visible(btnListEpisodes, FALSE);
+		gtk_widget_set_visible(btnLinksError, FALSE);
+		gtk_widget_set_visible(spLinks, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spLinks));
+	}
+	
+	void showLinksErrorButton() {
+		gtk_widget_set_visible(btnGetLinks, FALSE);
+		gtk_widget_set_visible(btnListEpisodes, FALSE);
+		gtk_widget_set_visible(btnLinksError, TRUE);
+		gtk_widget_set_visible(spLinks, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spLinks));
+	}
+	
+	void detectTask() {
+	    // On pre execute
+		gdk_threads_enter();
+		string href = actors.getUrl();
+		// Show links spinner
+		showSpLinks();
+		gdk_threads_leave();
+		string id = PlaylistsUtils::getHrefId(href);	
+		if(!id.empty()) {
+			string url = PlaylistsUtils::getUrl(id);
+			string referer = PlaylistsUtils::getReferer(id);
+			string js = HtmlString::getPage(url, referer);
+			
+			gdk_threads_enter();
+			if(!js.empty()) {
+				string playlist_link = PlaylistsUtils::get_txt_link(js);
+				if(!playlist_link.empty()) { // Playlists found
+					showListEpisodesButton();
+					ListEpisodesArgs listEpisodesArgs;
+					listEpisodesArgs.title = actors.getTitle();
+					listEpisodesArgs.playlist_link = playlist_link;
+					actors.setListEpisodesArgs(listEpisodesArgs);
+					actors.setLinksMode(LINKS_MODE_SERIAL);
+				}else {
+					GetLinksArgs getLinksArgs;
+					getLinksArgs.js = js;
+					getLinksArgs.href = href;
+					getLinksArgs.referer = referer; 
+					showGetLinksButton();
+					actors.setGetLinksArgs(getLinksArgs);
+					actors.setLinksMode(LINKS_MODE_MOVIE);
+				}
+			}else {
+				showLinksErrorButton();
+				linksError = DETECT_TASK;
+			}
+			gdk_threads_leave();
+		}
+	}
+	
+	static void getLinksTask(gpointer args, gpointer args2) {
+		ActorsHistory *actorsHistory = (ActorsHistory *)args2;
+		// On pre execute
+		gdk_threads_enter();
+		GetLinksArgs getLinksArgs = actorsHistory->actors.getGetLinksArgs();
+		string resultsTitle = actorsHistory->actors.getResultsTitle();
+		// Show links spinner
+		actorsHistory->showSpLinks();
+		gdk_threads_leave();
+		PlayItem playItem = PlaylistsUtils::parse_play_item(getLinksArgs.js, FALSE);
+		if(!playItem.comment.empty()) { // PlayItem found
+			gdk_threads_enter();
+			actorsHistory->showGetLinksButton();
+		    actorsHistory->linksSizeDialogThread(playItem);
+		    gdk_threads_leave();
+		}else {
+			if(resultsTitle.find("Трейлеры") != string::npos) {
+				// Searching for alternative trailers links
+	            string infoHtml = HtmlString::getPage(getLinksArgs.href,
+	                                                  getLinksArgs.referer);
+	            string trailerId = PlaylistsUtils::getTrailerId(infoHtml); 
+	            string url = PlaylistsUtils::getTrailerUrl(trailerId);
+	            string referer = PlaylistsUtils::getTrailerReferer(trailerId);
+	            string json = HtmlString::getPage(url, referer);
+				gdk_threads_enter();
+				actorsHistory->showGetLinksButton();
+		        actorsHistory->linksSizeDialogThread(PlaylistsUtils::parse_play_item(json));
+				gdk_threads_leave();
+			}else {
+				gdk_threads_enter();
+				actorsHistory->showLinksErrorButton();
+				actorsHistory->linksError = GET_LINKS_TASK;
+			    gdk_threads_leave();
+			}
+		}
+	}
+	
+	void showCopyLinksDialogWithSize(PlayItem *playItem, string sizeFile, string sizeDownload) {
+		GtkWidget *dialog, *label, *content_area;
+		
+		dialog = gtk_dialog_new_with_buttons ("Copy to clipboard...",
+                                              GTK_WINDOW(window),
+                                              (GtkDialogFlags)(GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT),
+                                              NULL);
+                                              
+        if(sizeFile != "") {
+			string sizeFileTitle = "Play (" + sizeFile + " Mb)";
+			gtk_dialog_add_button(GTK_DIALOG(dialog),
+			                      sizeFileTitle.c_str(),
+			                      LINK_RESPONSE_PLAY);
+		}
+		
+		if(sizeDownload != "") {
+			string sizeDownloadTitle = "Download (" + sizeDownload + " Mb)";
+			gtk_dialog_add_button(GTK_DIALOG(dialog),
+			                      sizeDownloadTitle.c_str(),
+			                      LINK_RESPONSE_DOWNLOAD);
+		}
+		
+		gtk_dialog_add_button(GTK_DIALOG(dialog),
+		                      "Cancel",
+                              LINK_RESPONSE_CANCEL);
+          
+        content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+	    label = gtk_label_new (playItem->comment.c_str());
+	    
+	    /* Add the label, and show everything we've added to the dialog. */
+	    gtk_container_add (GTK_CONTAINER (content_area), label);
+        gtk_widget_show_all(dialog);  
+        gint linkResponse = gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        
+        // For pasting with "paste" or ctrl-v
+        GtkClipboard* clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+        // For pasting with middle mouse button (in urxvt)
+        GtkClipboard* clipboardX = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
+        switch(linkResponse) {
+			case LINK_RESPONSE_PLAY:
+			    gtk_clipboard_set_text(clipboard,
+			                           playItem->file.c_str(),
+			                           playItem->file.size());
+			    gtk_clipboard_set_text(clipboardX,
+			                           playItem->file.c_str(),
+			                           playItem->file.size());
+			break;
+			case LINK_RESPONSE_DOWNLOAD:
+			    gtk_clipboard_set_text(clipboard,
+			                           playItem->download.c_str(),
+			                           playItem->download.size());
+			    gtk_clipboard_set_text(clipboardX,
+			                           playItem->file.c_str(),
+			                           playItem->file.size());
+			break;
+			case LINK_RESPONSE_CANCEL:
+			    // Do nothing. Dialog should already be destroyed.
+			break;
+		}
+	}
+	
+	static void linksSizeTask(gpointer args, gpointer args2) {
+		ActorsHistory *actorsHistory = (ActorsHistory *)args2;
+		PlayItem *playItem = (PlayItem *)args;
+		
+		string sizeFile, sizeDownload;
+		
+		sizeFile = HtmlString::getSizeOfLink(playItem->file);
+		sizeDownload = HtmlString::getSizeOfLink(playItem->download);
+		
+		gdk_threads_enter();
+		//On post execute
+		actorsHistory->showCopyLinksDialogWithSize(playItem,
+		                                           sizeFile,
+		                                           sizeDownload);
+		g_free(playItem);
+		gdk_threads_leave();
+	}
 	
 	static void actorsTask(gpointer args, gpointer args2) {
 		ActorsHistory *actorsHistory = (ActorsHistory*)args2;
@@ -94,6 +370,8 @@ class ActorsHistory {
 		string link = actorsHistory->onPreExecute();
 		gdk_threads_leave();
 		string page = HtmlString::getActorsPage(link);
+		//TODO: maybe call it in separate thread
+		actorsHistory->detectTask();
 		// On post execute
 		gdk_threads_enter();
 		actorsHistory->onPostExecute(page);

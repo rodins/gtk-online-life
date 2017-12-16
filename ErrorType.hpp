@@ -7,7 +7,3 @@ enum ErrorType {
     NONE_ERROR,
 };
 
-enum LinksErrorType {
-	DETECT_TASK,
-    GET_LINKS_TASK
-};

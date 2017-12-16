@@ -34,28 +34,6 @@ struct ResultsArgs {
 	}
 };
 
-struct GetLinksArgs {
-	string js;
-	string href;
-	string referer;
-};
-
-struct ListEpisodesArgs {
-	string title;
-	string playlist_link;
-};
-
-struct DetectArgs {
-	string title;
-	string href;
-};
-
-enum LinkResponse {
-	LINK_RESPONSE_PLAY,
-	LINK_RESPONSE_DOWNLOAD,
-	LINK_RESPONSE_CANCEL
-};
-
 class ResultsHistory {
     Results *results;
     Results *resultsAppendError;
@@ -78,32 +56,32 @@ class ResultsHistory {
 	
 	GtkToolItem *btnUp;
 	GtkToolItem *btnActors;
-    GtkWidget *spLinks;
+    /*GtkWidget *spLinks;
     GtkWidget *btnLinksError;
     GtkWidget *btnGetLinks;
-    GtkWidget *btnListEpisodes;
+    GtkWidget *btnListEpisodes;*/
     GtkToolItem *btnRefresh;
     
     set<int> *imageIndexes;
     
     GThreadPool *resultsNewThreadPool;
     GThreadPool *resultsAppendThreadPool;
-    GThreadPool *detectThreadPool;
-    GThreadPool *getLinksThreadPool;
+    //GThreadPool *detectThreadPool;
+    //GThreadPool *getLinksThreadPool;
     GThreadPool *listEpisodesThreadPool;
-    GThreadPool *linksSizeThreadPool;
+    //GThreadPool *linksSizeThreadPool;
     
     ActorsHistory *actorsHistory;
     map<string, GdkPixbuf*> *imagesCache;
     
     ErrorType error;
-    LinksErrorType linksError;
+    //LinksErrorType linksError;
     
     string repeatTitle, repeatLink;
     
-    DetectArgs *detectArgs;
+    /*DetectArgs *detectArgs;
     ListEpisodesArgs *listEpisodesArgs;
-    GetLinksArgs *getLinksArgs;
+    GetLinksArgs *getLinksArgs;*/
     
     public:
     
@@ -119,10 +97,10 @@ class ResultsHistory {
                    GtkWidget *hb_results_error,
                    GtkToolItem *btn_up,
                    GtkToolItem *rb_actors,
-                   GtkWidget *spLinks,
+                   /*GtkWidget *spLinks,
 				   GtkWidget *btnLinksError,
 				   GtkWidget *btnGetLinks,
-				   GtkWidget *btnListEpisodes,
+				   GtkWidget *btnListEpisodes,*/
                    GtkToolItem *btn_refresh,
                    set<int> *ii,
                    map<string, GdkPixbuf*> *cache,
@@ -141,10 +119,10 @@ class ResultsHistory {
 		
 		btnUp = btn_up;
 		btnActors = rb_actors;
-		this->spLinks = spLinks;
+		/*this->spLinks = spLinks;
 		this->btnLinksError = btnLinksError;
 		this->btnGetLinks = btnGetLinks;
-		this->btnListEpisodes = btnListEpisodes;
+		this->btnListEpisodes = btnListEpisodes;*/
 		btnRefresh = btn_refresh;
 		
 		imageIndexes = ii;
@@ -167,18 +145,18 @@ class ResultsHistory {
 	                                   NULL);
 	                                   
 	    // GThreadPool for detect
-	    detectThreadPool = g_thread_pool_new(ResultsHistory::detectTask,
+	    /*detectThreadPool = g_thread_pool_new(ResultsHistory::detectTask,
 	                                   this,
 	                                   1, // Run one thread at the time
 	                                   FALSE,
-	                                   NULL);
+	                                   NULL);*/
 	                                   
 	    // GThreadPool for getLinks
-	    getLinksThreadPool = g_thread_pool_new(ResultsHistory::getLinksTask,
+	    /*getLinksThreadPool = g_thread_pool_new(ResultsHistory::getLinksTask,
 	                                   this,
 	                                   1, // Run one thread at the time
 	                                   FALSE,
-	                                   NULL);
+	                                   NULL);*/
 	                                   
 	    // GThreadPool for listEpisodes
 	    listEpisodesThreadPool = g_thread_pool_new(ResultsHistory::listEpisodesTask,
@@ -188,11 +166,11 @@ class ResultsHistory {
 	                                   NULL);
 	                                   
 	    // GThreadPool for links sizes
-	    linksSizeThreadPool = g_thread_pool_new(ResultsHistory::linksSizeTask,
+	    /*linksSizeThreadPool = g_thread_pool_new(ResultsHistory::linksSizeTask,
 	                                   this,
 	                                   1, // Run one thread at the time
 	                                   FALSE,
-	                                   NULL);                                
+	                                   NULL);  */                              
 	                                   
 	                                   
 	    playlists = new Playlists(
@@ -202,9 +180,9 @@ class ResultsHistory {
         actorsHistory = ah;
         
         error = NONE_ERROR;
-        detectArgs = NULL;
-        listEpisodesArgs = NULL;
-        getLinksArgs = NULL;
+        //detectArgs = NULL;
+        //listEpisodesArgs = NULL;
+        //getLinksArgs = NULL;
 	}
 	
 	~ResultsHistory(){
@@ -255,7 +233,7 @@ class ResultsHistory {
 			    appendThreadOnError();
 			break;
 			case PLAYLISTS_ERROR:
-		        newThreadPlaylist();
+		        btnListEpisodesClicked();
 			break;
 			case NONE_ERROR:
 			    // Nothing to do. Do not want compiler warning.
@@ -265,9 +243,11 @@ class ResultsHistory {
 	
 	void onClick(string resultTitle, string href) {
 		// Always show info, call actors thread
-		actorsHistory->newThread(resultTitle, href);
+		actorsHistory->newThread(results->getTitle(), // For trailers detection
+		                         resultTitle, 
+		                         href);             
 	    // First step to find links
-		detectThread(resultTitle, href);
+		//detectThread(resultTitle, href);
 	}
 	
 	void newThread(string title, string url) {
@@ -319,19 +299,17 @@ class ResultsHistory {
 		resultsArgs->results->parser(div, titles);
 	}
 	
-	void btnGetLinksClicked() {
-		g_thread_pool_push(getLinksThreadPool, 
-		                   (gpointer)getLinksArgs, 
-		                   NULL);
-	}
-	
 	void btnListEpisodesClicked() {
+		ListEpisodesArgs listEpisodesArgs = actorsHistory->getCurrentActorsListEpisodesArgs();
+		ListEpisodesArgs *listEpisodesArgsPtr = new ListEpisodesArgs();
+		listEpisodesArgsPtr->title = listEpisodesArgs.title;
+		listEpisodesArgsPtr->playlist_link = listEpisodesArgs.playlist_link;
 	    g_thread_pool_push(listEpisodesThreadPool, 
-		                   (gpointer)listEpisodesArgs, 
+		                   (gpointer)listEpisodesArgsPtr, 
 		                   NULL);
 	}
 	
-	void btnLinksErrorClicked() {
+	/*void btnLinksErrorClicked() {
 		switch(linksError) {
 			case DETECT_TASK:
 			    g_thread_pool_push(detectThreadPool, 
@@ -342,9 +320,9 @@ class ResultsHistory {
 			    btnGetLinksClicked();
 			break;
 		}
-	}
+	}*/
 	
-	void linksSizeDialogThread(PlayItem playItem) {
+	/*void linksSizeDialogThread(PlayItem playItem) {
 		PlayItem *playItemArg = new PlayItem();
 		playItemArg->comment = playItem.comment;
 		playItemArg->file = playItem.file;
@@ -352,11 +330,11 @@ class ResultsHistory {
 		g_thread_pool_push(linksSizeThreadPool, 
 		                   (gpointer)playItemArg, 
 		                   NULL);
-	}
+	}*/
 	
 	private:
 	
-	void detectThread(string resultTitle, string href) {
+	/*void detectThread(string resultTitle, string href) {
 		// Detect is this movie or serial
 		// Free previous detect args before creating new one
 		g_free(detectArgs);
@@ -366,7 +344,7 @@ class ResultsHistory {
 		g_thread_pool_push(detectThreadPool, 
 		                   (gpointer)detectArgs, 
 		                   NULL);
-	}
+	}*/
 	
 	void scrollToTopOfList() {
 		// Scroll to the top of the list on new results (not append to list)
@@ -416,7 +394,7 @@ class ResultsHistory {
 	}
 	
     // Info links frame functions
-    void showSpLinks() {
+    /*void showSpLinks() {
 		gtk_widget_set_visible(btnGetLinks, FALSE);
 		gtk_widget_set_visible(btnListEpisodes, FALSE);
 		gtk_widget_set_visible(btnLinksError, FALSE);
@@ -446,9 +424,9 @@ class ResultsHistory {
 		gtk_widget_set_visible(btnLinksError, TRUE);
 		gtk_widget_set_visible(spLinks, FALSE);
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
-	}
+	}*/
 	
-	static void detectTask(gpointer args, gpointer args2) {
+	/*static void detectTask(gpointer args, gpointer args2) {
 	    ResultsHistory *resultsHistory = (ResultsHistory *)args2;
 	    DetectArgs *detectArgs = (DetectArgs *)args;
 		string id = PlaylistsUtils::getHrefId(detectArgs->href);	
@@ -488,9 +466,9 @@ class ResultsHistory {
 			}
 			gdk_threads_leave();
 		}
-	}
+	}*/
 	
-	static void getLinksTask(gpointer args, gpointer args2) {
+	/*static void getLinksTask(gpointer args, gpointer args2) {
 		ResultsHistory *resultsHistory = (ResultsHistory *)args2;
 		GetLinksArgs *getLinksArgs = (GetLinksArgs *)args;
 		// On pre execute
@@ -527,87 +505,7 @@ class ResultsHistory {
 			    gdk_threads_leave();
 			}
 		}
-	} 
-	
-	void showCopyLinksDialogWithSize(PlayItem *playItem, string sizeFile, string sizeDownload) {
-		GtkWidget *dialog, *label, *content_area;
-		
-		dialog = gtk_dialog_new_with_buttons ("Copy to clipboard...",
-                                              GTK_WINDOW(window),
-                                              (GtkDialogFlags)(GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT),
-                                              NULL);
-                                              
-        if(sizeFile != "") {
-			string sizeFileTitle = "Play (" + sizeFile + " Mb)";
-			gtk_dialog_add_button(GTK_DIALOG(dialog),
-			                      sizeFileTitle.c_str(),
-			                      LINK_RESPONSE_PLAY);
-		}
-		
-		if(sizeDownload != "") {
-			string sizeDownloadTitle = "Download (" + sizeDownload + " Mb)";
-			gtk_dialog_add_button(GTK_DIALOG(dialog),
-			                      sizeDownloadTitle.c_str(),
-			                      LINK_RESPONSE_DOWNLOAD);
-		}
-		
-		gtk_dialog_add_button(GTK_DIALOG(dialog),
-		                      "Cancel",
-                              LINK_RESPONSE_CANCEL);
-          
-        content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
-	    label = gtk_label_new (playItem->comment.c_str());
-	    
-	    /* Add the label, and show everything we've added to the dialog. */
-	    gtk_container_add (GTK_CONTAINER (content_area), label);
-        gtk_widget_show_all(dialog);  
-        gint linkResponse = gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        
-        // For pasting with "paste" or ctrl-v
-        GtkClipboard* clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-        // For pasting with middle mouse button (in urxvt)
-        GtkClipboard* clipboardX = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
-        switch(linkResponse) {
-			case LINK_RESPONSE_PLAY:
-			    gtk_clipboard_set_text(clipboard,
-			                           playItem->file.c_str(),
-			                           playItem->file.size());
-			    gtk_clipboard_set_text(clipboardX,
-			                           playItem->file.c_str(),
-			                           playItem->file.size());
-			break;
-			case LINK_RESPONSE_DOWNLOAD:
-			    gtk_clipboard_set_text(clipboard,
-			                           playItem->download.c_str(),
-			                           playItem->download.size());
-			    gtk_clipboard_set_text(clipboardX,
-			                           playItem->file.c_str(),
-			                           playItem->file.size());
-			break;
-			case LINK_RESPONSE_CANCEL:
-			    // Do nothing. Dialog should already be destroyed.
-			break;
-		}
-	}
-	
-	static void linksSizeTask(gpointer args, gpointer args2) {
-		ResultsHistory *resultsHistory = (ResultsHistory *)args2;
-		PlayItem *playItem = (PlayItem *)args;
-		
-		string sizeFile, sizeDownload;
-		
-		sizeFile = HtmlString::getSizeOfLink(playItem->file);
-		sizeDownload = HtmlString::getSizeOfLink(playItem->download);
-		
-		gdk_threads_enter();
-		//On post execute
-		resultsHistory->showCopyLinksDialogWithSize(playItem,
-		                                            sizeFile,
-		                                            sizeDownload);
-		g_free(playItem);
-		gdk_threads_leave();
-	}
+	} */
 	
 	static void listEpisodesTask(gpointer args, gpointer args2) {
 		ResultsHistory *resultsHistory = (ResultsHistory *)args2;
@@ -633,6 +531,7 @@ class ResultsHistory {
 			resultsHistory->setSensitiveItemsPlaylists();
 			resultsHistory->error = PLAYLISTS_ERROR;
 		}
+		g_free(listEpisodesArgs);
 		gdk_threads_leave();
 	}
 	
@@ -894,12 +793,6 @@ class ResultsHistory {
 	    error = NONE_ERROR;
 	    resultsAppendError = NULL;
 		g_thread_pool_push(resultsNewThreadPool, (gpointer)resultsArgs, NULL);
-	}
-	
-	void newThreadPlaylist() {
-		g_thread_pool_push(listEpisodesThreadPool,
-		                   (gpointer)listEpisodesArgs, 
-		                   NULL);
 	}
 	
 	void appendThreadOnError() {

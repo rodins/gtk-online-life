@@ -1,7 +1,24 @@
 //Actors.hpp
 
+struct GetLinksArgs {
+	string js;
+	string href;
+	string referer;
+};
+
+struct ListEpisodesArgs {
+	string title;
+	string playlist_link;
+};
+
+enum LinksMode {
+	LINKS_MODE_SERIAL,
+	LINKS_MODE_MOVIE
+};
+
 class Actors {
     string actorsTitle;
+    string resultsTitle;
     
     GtkListStore *store;
     GtkTreeIter iter;
@@ -11,6 +28,11 @@ class Actors {
     int count;
     
     string url;
+    
+    GetLinksArgs getLinksArgs;
+    ListEpisodesArgs listEpisodesArgs;
+    LinksMode linksMode;
+    
     public:
     
     Actors() {
@@ -23,6 +45,38 @@ class Actors {
 	
 	string getUrl() {
 		return url;
+	}
+	
+	void setGetLinksArgs(GetLinksArgs getLinksArgs) {
+	    this->getLinksArgs = getLinksArgs;
+	}
+	
+	GetLinksArgs getGetLinksArgs() {
+		return getLinksArgs;
+	}
+	
+	void setListEpisodesArgs(ListEpisodesArgs listEpisodesArgs) {
+		this->listEpisodesArgs = listEpisodesArgs;
+	}
+	
+	ListEpisodesArgs getListEpisodesArgs() {
+		return listEpisodesArgs;
+	}
+	
+	void setLinksMode(LinksMode linksMode) {
+		this->linksMode = linksMode;
+	}
+	
+	LinksMode getLinksMode() {
+		return linksMode;
+	}
+	
+	void setResultsTitle(string title) {
+		resultsTitle = title;
+	}
+	
+	string getResultsTitle() {
+		return resultsTitle;
 	}
     
 	GtkTreeModel *getModel() {

@@ -115,7 +115,7 @@ void playlistClicked(GtkTreeView *treeView,
                      GtkTreePath *path,
                      GtkTreeViewColumn *column,
                      gpointer data) {
-    ResultsHistory *resultsHistory = (ResultsHistory *)data;
+    ActorsHistory *actorsHistory = (ActorsHistory *)data;
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -142,7 +142,7 @@ void playlistClicked(GtkTreeView *treeView,
 		playItem.comment = comment;
 		playItem.file = file;
 		playItem.download = download;
-		resultsHistory->linksSizeDialogThread(playItem);
+		actorsHistory->linksSizeDialogThread(playItem);
 	}
 	
 	g_free(comment);
@@ -284,13 +284,13 @@ static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
 }
 
 static void btnLinksErrorClicked(GtkWidget *widget, gpointer data) {
-	ResultsHistory *resultsHistory = (ResultsHistory *)data;
-	resultsHistory->btnLinksErrorClicked();
+	ActorsHistory *actorsHistory = (ActorsHistory *)data;
+	actorsHistory->btnLinksErrorClicked();
 }
 
 static void btnGetLinksClicked(GtkWidget *widget, gpointer data) {
-	ResultsHistory *resultsHistory = (ResultsHistory *)data;
-	resultsHistory->btnGetLinksClicked();
+	ActorsHistory *actorsHistory = (ActorsHistory *)data;
+	actorsHistory->btnGetLinksClicked();
 }
 
 static void btnListEpisodesClicked(GtkWidget *widget, gpointer data) {
@@ -587,7 +587,8 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbCenter), spCenter, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbCenter), hbResultsError, TRUE, FALSE, 1);
     
-    ActorsHistory *actorsHistory = new ActorsHistory(tvActors,
+    ActorsHistory *actorsHistory = new ActorsHistory(window,
+                                                     tvActors,
                                                      tvBackActors,
                                                      frRightBottom,
                                                      lbInfo,
@@ -595,7 +596,11 @@ int main( int   argc,
                                                      frInfo,
                                                      spActors,
                                                      hbActorsError,
-                                                     vbRight);
+                                                     vbRight,
+                                                     spLinks,
+                                                     btnLinksError,
+                                                     btnGetLinks,
+                                                     btnListEpisodes);
                                                      
     g_signal_connect(selection,
 	                 "changed", 
@@ -611,6 +616,21 @@ int main( int   argc,
                      "clicked",
                      G_CALLBACK(btnActorsRepeatClicked), 
                      actorsHistory);
+                     
+    g_signal_connect(tvPlaylists,
+                     "row-activated", 
+                     G_CALLBACK(playlistClicked), 
+                     actorsHistory);
+                     
+    g_signal_connect(btnLinksError,
+                     "clicked",
+                     G_CALLBACK(btnLinksErrorClicked),
+                     actorsHistory);
+                     
+    g_signal_connect(btnGetLinks,
+                     "clicked",
+                     G_CALLBACK(btnGetLinksClicked),
+                     actorsHistory);
     
 	ResultsHistory *resultsHistory = new ResultsHistory(window,
                                                         ivResults,
@@ -624,10 +644,6 @@ int main( int   argc,
                                                         hbResultsError,
                                                         btnUp,
                                                         btnActors,
-                                                        spLinks,
-                                                        btnLinksError,
-                                                        btnGetLinks,
-                                                        btnListEpisodes,
                                                         btnRefresh,
                                                         imageIndexes,
                                                         imagesCache,
@@ -684,21 +700,6 @@ int main( int   argc,
     g_signal_connect(ivResults, 
                      "item-activated", 
                      G_CALLBACK(resultActivated), 
-                     resultsHistory);
-                     
-    g_signal_connect(tvPlaylists,
-                     "row-activated", 
-                     G_CALLBACK(playlistClicked), 
-                     resultsHistory);
-                     
-    g_signal_connect(btnLinksError,
-                     "clicked",
-                     G_CALLBACK(btnLinksErrorClicked),
-                     resultsHistory);
-                     
-    g_signal_connect(btnGetLinks,
-                     "clicked",
-                     G_CALLBACK(btnGetLinksClicked),
                      resultsHistory);
                      
     g_signal_connect(btnListEpisodes,
