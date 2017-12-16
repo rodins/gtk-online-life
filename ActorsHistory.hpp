@@ -30,6 +30,7 @@ class ActorsHistory {
     GThreadPool *actorsThreadPool;
     GThreadPool *getLinksThreadPool;
     GThreadPool *linksSizeThreadPool;
+    GThreadPool *detectThreadPool;
     
     GtkWidget *spLinks;
     GtkWidget *btnLinksError;
@@ -93,6 +94,13 @@ class ActorsHistory {
 	                                   1, // Run one thread at the time
 	                                   FALSE,
 	                                   NULL); 
+	                                   
+	    // GThreadPool for detect
+	    detectThreadPool = g_thread_pool_new(ActorsHistory::detectTask,
+	                                   this,
+	                                   1, // Run one thread at the time
+	                                   FALSE,
+	                                   NULL);
 	} 
 	
     void newThread(string resultsTitle, string title, string href) {
@@ -102,12 +110,16 @@ class ActorsHistory {
 		actors.setResultsTitle(resultsTitle);// for trailers detection
 		actors.setTitle(title);
 		actors.setUrl(href);
-		//TODO: maybe I should call detectThread as separate thread
 		newThread();
+		detectThread();
 	}
 	
 	void newThread() {
 		g_thread_pool_push(actorsThreadPool, (gpointer)1, NULL);
+	}
+	
+	void detectThread() {
+		g_thread_pool_push(detectThreadPool, (gpointer)1, NULL);
 	}
     
 	void changed(GtkTreeSelection *treeselection) {
@@ -173,7 +185,7 @@ class ActorsHistory {
 	void btnLinksErrorClicked() {
 		switch(linksError) {
 			case DETECT_TASK:
-			    newThread();
+			    detectThread();
 			break;
 			case GET_LINKS_TASK:
 			    btnGetLinksClicked();
@@ -216,12 +228,13 @@ class ActorsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
-	void detectTask() {
+	static void detectTask(gpointer arg, gpointer arg2) {
+		ActorsHistory *actorsHistory = (ActorsHistory *)arg2;
 	    // On pre execute
 		gdk_threads_enter();
-		string href = actors.getUrl();
+		string href = actorsHistory->actors.getUrl();
 		// Show links spinner
-		showSpLinks();
+		actorsHistory->showSpLinks();
 		gdk_threads_leave();
 		string id = PlaylistsUtils::getHrefId(href);	
 		if(!id.empty()) {
@@ -233,24 +246,24 @@ class ActorsHistory {
 			if(!js.empty()) {
 				string playlist_link = PlaylistsUtils::get_txt_link(js);
 				if(!playlist_link.empty()) { // Playlists found
-					showListEpisodesButton();
+					actorsHistory->showListEpisodesButton();
 					ListEpisodesArgs listEpisodesArgs;
-					listEpisodesArgs.title = actors.getTitle();
+					listEpisodesArgs.title = actorsHistory->actors.getTitle();
 					listEpisodesArgs.playlist_link = playlist_link;
-					actors.setListEpisodesArgs(listEpisodesArgs);
-					actors.setLinksMode(LINKS_MODE_SERIAL);
+					actorsHistory->actors.setListEpisodesArgs(listEpisodesArgs);
+					actorsHistory->actors.setLinksMode(LINKS_MODE_SERIAL);
 				}else {
 					GetLinksArgs getLinksArgs;
 					getLinksArgs.js = js;
 					getLinksArgs.href = href;
 					getLinksArgs.referer = referer; 
-					showGetLinksButton();
-					actors.setGetLinksArgs(getLinksArgs);
-					actors.setLinksMode(LINKS_MODE_MOVIE);
+					actorsHistory->showGetLinksButton();
+					actorsHistory->actors.setGetLinksArgs(getLinksArgs);
+					actorsHistory->actors.setLinksMode(LINKS_MODE_MOVIE);
 				}
 			}else {
-				showLinksErrorButton();
-				linksError = DETECT_TASK;
+				actorsHistory->showLinksErrorButton();
+				actorsHistory->linksError = DETECT_TASK;
 			}
 			gdk_threads_leave();
 		}
@@ -380,8 +393,6 @@ class ActorsHistory {
 		string link = actorsHistory->onPreExecute();
 		gdk_threads_leave();
 		string page = HtmlString::getActorsPage(link);
-		//TODO: maybe call it in separate thread
-		actorsHistory->detectTask();
 		// On post execute
 		gdk_threads_enter();
 		actorsHistory->onPostExecute(page);
