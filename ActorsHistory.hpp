@@ -306,96 +306,6 @@ class ActorsHistory {
 		}
 	}
 	
-	/*void showCopyLinksDialogWithSize(PlayItem *playItem, string sizeFile, string sizeDownload) {
-		GtkWidget *dialog, *label, *content_area;
-		
-		dialog = gtk_dialog_new_with_buttons ("Copy to clipboard...",
-                                              GTK_WINDOW(window),
-                                              (GtkDialogFlags)(GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT),
-                                              NULL);
-                                              
-        if(sizeFile != "") {
-			string sizeFileTitle = "Play (" + sizeFile + " Mb)";
-			gtk_dialog_add_button(GTK_DIALOG(dialog),
-			                      sizeFileTitle.c_str(),
-			                      LINK_RESPONSE_PLAY);
-		}
-		
-		if(sizeDownload != "") {
-			string sizeDownloadTitle = "Download (" + sizeDownload + " Mb)";
-			gtk_dialog_add_button(GTK_DIALOG(dialog),
-			                      sizeDownloadTitle.c_str(),
-			                      LINK_RESPONSE_DOWNLOAD);
-		}
-		
-		gtk_dialog_add_button(GTK_DIALOG(dialog),
-		                      "Cancel",
-                              LINK_RESPONSE_CANCEL);
-          
-        content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
-	    label = gtk_label_new (playItem->comment.c_str());
-	    
-	    /* Add the label, and show everything we've added to the dialog. 
-	    gtk_container_add (GTK_CONTAINER (content_area), label);
-        gtk_widget_show_all(dialog);  
-        gint linkResponse = gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        
-        // For pasting with "paste" or ctrl-v
-        GtkClipboard* clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-        // For pasting with middle mouse button (in urxvt)
-        GtkClipboard* clipboardX = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
-        switch(linkResponse) {
-			case LINK_RESPONSE_PLAY:
-			    gtk_clipboard_set_text(clipboard,
-			                           playItem->file.c_str(),
-			                           playItem->file.size());
-			    gtk_clipboard_set_text(clipboardX,
-			                           playItem->file.c_str(),
-			                           playItem->file.size());
-			break;
-			case LINK_RESPONSE_DOWNLOAD:
-			    gtk_clipboard_set_text(clipboard,
-			                           playItem->download.c_str(),
-			                           playItem->download.size());
-			    gtk_clipboard_set_text(clipboardX,
-			                           playItem->file.c_str(),
-			                           playItem->file.size());
-			break;
-			case LINK_RESPONSE_CANCEL:
-			    // Do nothing. Dialog should already be destroyed.
-			break;
-		}
-	}*/
-	
-	/*void pasteLinksToClipboard(gint linkResponse, PlayItem *playItem) {
-		// For pasting with "paste" or ctrl-v
-        GtkClipboard* clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-        // For pasting with middle mouse button (in urxvt)
-        GtkClipboard* clipboardX = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
-        switch(linkResponse) {
-			case LINK_RESPONSE_PLAY:
-			    gtk_clipboard_set_text(clipboard,
-			                           playItem->file.c_str(),
-			                           playItem->file.size());
-			    gtk_clipboard_set_text(clipboardX,
-			                           playItem->file.c_str(),
-			                           playItem->file.size());
-			break;
-			case LINK_RESPONSE_DOWNLOAD:
-			    gtk_clipboard_set_text(clipboard,
-			                           playItem->download.c_str(),
-			                           playItem->download.size());
-			    gtk_clipboard_set_text(clipboardX,
-			                           playItem->file.c_str(),
-			                           playItem->file.size());
-			break;
-			case LINK_RESPONSE_CANCEL:
-			    // Do nothing. Dialog should already be destroyed.
-			break;
-		}
-	}*/
-	
 	static void dialogResponse(GtkWidget *dialog,
 	                           gint response_id, 
 	                           gpointer user_data) {
@@ -472,8 +382,6 @@ class ActorsHistory {
 	    gtk_container_add (GTK_CONTAINER (content_area), label);
         gtk_widget_show_all(dialog);  
         
-        //gtk_widget_destroy(dialog);
-        
 		gdk_threads_leave();
 		
 		// Async part
@@ -495,12 +403,6 @@ class ActorsHistory {
 			gtk_button_set_label(GTK_BUTTON(btnDownload), sizeDownloadTitle.c_str());
 		}
 		
-		/*gint linkResponse = gtk_dialog_run(GTK_DIALOG(dialog));
-		actorsHistory->pasteLinksToClipboard(linkResponse, playItem);*/
-		
-		/*actorsHistory->showCopyLinksDialogWithSize(playItem,
-		                                           sizeFile,
-		                                           sizeDownload);*/
 		gdk_threads_leave();
 		g_free(playItem);
 	}

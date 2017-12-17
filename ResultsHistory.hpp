@@ -56,32 +56,20 @@ class ResultsHistory {
 	
 	GtkToolItem *btnUp;
 	GtkToolItem *btnActors;
-    /*GtkWidget *spLinks;
-    GtkWidget *btnLinksError;
-    GtkWidget *btnGetLinks;
-    GtkWidget *btnListEpisodes;*/
     GtkToolItem *btnRefresh;
     
     set<int> *imageIndexes;
     
     GThreadPool *resultsNewThreadPool;
     GThreadPool *resultsAppendThreadPool;
-    //GThreadPool *detectThreadPool;
-    //GThreadPool *getLinksThreadPool;
     GThreadPool *listEpisodesThreadPool;
-    //GThreadPool *linksSizeThreadPool;
     
     ActorsHistory *actorsHistory;
     map<string, GdkPixbuf*> *imagesCache;
     
     ErrorType error;
-    //LinksErrorType linksError;
     
     string repeatTitle, repeatLink;
-    
-    /*DetectArgs *detectArgs;
-    ListEpisodesArgs *listEpisodesArgs;
-    GetLinksArgs *getLinksArgs;*/
     
     public:
     
@@ -97,10 +85,6 @@ class ResultsHistory {
                    GtkWidget *hb_results_error,
                    GtkToolItem *btn_up,
                    GtkToolItem *rb_actors,
-                   /*GtkWidget *spLinks,
-				   GtkWidget *btnLinksError,
-				   GtkWidget *btnGetLinks,
-				   GtkWidget *btnListEpisodes,*/
                    GtkToolItem *btn_refresh,
                    set<int> *ii,
                    map<string, GdkPixbuf*> *cache,
@@ -119,10 +103,6 @@ class ResultsHistory {
 		
 		btnUp = btn_up;
 		btnActors = rb_actors;
-		/*this->spLinks = spLinks;
-		this->btnLinksError = btnLinksError;
-		this->btnGetLinks = btnGetLinks;
-		this->btnListEpisodes = btnListEpisodes;*/
 		btnRefresh = btn_refresh;
 		
 		imageIndexes = ii;
@@ -144,35 +124,13 @@ class ResultsHistory {
 	                                   FALSE,
 	                                   NULL);
 	                                   
-	    // GThreadPool for detect
-	    /*detectThreadPool = g_thread_pool_new(ResultsHistory::detectTask,
-	                                   this,
-	                                   1, // Run one thread at the time
-	                                   FALSE,
-	                                   NULL);*/
-	                                   
-	    // GThreadPool for getLinks
-	    /*getLinksThreadPool = g_thread_pool_new(ResultsHistory::getLinksTask,
-	                                   this,
-	                                   1, // Run one thread at the time
-	                                   FALSE,
-	                                   NULL);*/
-	                                   
 	    // GThreadPool for listEpisodes
 	    listEpisodesThreadPool = g_thread_pool_new(ResultsHistory::listEpisodesTask,
 	                                   this,
 	                                   1, // Run one thread at the time
 	                                   FALSE,
 	                                   NULL);
-	                                   
-	    // GThreadPool for links sizes
-	    /*linksSizeThreadPool = g_thread_pool_new(ResultsHistory::linksSizeTask,
-	                                   this,
-	                                   1, // Run one thread at the time
-	                                   FALSE,
-	                                   NULL);  */                              
-	                                   
-	                                   
+	                                                               
 	    playlists = new Playlists(
 	        gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists))
         );
@@ -180,9 +138,6 @@ class ResultsHistory {
         actorsHistory = ah;
         
         error = NONE_ERROR;
-        //detectArgs = NULL;
-        //listEpisodesArgs = NULL;
-        //getLinksArgs = NULL;
 	}
 	
 	~ResultsHistory(){
@@ -246,8 +201,6 @@ class ResultsHistory {
 		actorsHistory->newThread(results->getTitle(), // For trailers detection
 		                         resultTitle, 
 		                         href);             
-	    // First step to find links
-		//detectThread(resultTitle, href);
 	}
 	
 	void newThread(string title, string url) {
@@ -309,42 +262,7 @@ class ResultsHistory {
 		                   NULL);
 	}
 	
-	/*void btnLinksErrorClicked() {
-		switch(linksError) {
-			case DETECT_TASK:
-			    g_thread_pool_push(detectThreadPool, 
-		                   (gpointer)detectArgs, 
-		                   NULL);
-			break;
-			case GET_LINKS_TASK:
-			    btnGetLinksClicked();
-			break;
-		}
-	}*/
-	
-	/*void linksSizeDialogThread(PlayItem playItem) {
-		PlayItem *playItemArg = new PlayItem();
-		playItemArg->comment = playItem.comment;
-		playItemArg->file = playItem.file;
-		playItemArg->download = playItem.download;
-		g_thread_pool_push(linksSizeThreadPool, 
-		                   (gpointer)playItemArg, 
-		                   NULL);
-	}*/
-	
 	private:
-	
-	/*void detectThread(string resultTitle, string href) {
-		// Detect is this movie or serial
-		// Free previous detect args before creating new one
-		g_free(detectArgs);
-	    detectArgs = new DetectArgs();
-	    detectArgs->title = resultTitle;
-	    detectArgs->href = href;
-		g_thread_pool_push(detectThreadPool, 
-		                   (gpointer)detectArgs, 
-		                   NULL);
-	}*/
 	
 	void scrollToTopOfList() {
 		// Scroll to the top of the list on new results (not append to list)
@@ -392,120 +310,6 @@ class ResultsHistory {
 		resultsHistory->onPostExecuteAppend(resultsAppend, res);
 		gdk_threads_leave();
 	}
-	
-    // Info links frame functions
-    /*void showSpLinks() {
-		gtk_widget_set_visible(btnGetLinks, FALSE);
-		gtk_widget_set_visible(btnListEpisodes, FALSE);
-		gtk_widget_set_visible(btnLinksError, FALSE);
-		gtk_widget_set_visible(spLinks, TRUE);
-		gtk_spinner_start(GTK_SPINNER(spLinks));
-	}
-	
-	void showListEpisodesButton() {
-		gtk_widget_set_visible(btnGetLinks, FALSE);
-		gtk_widget_set_visible(btnListEpisodes, TRUE);
-		gtk_widget_set_visible(btnLinksError, FALSE);
-		gtk_widget_set_visible(spLinks, FALSE);
-		gtk_spinner_stop(GTK_SPINNER(spLinks));
-	}
-	
-	void showGetLinksButton() {
-		gtk_widget_set_visible(btnGetLinks, TRUE);
-		gtk_widget_set_visible(btnListEpisodes, FALSE);
-		gtk_widget_set_visible(btnLinksError, FALSE);
-		gtk_widget_set_visible(spLinks, FALSE);
-		gtk_spinner_stop(GTK_SPINNER(spLinks));
-	}
-	
-	void showLinksErrorButton() {
-		gtk_widget_set_visible(btnGetLinks, FALSE);
-		gtk_widget_set_visible(btnListEpisodes, FALSE);
-		gtk_widget_set_visible(btnLinksError, TRUE);
-		gtk_widget_set_visible(spLinks, FALSE);
-		gtk_spinner_stop(GTK_SPINNER(spLinks));
-	}*/
-	
-	/*static void detectTask(gpointer args, gpointer args2) {
-	    ResultsHistory *resultsHistory = (ResultsHistory *)args2;
-	    DetectArgs *detectArgs = (DetectArgs *)args;
-		string id = PlaylistsUtils::getHrefId(detectArgs->href);	
-		if(!id.empty()) {
-			string url = PlaylistsUtils::getUrl(id);
-			string referer = PlaylistsUtils::getReferer(id);
-			// On pre execute
-			gdk_threads_enter();
-			// Show links spinner
-			resultsHistory->showSpLinks();
-			gdk_threads_leave();
-			
-			string js = HtmlString::getPage(url, referer);
-			
-			gdk_threads_enter();
-			if(!js.empty()) {
-				string playlist_link = PlaylistsUtils::get_txt_link(js);
-				if(!playlist_link.empty()) { // Playlists found
-					resultsHistory->showListEpisodesButton();
-					// Free previous object before creating new one
-					g_free(resultsHistory->listEpisodesArgs);
-					resultsHistory->listEpisodesArgs = new ListEpisodesArgs();
-					resultsHistory->listEpisodesArgs->title = detectArgs->title;
-					resultsHistory->listEpisodesArgs->playlist_link = playlist_link;
-				}else {
-					// Free previous object before creating new one
-					g_free(resultsHistory->getLinksArgs);
-					resultsHistory->getLinksArgs = new GetLinksArgs();
-					resultsHistory->getLinksArgs->js = js;
-					resultsHistory->getLinksArgs->href = detectArgs->href;
-					resultsHistory->getLinksArgs->referer = referer; 
-					resultsHistory->showGetLinksButton();
-				}
-			}else {
-				resultsHistory->showLinksErrorButton();
-				resultsHistory->linksError = DETECT_TASK;
-			}
-			gdk_threads_leave();
-		}
-	}*/
-	
-	/*static void getLinksTask(gpointer args, gpointer args2) {
-		ResultsHistory *resultsHistory = (ResultsHistory *)args2;
-		GetLinksArgs *getLinksArgs = (GetLinksArgs *)args;
-		// On pre execute
-		gdk_threads_enter();
-		// Show links spinner
-		resultsHistory->showSpLinks();
-		gdk_threads_leave();
-		PlayItem playItem = PlaylistsUtils::parse_play_item(getLinksArgs->js, FALSE);
-		if(!playItem.comment.empty()) { // PlayItem found
-			gdk_threads_enter();
-			resultsHistory->showGetLinksButton();
-		    resultsHistory->linksSizeDialogThread(playItem);
-		    gdk_threads_leave();
-		}else {
-			gdk_threads_enter();
-			size_t trailersFound = resultsHistory->results->getTitle().find("Трейлеры");
-			gdk_threads_leave();
-			if(trailersFound != string::npos) {
-				// Searching for alternative trailers links
-	            string infoHtml = HtmlString::getPage(getLinksArgs->href,
-	                                                  getLinksArgs->referer);
-	            string trailerId = PlaylistsUtils::getTrailerId(infoHtml); 
-	            string url = PlaylistsUtils::getTrailerUrl(trailerId);
-	            string referer = PlaylistsUtils::getTrailerReferer(trailerId);
-	            string json = HtmlString::getPage(url, referer);
-				gdk_threads_enter();
-				resultsHistory->showGetLinksButton();
-		        resultsHistory->linksSizeDialogThread(PlaylistsUtils::parse_play_item(json));
-				gdk_threads_leave();
-			}else {
-				gdk_threads_enter();
-				resultsHistory->showLinksErrorButton();
-				resultsHistory->linksError = GET_LINKS_TASK;
-			    gdk_threads_leave();
-			}
-		}
-	} */
 	
 	static void listEpisodesTask(gpointer args, gpointer args2) {
 		ResultsHistory *resultsHistory = (ResultsHistory *)args2;
