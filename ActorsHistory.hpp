@@ -344,11 +344,16 @@ class ActorsHistory {
 		
 		// On pre execute
 		gdk_threads_enter();
+		// Create dialog, add buttons to it, get size information and display it
 		GtkWidget *dialog, 
 		          *label, 
 		          *content_area,
 		          *btnPlay,
-		          *btnDownload;
+		          *btnDownload,
+		          *spDialog;
+		          
+		spDialog = gtk_spinner_new();
+		gtk_widget_set_size_request(spDialog, 32, 32);
 		
 		dialog = gtk_dialog_new_with_buttons ("Copy to clipboard...",
                                               GTK_WINDOW(actorsHistory->window),
@@ -379,8 +384,13 @@ class ActorsHistory {
 	    label = gtk_label_new (playItem->comment.c_str());
 	    
 	    /* Add the label, and show everything we've added to the dialog. */
-	    gtk_container_add (GTK_CONTAINER (content_area), label);
-        gtk_widget_show_all(dialog);  
+	    //gtk_container_add (GTK_CONTAINER (content_area), label);
+	    gtk_box_pack_start(GTK_BOX(content_area), spDialog, TRUE, FALSE, 1);
+	    gtk_box_pack_start(GTK_BOX(content_area), label, TRUE, FALSE, 1);
+        gtk_widget_show_all(dialog); 
+        // Hide label (title) and show spinner
+        gtk_widget_set_visible(label, FALSE);
+        gtk_spinner_start(GTK_SPINNER(spDialog)); 
         
 		gdk_threads_leave();
 		
@@ -391,6 +401,11 @@ class ActorsHistory {
 		
 		gdk_threads_enter();
 		//On post execute
+		// Show label (title) and hide spinner
+		gtk_widget_set_visible(label, TRUE);
+		gtk_spinner_stop(GTK_SPINNER(spDialog));
+		gtk_widget_set_visible(spDialog, FALSE);
+		
 		if(sizeFile != "") {
 			string sizeFileTitle = "Play (" + sizeFile + " Mb)";
 			gtk_widget_set_sensitive(btnPlay, TRUE);
