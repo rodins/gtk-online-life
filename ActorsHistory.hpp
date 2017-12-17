@@ -336,6 +336,7 @@ class ActorsHistory {
 			    // Do nothing. Dialog should already be destroyed.
 			break;
 		}
+		g_free(playItem);
 	}
 	
 	static void linksSizeTask(gpointer args, gpointer args2) {
@@ -386,7 +387,7 @@ class ActorsHistory {
 	    /* Add the label, and show everything we've added to the dialog. */
 	    //gtk_container_add (GTK_CONTAINER (content_area), label);
 	    gtk_box_pack_start(GTK_BOX(content_area), spDialog, TRUE, FALSE, 1);
-	    gtk_box_pack_start(GTK_BOX(content_area), label, TRUE, FALSE, 1);
+	    gtk_box_pack_start(GTK_BOX(content_area), label, TRUE, FALSE, 5);
         gtk_widget_show_all(dialog); 
         // Hide label (title) and show spinner
         gtk_widget_set_visible(label, FALSE);
@@ -419,7 +420,6 @@ class ActorsHistory {
 		}
 		
 		gdk_threads_leave();
-		g_free(playItem);
 	}
 	
 	static void actorsTask(gpointer args, gpointer args2) {
