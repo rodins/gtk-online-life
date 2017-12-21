@@ -307,7 +307,7 @@ int main( int   argc,
 	
 	GtkWidget *frRightBottom;
 	GtkWidget *lbInfo;
-	GtkWidget *frRightTop, *frInfo, *frLinks;
+	GtkWidget *frRightTop, *frInfo, *frLinks, *frSave;
 	GtkWidget *spActors, *spLinks;
     GtkWidget *hbActorsError;
     
@@ -330,8 +330,12 @@ int main( int   argc,
     GtkWidget *btnCategoriesError;
     GtkWidget *btnActorsError;
     
-    GtkWidget *btnGetLinks, *btnListEpisodes, *btnLinksError;
-    GtkWidget *hbLinks;
+    GtkWidget *btnGetLinks, 
+              *btnListEpisodes, 
+              *btnLinksError, 
+              *btnSave,
+              *btnDelete;
+    GtkWidget *hbLinks, *hbSave;
     
 	GtkToolItem *btnCategories;
 	GtkToolItem *btnRefresh;
@@ -572,10 +576,20 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(hbLinks), btnListEpisodes, TRUE, FALSE, 10);
     gtk_container_add(GTK_CONTAINER(frLinks), hbLinks);
     
+    // Save frame in actors pane
+    frSave = gtk_frame_new("Save");
+    btnSave = gtk_button_new_with_label("Save");
+    btnDelete = gtk_button_new_with_label("Delete");
+    hbSave = gtk_hbox_new(FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(hbSave), btnSave, TRUE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbSave), btnDelete, TRUE, FALSE, 10);
+    gtk_container_add(GTK_CONTAINER(frSave), hbSave);
+    
     gtk_box_pack_start(GTK_BOX(hbActorsError), btnActorsError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbRight), spActors, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), hbActorsError, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), frLinks, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbRight), frSave, FALSE, FALSE, 1);
     gtk_widget_set_size_request(spActors, 32, 32);
     gtk_widget_set_size_request(spLinks, 32, 32);
     
@@ -764,6 +778,7 @@ int main( int   argc,
     gtk_widget_set_visible(btnLinksError, FALSE);
     gtk_widget_set_visible(btnGetLinks, FALSE);
     gtk_widget_set_visible(btnListEpisodes, FALSE);
+    gtk_widget_set_visible(btnDelete, FALSE);
     
     gtk_widget_set_visible(hbResultsError, FALSE);
                                    
