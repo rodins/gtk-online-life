@@ -193,6 +193,14 @@ class ActorsHistory {
 		}
 	}
 	
+	void btnSaveClicked() {
+		cout << "Not yet implemented: btnSave" << endl;
+	}
+	
+	void btnDeleteClicked() {
+		cout << "Not yet implemented: btnDelete" << endl;
+	}
+	
 	private:
 	
 	// Info links frame functions

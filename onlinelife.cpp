@@ -298,6 +298,16 @@ static void btnListEpisodesClicked(GtkWidget *widget, gpointer data) {
 	resultsHistory->btnListEpisodesClicked();
 }
 
+static void btnSaveClicked(GtkWidget *widget, gpointer data) {
+	ActorsHistory *actorsHistory = (ActorsHistory *)data;
+	actorsHistory->btnSaveClicked();
+}
+
+static void btnDeleteClicked(GtkWidget *widget, gpointer data) {
+	ActorsHistory *actorsHistory = (ActorsHistory *)data;
+	actorsHistory->btnDeleteClicked();
+}
+
 int main( int   argc,
           char *argv[] )
 {   
@@ -644,6 +654,16 @@ int main( int   argc,
     g_signal_connect(btnGetLinks,
                      "clicked",
                      G_CALLBACK(btnGetLinksClicked),
+                     actorsHistory);
+                     
+    g_signal_connect(btnSave,
+                     "clicked",
+                     G_CALLBACK(btnSaveClicked),
+                     actorsHistory);
+                     
+    g_signal_connect(btnDelete,
+                     "clicked",
+                     G_CALLBACK(btnDeleteClicked),
                      actorsHistory);
     
 	ResultsHistory *resultsHistory = new ResultsHistory(window,
