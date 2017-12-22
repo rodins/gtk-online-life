@@ -3,7 +3,6 @@
 #include <string>
 #include <iostream>
 #include <stdlib.h>
-#include <fstream>
 #include <string.h>
 #include <map>
 #include <set>
@@ -24,21 +23,6 @@
 #include "ImagesDownloader.hpp"
 
 using namespace std;
-
-/*string readFromFile(string filename) {
-	ifstream in(filename.c_str());
-	if(in) {
-		return string((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
-	}
-	return "";
-}
-
-void writeToFile(string filename, string input) {
-	ofstream out(filename.c_str());
-	if(out) {
-		out << input;
-	}
-}*/
 
 void categoriesClicked(GtkTreeView *treeView,
                        GtkTreePath *path,

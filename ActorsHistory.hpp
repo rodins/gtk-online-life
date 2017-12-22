@@ -1,5 +1,6 @@
 //ActorsHistory.hpp
 #include "Actors.hpp"
+#include "FileUtils.hpp"
 
 enum LinkResponse {
 	LINK_RESPONSE_PLAY,
@@ -194,7 +195,7 @@ class ActorsHistory {
 	}
 	
 	void btnSaveClicked() {
-		cout << "Not yet implemented: btnSave" << endl;
+		FileUtils::writeToFile(actors.getTitle(), actors.getUrl());
 	}
 	
 	void btnDeleteClicked() {
