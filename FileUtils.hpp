@@ -25,4 +25,9 @@ class FileUtils {
 			out << input;
 		}
 	}
+	
+	static bool isTitleSaved(string title) {
+		string filename = homeAppSavesDir + "/" + title;
+		return g_file_test(filename.c_str(), G_FILE_TEST_EXISTS);
+	}
 };

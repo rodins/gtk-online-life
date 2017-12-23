@@ -37,6 +37,8 @@ class ActorsHistory {
     GtkWidget *btnLinksError;
     GtkWidget *btnGetLinks;
     GtkWidget *btnListEpisodes;
+    GtkWidget *btnSave;
+    GtkWidget *btnDelete;
     
     LinksErrorType linksError;
     
@@ -55,7 +57,9 @@ class ActorsHistory {
                   GtkWidget *spLinks,
 				  GtkWidget *btnLinksError,
 				  GtkWidget *btnGetLinks,
-				  GtkWidget *btnListEpisodes) {
+				  GtkWidget *btnListEpisodes,
+				  GtkWidget *btnSave,
+				  GtkWidget *btnDelete) {
 		this->window = window;			  
 		tvActors = a;
 		tvBackActors = pa;
@@ -72,6 +76,9 @@ class ActorsHistory {
 		this->btnLinksError = btnLinksError;
 		this->btnGetLinks = btnGetLinks;
 		this->btnListEpisodes = btnListEpisodes;
+		
+		this->btnSave = btnSave;
+		this->btnDelete = btnDelete;
 		
 		icon = IconsFactory::getLinkIcon();
 		
@@ -196,6 +203,10 @@ class ActorsHistory {
 	
 	void btnSaveClicked() {
 		FileUtils::writeToFile(actors.getTitle(), actors.getUrl());
+		if(FileUtils::isTitleSaved(actors.getTitle())) {
+			gtk_widget_set_visible(btnSave, FALSE);
+			gtk_widget_set_visible(btnDelete, TRUE);
+		}
 	}
 	
 	void btnDeleteClicked() {

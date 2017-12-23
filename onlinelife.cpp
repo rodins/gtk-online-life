@@ -608,7 +608,9 @@ int main( int   argc,
                                                      spLinks,
                                                      btnLinksError,
                                                      btnGetLinks,
-                                                     btnListEpisodes);
+                                                     btnListEpisodes,
+                                                     btnSave,
+                                                     btnDelete);
                                                      
     g_signal_connect(selection,
 	                 "changed", 
