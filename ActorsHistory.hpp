@@ -470,7 +470,7 @@ class ActorsHistory {
 	}
 	
 	void updateActors() {
-		gtk_label_set_text(GTK_LABEL(lbInfo), actors.getTitle().c_str());
+		gtk_label_set_text(GTK_LABEL(lbInfo), actors.getInfo().c_str());
 		GtkTreeModel *model;
 		model = actors.getModel();
 	    gtk_tree_view_set_model(GTK_TREE_VIEW(tvActors), model);

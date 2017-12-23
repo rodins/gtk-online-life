@@ -19,6 +19,7 @@ enum LinksMode {
 class Actors {
     string actorsTitle;
     string resultsTitle;
+    string info;
     
     GtkListStore *store;
     GtkTreeIter iter;
@@ -94,6 +95,10 @@ class Actors {
 	string& getTitle() {
 		return actorsTitle;
 	}
+	
+	string& getInfo() {
+		return info;
+	}
     
     void parse(string &page) {
 		count = 0;
@@ -106,7 +111,7 @@ class Actors {
 		page = to_utf8(page);
 		string year = parse_simple_info(page, "Год: ");
 		string country = parse_simple_info(page, "Страна: ");
-		actorsTitle = actorsTitle + " - " + year + " - " + country;
+		info = actorsTitle + " - " + year + " - " + country;
 		parse_info(page, "Режиссер:", " (режиссер)");
 		parse_info(page, "В ролях:", "");
 	}
