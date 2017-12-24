@@ -212,7 +212,8 @@ class ActorsHistory {
 	}
 	
 	void btnDeleteClicked() {
-		cout << "Not yet implemented: btnDelete" << endl;
+		FileUtils::removeFile(actors.getTitle());
+		showSaveOrDeleteButton();
 	}
 	
 	private:
