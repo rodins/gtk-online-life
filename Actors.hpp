@@ -34,10 +34,13 @@ class Actors {
     ListEpisodesArgs listEpisodesArgs;
     LinksMode linksMode;
     
+    bool networkOk;
+    
     public:
     
     Actors() {
 	    count = 0;	
+	    networkOk = FALSE;
 	}
 	
 	void setUrl(string u) {
@@ -98,6 +101,14 @@ class Actors {
 	
 	string& getInfo() {
 		return info;
+	}
+	
+	void setNetworkOk(bool isOk) {
+		networkOk = isOk;
+	}
+	
+	bool isNetworkOk() {
+		return networkOk;
 	}
     
     void parse(string &page) {

@@ -112,12 +112,14 @@ class ActorsHistory {
 	} 
 	
     void newThread(string resultsTitle, string title, string href) {
-		if(!actors.getTitle().empty()) {
+		if(!actors.getTitle().empty() && actors.isNetworkOk()) {
 			prevActors = actors;
 		}
 		actors.setResultsTitle(resultsTitle);// for trailers detection
 		actors.setTitle(title);
 		actors.setUrl(href);
+		actors.setNetworkOk(FALSE);
+		showSaveOrDeleteButton();
 		newThread();
 		detectThread();
 	}
@@ -157,6 +159,9 @@ class ActorsHistory {
 			    showListEpisodesButton();
 			break;
 		}
+		
+		// Save or delete button change
+		showSaveOrDeleteButton();
 	}
 	
 	void btnActorsClicked(GtkWidget *widget) {
@@ -203,10 +208,7 @@ class ActorsHistory {
 	
 	void btnSaveClicked() {
 		FileUtils::writeToFile(actors.getTitle(), actors.getUrl());
-		if(FileUtils::isTitleSaved(actors.getTitle())) {
-			gtk_widget_set_visible(btnSave, FALSE);
-			gtk_widget_set_visible(btnDelete, TRUE);
-		}
+		showSaveOrDeleteButton();
 	}
 	
 	void btnDeleteClicked() {
@@ -214,6 +216,16 @@ class ActorsHistory {
 	}
 	
 	private:
+	
+	void showSaveOrDeleteButton() {
+		if(FileUtils::isTitleSaved(actors.getTitle())) {
+			gtk_widget_set_visible(btnSave, FALSE);
+			gtk_widget_set_visible(btnDelete, TRUE);
+		}else {
+			gtk_widget_set_visible(btnSave, TRUE);
+			gtk_widget_set_visible(btnDelete, FALSE);
+		}
+	}
 	
 	// Info links frame functions
     void showSpLinks() {
@@ -512,6 +524,7 @@ class ActorsHistory {
 	
 	void onPostExecute(string &page) {
 		if(!page.empty()) {
+			actors.setNetworkOk(TRUE);
 			actors.parse(page);
 			// Save to back actors map
 			if(backActors.count(prevActors.getTitle()) == 0 
