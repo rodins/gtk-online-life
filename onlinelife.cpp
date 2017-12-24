@@ -301,7 +301,12 @@ int main( int   argc,
 	
 	GtkWidget *frRightBottom;
 	GtkWidget *lbInfo;
-	GtkWidget *frRightTop, *frInfo, *frLinks, *frSave;
+	GtkWidget *frRightTop,
+	          *frInfo,
+	          *frLinks, 
+	          *frSave,
+	          *frSavedItems;
+	          
 	GtkWidget *spActors, *spLinks;
     GtkWidget *hbActorsError;
     
@@ -311,10 +316,15 @@ int main( int   argc,
     GtkWidget *btnResultsError;
     
     GtkWidget *vbLeft, *vbRight;
-    GtkWidget *tvCategories, *tvActors, *tvBackActors;
+    GtkWidget *tvCategories, 
+              *tvActors, 
+              *tvBackActors,
+              *tvSavedItems;
+              
     GtkWidget *spCategories;
     GtkWidget *hbCategoriesError;
-    GtkWidget *swLeftTop;
+    GtkWidget *swLeftTop,
+              *swSavedItems;
 	
     GtkWidget *vbox;
     GtkWidget *toolbar; 
@@ -495,10 +505,12 @@ int main( int   argc,
 
     tvCategories = createTreeView();
     tvActors = createTreeView();
+    tvSavedItems = createTreeView();
     
     swLeftTop = gtk_scrolled_window_new(NULL, NULL);
     swRightTop = gtk_scrolled_window_new(NULL, NULL);
     swRightBottom = gtk_scrolled_window_new(NULL, NULL);
+    swSavedItems = gtk_scrolled_window_new(NULL, NULL);
     
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swLeftTop),
             GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
@@ -512,6 +524,11 @@ int main( int   argc,
             GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swRightBottom),
             GTK_SHADOW_ETCHED_IN);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swSavedItems),
+            GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swSavedItems),
+            GTK_SHADOW_ETCHED_IN);
+    
     
     vbLeft = gtk_vbox_new(FALSE, 1);
     vbRight = gtk_vbox_new(FALSE, 1);
@@ -525,6 +542,7 @@ int main( int   argc,
     gtk_container_add(GTK_CONTAINER(swLeftTop), tvCategories);
     gtk_container_add(GTK_CONTAINER(swRightTop), tvActors);
     gtk_container_add(GTK_CONTAINER(swRightBottom), tvBackActors);
+    gtk_container_add(GTK_CONTAINER(swSavedItems), tvSavedItems);
     
     // Frames
     frRightTop = gtk_frame_new("Actors");
@@ -535,10 +553,15 @@ int main( int   argc,
     spCategories = gtk_spinner_new();
     btnCategoriesError = gtk_button_new_with_label("Repeat");
     
+    // Saved items frame
+    frSavedItems = gtk_frame_new("Saved items");
+    gtk_container_add(GTK_CONTAINER(frSavedItems), swSavedItems);
+    
     gtk_box_pack_start(GTK_BOX(hbCategoriesError), btnCategoriesError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbLeft), swLeftTop, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeft), spCategories, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeft), hbCategoriesError, TRUE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbLeft), frSavedItems, TRUE, TRUE, 1);
     
     gtk_container_add(GTK_CONTAINER(frRightTop), swRightTop);
     gtk_container_add(GTK_CONTAINER(frRightBottom), swRightBottom);
