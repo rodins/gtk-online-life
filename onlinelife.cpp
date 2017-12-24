@@ -192,6 +192,7 @@ static void btnCategoriesClicked(GtkWidget *widget,
                                  gpointer data) {
 	CategoriesWidgets *categoriesWidgets = (CategoriesWidgets *)data;
 	categoriesWidgets->btnCategoriesClicked();	
+	FileUtils::listSavedFiles();
 }
 
 static void btnUpClicked( GtkWidget *widget,

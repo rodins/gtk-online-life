@@ -35,4 +35,17 @@ class FileUtils {
 		string filename = homeAppSavesDir + "/" + title;
 		g_remove(filename.c_str());
 	}
+	
+	static vector<string> listSavedFiles() {
+		vector<string> output;
+		GDir *dir;
+		const gchar *filename;
+		
+		dir = g_dir_open(homeAppSavesDir.c_str(), 0, NULL);
+		while ((filename = g_dir_read_name(dir))) {
+		    printf("%s\n", filename);
+		    output.push_back(filename);
+		}
+		return output;
+	}
 };
