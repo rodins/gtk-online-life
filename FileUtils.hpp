@@ -36,16 +36,25 @@ class FileUtils {
 		g_remove(filename.c_str());
 	}
 	
-	static vector<string> listSavedFiles() {
-		vector<string> output;
+	static void listSavedFiles(GtkWidget *tvSavedItems) {
+		GtkListStore *storeSavedItems = GTK_LIST_STORE(gtk_tree_view_get_model(
+		                                GTK_TREE_VIEW(tvSavedItems)));
+		gtk_list_store_clear(storeSavedItems);
+		GdkPixbuf *icon = IconsFactory::getLinkIcon();
+		GtkTreeIter iter;
 		GDir *dir;
 		const gchar *filename;
 		
 		dir = g_dir_open(homeAppSavesDir.c_str(), 0, NULL);
 		while ((filename = g_dir_read_name(dir))) {
-		    printf("%s\n", filename);
-		    output.push_back(filename);
+			gtk_list_store_append(storeSavedItems, &iter);
+		    gtk_list_store_set(storeSavedItems, 
+		                       &iter, 
+		                       IMAGE_COLUMN, 
+		                       icon,
+		                       TITLE_COLUMN, 
+		                       filename,
+		                       -1);
 		}
-		return output;
 	}
 };

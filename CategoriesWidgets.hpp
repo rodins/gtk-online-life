@@ -9,16 +9,18 @@ class CategoriesWidgets {
     GtkWidget *hbCategoriesError;
     
     GtkWidget *tvCategories;
+    GtkWidget *tvSavedItems;
     public:
     
     CategoriesWidgets(GtkWidget *vb_left, GtkWidget *sw_left_top,
                       GtkWidget *sp_categories, GtkWidget *hb_categories_error,
-                      GtkWidget *tv_categories) {
+                      GtkWidget *tv_categories, GtkWidget *tvSavedItems) {
 	    vbLeft = vb_left;
 	    swLeftTop = sw_left_top;
 	    spCategories = sp_categories;
 	    hbCategoriesError = hb_categories_error;
-	    tvCategories = tv_categories;		  
+	    tvCategories = tv_categories;
+	    this->tvSavedItems = tvSavedItems;		  
 	}
 	
 	void btnCategoriesClicked() {
@@ -32,6 +34,9 @@ class CategoriesWidgets {
 			}else {
 				gtk_widget_set_visible(vbLeft, TRUE);
 			}
+			
+			// Manage saved items
+			FileUtils::listSavedFiles(tvSavedItems);
 		}else { // Categories visible
 			gtk_widget_set_visible(vbLeft, FALSE);
 		}

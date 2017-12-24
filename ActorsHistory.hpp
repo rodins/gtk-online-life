@@ -505,8 +505,8 @@ class ActorsHistory {
 		gtk_widget_set_visible(frRightBottom, TRUE);
 		
 		GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(
-		    GTK_TREE_VIEW(tvBackActors)));
-		GtkTreeIter iter;
+		                      GTK_TREE_VIEW(tvBackActors)));
+		GtkTreeIter iter; // TODO: make iter class member
 		
 		gtk_list_store_append(store, &iter);
 	    gtk_list_store_set(store, 

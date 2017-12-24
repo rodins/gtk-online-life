@@ -174,15 +174,19 @@ GtkWidget *createTreeView(void) {
 	view = gtk_tree_view_new();
 	
 	renderer = gtk_cell_renderer_pixbuf_new();
-	col = gtk_tree_view_column_new_with_attributes ("Image", renderer,
-                                                      "pixbuf", IMAGE_COLUMN,
-                                                      NULL);
+	col = gtk_tree_view_column_new_with_attributes ("Image", 
+	                                                renderer,
+                                                    "pixbuf", 
+                                                    IMAGE_COLUMN,
+                                                    NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 	
-	renderer = gtk_cell_renderer_text_new();
-	col = gtk_tree_view_column_new_with_attributes ("Title", renderer,
-                                                      "text", TITLE_COLUMN,
-                                                      NULL);
+    renderer = gtk_cell_renderer_text_new();
+	col = gtk_tree_view_column_new_with_attributes ("Title", 
+	                                                renderer,
+                                                    "text", 
+                                                    TITLE_COLUMN,
+                                                    NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 	gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(view), FALSE);
 	return view;
@@ -192,7 +196,6 @@ static void btnCategoriesClicked(GtkWidget *widget,
                                  gpointer data) {
 	CategoriesWidgets *categoriesWidgets = (CategoriesWidgets *)data;
 	categoriesWidgets->btnCategoriesClicked();	
-	FileUtils::listSavedFiles();
 }
 
 static void btnUpClicked( GtkWidget *widget,
@@ -496,8 +499,9 @@ int main( int   argc,
     
     tvBackActors = createTreeView();
     // Set up store
-    GtkListStore *store 
-        = gtk_list_store_new(NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING);    
+    GtkListStore *store = gtk_list_store_new(NUM_COLS, 
+                                             GDK_TYPE_PIXBUF, 
+                                             G_TYPE_STRING);    
     gtk_tree_view_set_model(GTK_TREE_VIEW(tvBackActors), 
         GTK_TREE_MODEL(store));
 	g_object_unref(store);
@@ -506,7 +510,14 @@ int main( int   argc,
 
     tvCategories = createTreeView();
     tvActors = createTreeView();
+    
+    GtkListStore *savedItemsStore = gtk_list_store_new(NUM_COLS, 
+                                                       GDK_TYPE_PIXBUF,
+                                                       G_TYPE_STRING);  // Title                                                  
     tvSavedItems = createTreeView();
+    gtk_tree_view_set_model(GTK_TREE_VIEW(tvSavedItems), 
+                            GTK_TREE_MODEL(savedItemsStore));
+    g_object_unref(savedItemsStore);
     
     swLeftTop = gtk_scrolled_window_new(NULL, NULL);
     swRightTop = gtk_scrolled_window_new(NULL, NULL);
@@ -756,7 +767,8 @@ int main( int   argc,
                                                swLeftTop,
                                                spCategories,
                                                hbCategoriesError,
-                                               tvCategories
+                                               tvCategories,
+                                               tvSavedItems
                                            );
                                            
     g_signal_connect(btnCategoriesError, 
