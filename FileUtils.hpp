@@ -8,8 +8,8 @@ string homeAppSavesDir = string(g_get_home_dir()) + "/.gtk_online_life/saves";
 class FileUtils {
 	public:
 	
-    static string readFromFile(string filename) { 
-		filename = homeAppSavesDir + "/" + filename;
+    static string readFromFile(string title) { 
+		string filename = homeAppSavesDir + "/" + title;
 		ifstream in(filename.c_str());
 		if(in) {
 			return string((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
@@ -17,9 +17,9 @@ class FileUtils {
 		return "";
 	}
 	
-	static void writeToFile(string filename, string input) {
+	static void writeToFile(string title, string input) {
 		g_mkdir_with_parents(homeAppSavesDir.c_str(), S_IRWXU); 
-		filename = homeAppSavesDir + "/" + filename;
+		string filename = homeAppSavesDir + "/" + title;
 		ofstream out(filename.c_str());
 		if(out) {
 			out << input;
