@@ -322,7 +322,6 @@ void tvSavedItemsClicked(GtkTreeView *treeView,
 	actorsHistory->newThread("", //TODO: Save and get results title for trailers detection
 		                     filename, 
 		                     link);
-	
 	g_free(filename);                              
 }
 
@@ -677,7 +676,8 @@ int main( int   argc,
                                                      btnGetLinks,
                                                      btnListEpisodes,
                                                      btnSave,
-                                                     btnDelete);
+                                                     btnDelete,
+                                                     tvSavedItems);
                                                      
     g_signal_connect(selection,
 	                 "changed", 

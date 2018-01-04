@@ -39,6 +39,7 @@ class ActorsHistory {
     GtkWidget *btnListEpisodes;
     GtkWidget *btnSave;
     GtkWidget *btnDelete;
+    GtkWidget *tvSavedItems;
     
     LinksErrorType linksError;
     
@@ -59,7 +60,8 @@ class ActorsHistory {
 				  GtkWidget *btnGetLinks,
 				  GtkWidget *btnListEpisodes,
 				  GtkWidget *btnSave,
-				  GtkWidget *btnDelete) {
+				  GtkWidget *btnDelete,
+				  GtkWidget *tvSavedItems) {
 		this->window = window;			  
 		tvActors = a;
 		tvBackActors = pa;
@@ -79,6 +81,7 @@ class ActorsHistory {
 		
 		this->btnSave = btnSave;
 		this->btnDelete = btnDelete;
+		this->tvSavedItems = tvSavedItems;
 		
 		icon = IconsFactory::getLinkIcon();
 		
@@ -226,6 +229,8 @@ class ActorsHistory {
 			gtk_widget_set_visible(btnSave, TRUE);
 			gtk_widget_set_visible(btnDelete, FALSE);
 		}
+		// Update file list
+		FileUtils::listSavedFiles(tvSavedItems);
 	}
 	
 	// Info links frame functions

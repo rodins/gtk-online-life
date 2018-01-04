@@ -55,7 +55,7 @@ class FileUtils {
 			                       icon,
 			                       TITLE_COLUMN, 
 			                       filename,
-			                       -1);                   
+			                       -1);                                    
 			}
 			g_dir_close(dir);
 		}
