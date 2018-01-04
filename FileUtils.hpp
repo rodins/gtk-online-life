@@ -46,15 +46,18 @@ class FileUtils {
 		const gchar *filename;
 		
 		dir = g_dir_open(homeAppSavesDir.c_str(), 0, NULL);
-		while ((filename = g_dir_read_name(dir))) {
-			gtk_list_store_append(storeSavedItems, &iter);
-		    gtk_list_store_set(storeSavedItems, 
-		                       &iter, 
-		                       IMAGE_COLUMN, 
-		                       icon,
-		                       TITLE_COLUMN, 
-		                       filename,
-		                       -1);
+		if(dir != NULL) {
+			while ((filename = g_dir_read_name(dir))) {
+				gtk_list_store_append(storeSavedItems, &iter);
+			    gtk_list_store_set(storeSavedItems, 
+			                       &iter, 
+			                       IMAGE_COLUMN, 
+			                       icon,
+			                       TITLE_COLUMN, 
+			                       filename,
+			                       -1);                   
+			}
+			g_dir_close(dir);
 		}
 	}
 };

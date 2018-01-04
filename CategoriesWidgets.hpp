@@ -49,7 +49,7 @@ class CategoriesWidgets {
 			}
 			
 			// Manage saved items
-			//FileUtils::listSavedFiles(tvSavedItems);
+			FileUtils::listSavedFiles(tvSavedItems);
 		}else { // Categories visible
 			gtk_widget_set_visible(vbLeft, FALSE);
 		}
