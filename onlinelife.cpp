@@ -296,6 +296,31 @@ static void btnDeleteClicked(GtkWidget *widget, gpointer data) {
 	actorsHistory->btnDeleteClicked();
 }
 
+void tvSavedItemsClicked(GtkTreeView *treeView,
+                     GtkTreePath *path,
+                     GtkTreeViewColumn *column,
+                     gpointer data) {
+    ActorsHistory *actorsHistory = (ActorsHistory *)data;
+	// Get model from tree view
+	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
+	
+	// Get iter from path
+	GtkTreeIter iter;
+	gtk_tree_model_get_iter(model, &iter, path);
+	
+	// Get title and link
+	gchar *filename = NULL;
+	gtk_tree_model_get(model,
+	                   &iter, 
+	                   TITLE_COLUMN,
+	                   &filename,
+	                   -1);   
+	                   
+	cout << "Filename: " << filename << endl;
+	
+	g_free(filename);                              
+}
+
 int main( int   argc,
           char *argv[] )
 {   
@@ -687,6 +712,11 @@ int main( int   argc,
     g_signal_connect(btnDelete,
                      "clicked",
                      G_CALLBACK(btnDeleteClicked),
+                     actorsHistory);
+                     
+    g_signal_connect(tvSavedItems,
+                     "row-activated", 
+                     G_CALLBACK(tvSavedItemsClicked), 
                      actorsHistory);
     
 	ResultsHistory *resultsHistory = new ResultsHistory(window,
