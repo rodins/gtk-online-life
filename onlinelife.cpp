@@ -315,8 +315,13 @@ void tvSavedItemsClicked(GtkTreeView *treeView,
 	                   TITLE_COLUMN,
 	                   &filename,
 	                   -1);   
-	                   
-	cout << "Filename: " << filename << endl;
+
+	// Read file. Get link.
+	string link = FileUtils::readFromFile(filename);
+	
+	actorsHistory->newThread("", //TODO: Save and get results title for trailers detection
+		                     filename, 
+		                     link);
 	
 	g_free(filename);                              
 }
