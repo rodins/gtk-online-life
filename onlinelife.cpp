@@ -240,9 +240,9 @@ static void backActorsChanged(GtkTreeSelection *treeselection, gpointer data) {
 }
 
 static void btnCategoriesRepeatClicked(GtkWidget *widget, gpointer data) {
+	CategoriesWidgets *categoriesWidgets = (CategoriesWidgets *)data;
 	//Starting new thread to get categories from the net
-	// TODO: maybe should use thread pool here  
-    g_thread_new(NULL, CategoriesWidgets::categoriesTask, data);
+	categoriesWidgets->newThread();
 }
 
 static void btnActorsRepeatClicked(GtkWidget *widget, gpointer data) {
@@ -365,6 +365,8 @@ int main( int   argc,
 	
 	 /* Must initialize libcurl before any threads are started */ 
     curl_global_init(CURL_GLOBAL_ALL);
+    
+    g_thread_init(NULL); // for Wary-5.5 (old gtk)
     
     gdk_threads_init ();
     gdk_threads_enter ();

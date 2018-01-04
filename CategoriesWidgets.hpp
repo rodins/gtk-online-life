@@ -10,6 +10,8 @@ class CategoriesWidgets {
     
     GtkWidget *tvCategories;
     GtkWidget *tvSavedItems;
+    
+    GThreadPool *categoriesThreadPool;
     public:
     
     CategoriesWidgets(GtkWidget *vb_left, GtkWidget *sw_left_top,
@@ -20,7 +22,18 @@ class CategoriesWidgets {
 	    spCategories = sp_categories;
 	    hbCategoriesError = hb_categories_error;
 	    tvCategories = tv_categories;
-	    this->tvSavedItems = tvSavedItems;		  
+	    this->tvSavedItems = tvSavedItems;	
+	    
+	    // GThreadPool for categories
+	    categoriesThreadPool = g_thread_pool_new(CategoriesWidgets::categoriesTask,
+	                                             this,
+	                                             1, // Run one thread at the time
+	                                             FALSE,
+	                                             NULL);	  
+	}
+	
+	void newThread() {
+		g_thread_pool_push(categoriesThreadPool, (gpointer)1, NULL);
 	}
 	
 	void btnCategoriesClicked() {
@@ -30,13 +43,13 @@ class CategoriesWidgets {
 			                          GTK_TREE_VIEW(tvCategories));
 			if(model == NULL) {
 				//Starting new thread to get categories from the net  
-	            g_thread_new(NULL, CategoriesWidgets::categoriesTask, this);
+	            newThread();
 			}else {
 				gtk_widget_set_visible(vbLeft, TRUE);
 			}
 			
 			// Manage saved items
-			FileUtils::listSavedFiles(tvSavedItems);
+			//FileUtils::listSavedFiles(tvSavedItems);
 		}else { // Categories visible
 			gtk_widget_set_visible(vbLeft, FALSE);
 		}
@@ -60,8 +73,8 @@ class CategoriesWidgets {
 		}
 	}
     
-	static gpointer categoriesTask(gpointer arg) {
-		CategoriesWidgets * categoriesWidgets = (CategoriesWidgets *)arg;
+	static void categoriesTask(gpointer arg, gpointer arg1) {
+		CategoriesWidgets *categoriesWidgets = (CategoriesWidgets*)arg1;
 		// On pre execute
 		gdk_threads_enter();
 		categoriesWidgets->showSpCategories();
@@ -70,7 +83,6 @@ class CategoriesWidgets {
 		gdk_threads_enter();
 		categoriesWidgets->onPostExecute(page);
 		gdk_threads_leave();
-		return NULL;
 	}
 	
 	private:
