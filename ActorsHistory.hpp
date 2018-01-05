@@ -323,17 +323,19 @@ class ActorsHistory {
 		    actorsHistory->showGetLinksButton();
 		    gdk_threads_leave();
 		}else {
-			if(resultsTitle.find("Трейлеры") != string::npos) {
-				// Searching for alternative trailers links
-	            string infoHtml = HtmlString::getPage(getLinksArgs.href,
-	                                                  getLinksArgs.referer);
-	            string trailerId = PlaylistsUtils::getTrailerId(infoHtml); 
-	            string url = PlaylistsUtils::getTrailerUrl(trailerId);
-	            string referer = PlaylistsUtils::getTrailerReferer(trailerId);
-	            string json = HtmlString::getPage(url, referer);
+			// Searching for alternative trailers links
+            string infoHtml = HtmlString::getPage(getLinksArgs.href,
+                                                  getLinksArgs.referer);
+            string trailerId = PlaylistsUtils::getTrailerId(infoHtml); 
+            string url = PlaylistsUtils::getTrailerUrl(trailerId);
+            string referer = PlaylistsUtils::getTrailerReferer(trailerId);
+            string json = HtmlString::getPage(url, referer);
+            PlayItem playItem = PlaylistsUtils::parse_play_item(json);
+            if(!playItem.comment.empty()) {
 				gdk_threads_enter();
+				playItem.comment = actorsHistory->actors.getTitle();
 				actorsHistory->showGetLinksButton();
-		        actorsHistory->linksSizeDialogThread(PlaylistsUtils::parse_play_item(json));
+		        actorsHistory->linksSizeDialogThread(playItem);
 				gdk_threads_leave();
 			}else {
 				gdk_threads_enter();
