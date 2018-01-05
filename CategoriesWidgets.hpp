@@ -4,6 +4,7 @@
 class CategoriesWidgets {  
     GtkWidget *vbLeft;
     GtkWidget *swLeftTop;
+    GtkWidget *frSavedItems;
     
     GtkWidget *spCategories;
     GtkWidget *hbCategoriesError;
@@ -14,15 +15,20 @@ class CategoriesWidgets {
     GThreadPool *categoriesThreadPool;
     public:
     
-    CategoriesWidgets(GtkWidget *vb_left, GtkWidget *sw_left_top,
-                      GtkWidget *sp_categories, GtkWidget *hb_categories_error,
-                      GtkWidget *tv_categories, GtkWidget *tvSavedItems) {
+    CategoriesWidgets(GtkWidget *vb_left, 
+                      GtkWidget *sw_left_top,
+                      GtkWidget *sp_categories, 
+                      GtkWidget *hb_categories_error,
+                      GtkWidget *tv_categories, 
+                      GtkWidget *tvSavedItems,
+                      GtkWidget *frSavedItems) {
 	    vbLeft = vb_left;
 	    swLeftTop = sw_left_top;
 	    spCategories = sp_categories;
 	    hbCategoriesError = hb_categories_error;
 	    tvCategories = tv_categories;
 	    this->tvSavedItems = tvSavedItems;	
+	    this->frSavedItems = frSavedItems;
 	    
 	    // GThreadPool for categories
 	    categoriesThreadPool = g_thread_pool_new(CategoriesWidgets::categoriesTask,
@@ -36,8 +42,8 @@ class CategoriesWidgets {
 		g_thread_pool_push(categoriesThreadPool, (gpointer)1, NULL);
 	}
 	
-	void btnCategoriesClicked() {
-		if(!gtk_widget_get_visible(vbLeft)) { // Categories hidden
+	void showHideCategories() {
+		if(!gtk_widget_get_visible(swLeftTop)) {
 			//Get categories model
 			GtkTreeModel *model = gtk_tree_view_get_model(
 			                          GTK_TREE_VIEW(tvCategories));
@@ -45,13 +51,44 @@ class CategoriesWidgets {
 				//Starting new thread to get categories from the net  
 	            newThread();
 			}else {
-				gtk_widget_set_visible(vbLeft, TRUE);
-			}
-			
+				gtk_widget_set_visible(swLeftTop, TRUE);
+			}	
+		}else {
+			gtk_widget_set_visible(swLeftTop, FALSE);
+		}
+	}
+	
+	void showHideSavedItems() {
+		if(!gtk_widget_get_visible(frSavedItems)) {
 			// Manage saved items
 			FileUtils::listSavedFiles(tvSavedItems);
-		}else { // Categories visible
-			gtk_widget_set_visible(vbLeft, FALSE);
+		    gtk_widget_set_visible(frSavedItems, TRUE);
+		}else {
+			gtk_widget_set_visible(frSavedItems, FALSE);
+		}
+	}
+	
+	void btnCategoriesClicked() {
+		if(!gtk_widget_get_visible(vbLeft)) {
+			gtk_widget_set_visible(vbLeft, TRUE);
+			showHideCategories();
+		}else {
+			showHideCategories();
+			if(!gtk_widget_get_visible(frSavedItems)) {  
+			    gtk_widget_set_visible(vbLeft, FALSE);
+			}
+		}
+	}
+	
+	void btnSavedItemsClicked() {
+		if(!gtk_widget_get_visible(vbLeft)) {
+			gtk_widget_set_visible(vbLeft, TRUE);
+			showHideSavedItems();
+		}else {
+			showHideSavedItems();
+			if(!gtk_widget_get_visible(swLeftTop)) {  
+			    gtk_widget_set_visible(vbLeft, FALSE);
+			}
 		}
 	}
     

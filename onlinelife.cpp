@@ -198,6 +198,12 @@ static void btnCategoriesClicked(GtkWidget *widget,
 	categoriesWidgets->btnCategoriesClicked();	
 }
 
+static void btnSavedItemsClicked(GtkWidget *widget,
+                                 gpointer data) {
+	CategoriesWidgets *categoriesWidgets = (CategoriesWidgets *)data;
+	categoriesWidgets->btnSavedItemsClicked();	
+}
+
 static void btnUpClicked( GtkWidget *widget,
                           gpointer data ) {
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
@@ -373,6 +379,7 @@ int main( int   argc,
     GtkWidget *hbLinks, *hbSave;
     
 	GtkToolItem *btnCategories;
+	GtkToolItem *btnSavedItems;
 	GtkToolItem *btnRefresh;
 	GtkToolItem *btnUp;
     GtkToolItem *btnPrev;
@@ -459,10 +466,17 @@ int main( int   argc,
 	gtk_container_set_border_width(GTK_CONTAINER(toolbar), 2);
 	
     btnCategories = gtk_tool_button_new_from_stock(GTK_STOCK_DIRECTORY);
-    gtk_tool_item_set_tooltip_text(btnCategories, "Display categories");
+    gtk_tool_item_set_tooltip_text(btnCategories, "Show/hide categories");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnCategories, -1);
         
     sep = gtk_separator_tool_item_new();
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
+	
+	btnSavedItems = gtk_tool_button_new_from_stock(GTK_STOCK_FLOPPY);
+	gtk_tool_item_set_tooltip_text(btnSavedItems, "Show/hide saved items");
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnSavedItems, -1);
+	
+	sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
 	
 	btnRefresh = gtk_tool_button_new_from_stock(GTK_STOCK_REFRESH);
@@ -803,7 +817,8 @@ int main( int   argc,
                                                spCategories,
                                                hbCategoriesError,
                                                tvCategories,
-                                               tvSavedItems
+                                               tvSavedItems,
+                                               frSavedItems
                                            );
                                            
     g_signal_connect(btnCategoriesError, 
@@ -815,6 +830,11 @@ int main( int   argc,
                      "clicked", 
                      G_CALLBACK(btnCategoriesClicked),
                      categoriesWidgets);
+                     
+    g_signal_connect(GTK_WIDGET(btnSavedItems), 
+				     "clicked", 
+				     G_CALLBACK(btnSavedItemsClicked), 
+				     categoriesWidgets);
         
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
@@ -837,6 +857,9 @@ int main( int   argc,
     gtk_widget_show_all(window);
     
     gtk_widget_set_visible(vbLeft, FALSE);
+    gtk_widget_set_visible(swLeftTop, FALSE);
+    gtk_widget_set_visible(frSavedItems, FALSE);
+    
     gtk_widget_set_visible(vbRight, FALSE);
     
     gtk_widget_set_visible(swTree, FALSE);
