@@ -196,13 +196,6 @@ class ResultsHistory {
 		}
 	}
 	
-	void onClick(string resultTitle, string href) {
-		// Always show info, call actors thread
-		actorsHistory->newThread(results->getTitle(), // For trailers detection
-		                         resultTitle, 
-		                         href);             
-	}
-	
 	void newThread(string title, string url) {
 		saveToBackStack();
 		ResultsArgs *resultsArgs = new ResultsArgs(title, url, this);

@@ -135,7 +135,7 @@ void playlistClicked(GtkTreeView *treeView,
 }
 
 void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
-	ResultsHistory *resultsHistory = (ResultsHistory*) data;
+	ActorsHistory *actorsHistory = (ActorsHistory*) data;
 	// Get model from ivResults
 	GtkTreeModel *model = gtk_icon_view_get_model(icon_view);
 	
@@ -154,7 +154,7 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	                   &href,
 	                   -1);
 	                   
-	resultsHistory->onClick(resultTitle, href);
+	actorsHistory->newThread(resultTitle, href);
 	
 	g_free(resultTitle);
 	g_free(href);
@@ -319,9 +319,7 @@ void tvSavedItemsClicked(GtkTreeView *treeView,
 	// Read file. Get link.
 	string link = FileUtils::readFromFile(filename);
 	
-	actorsHistory->newThread("", //TODO: Save and get results title for trailers detection
-		                     filename, 
-		                     link);
+	actorsHistory->newThread(filename, link);
 	g_free(filename);                              
 }
 
@@ -723,6 +721,11 @@ int main( int   argc,
                      "row-activated", 
                      G_CALLBACK(tvSavedItemsClicked), 
                      actorsHistory);
+                     
+    g_signal_connect(ivResults, 
+                     "item-activated", 
+                     G_CALLBACK(resultActivated), 
+                     actorsHistory);
     
 	ResultsHistory *resultsHistory = new ResultsHistory(window,
                                                         ivResults,
@@ -788,12 +791,7 @@ int main( int   argc,
                      "activate", 
                      G_CALLBACK(entryActivated), 
                      resultsHistory);
-                     
-    g_signal_connect(ivResults, 
-                     "item-activated", 
-                     G_CALLBACK(resultActivated), 
-                     resultsHistory);
-                     
+                                      
     g_signal_connect(btnListEpisodes,
                      "clicked",
                      G_CALLBACK(btnListEpisodesClicked),

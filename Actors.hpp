@@ -18,7 +18,6 @@ enum LinksMode {
 
 class Actors {
     string actorsTitle;
-    string resultsTitle;
     string info;
     
     GtkListStore *store;
@@ -73,14 +72,6 @@ class Actors {
 	
 	LinksMode getLinksMode() {
 		return linksMode;
-	}
-	
-	void setResultsTitle(string title) {
-		resultsTitle = title;
-	}
-	
-	string getResultsTitle() {
-		return resultsTitle;
 	}
     
 	GtkTreeModel *getModel() {

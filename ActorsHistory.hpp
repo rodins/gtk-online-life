@@ -114,11 +114,10 @@ class ActorsHistory {
 	                                   NULL);
 	} 
 	
-    void newThread(string resultsTitle, string title, string href) {
+    void newThread(string title, string href) {
 		if(!actors.getTitle().empty() && actors.isNetworkOk()) {
 			prevActors = actors;
 		}
-		actors.setResultsTitle(resultsTitle);// for trailers detection
 		actors.setTitle(title);
 		actors.setUrl(href);
 		actors.setNetworkOk(FALSE);
@@ -312,7 +311,6 @@ class ActorsHistory {
 		// On pre execute
 		gdk_threads_enter();
 		GetLinksArgs getLinksArgs = actorsHistory->actors.getGetLinksArgs();
-		string resultsTitle = actorsHistory->actors.getResultsTitle();
 		// Show links spinner
 		actorsHistory->showSpLinks();
 		gdk_threads_leave();
