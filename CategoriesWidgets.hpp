@@ -42,17 +42,21 @@ class CategoriesWidgets {
 		g_thread_pool_push(categoriesThreadPool, (gpointer)1, NULL);
 	}
 	
+	void showCategories() {
+		//Get categories model
+		GtkTreeModel *model = gtk_tree_view_get_model(
+		                          GTK_TREE_VIEW(tvCategories));
+		if(model == NULL) {
+			//Starting new thread to get categories from the net  
+            newThread();
+		}else {
+			gtk_widget_set_visible(swLeftTop, TRUE);
+		}	
+	}
+	
 	void showHideCategories() {
 		if(!gtk_widget_get_visible(swLeftTop)) {
-			//Get categories model
-			GtkTreeModel *model = gtk_tree_view_get_model(
-			                          GTK_TREE_VIEW(tvCategories));
-			if(model == NULL) {
-				//Starting new thread to get categories from the net  
-	            newThread();
-			}else {
-				gtk_widget_set_visible(swLeftTop, TRUE);
-			}	
+			showCategories();
 		}else {
 			gtk_widget_set_visible(swLeftTop, FALSE);
 		}
@@ -60,8 +64,6 @@ class CategoriesWidgets {
 	
 	void showHideSavedItems() {
 		if(!gtk_widget_get_visible(frSavedItems)) {
-			// Manage saved items
-			FileUtils::listSavedFiles(tvSavedItems);
 		    gtk_widget_set_visible(frSavedItems, TRUE);
 		}else {
 			gtk_widget_set_visible(frSavedItems, FALSE);
@@ -71,7 +73,7 @@ class CategoriesWidgets {
 	void btnCategoriesClicked() {
 		if(!gtk_widget_get_visible(vbLeft)) {
 			gtk_widget_set_visible(vbLeft, TRUE);
-			showHideCategories();
+			showCategories();
 		}else {
 			showHideCategories();
 			if(!gtk_widget_get_visible(frSavedItems)) {  
@@ -83,9 +85,18 @@ class CategoriesWidgets {
 	void btnSavedItemsClicked() {
 		if(!gtk_widget_get_visible(vbLeft)) {
 			gtk_widget_set_visible(vbLeft, TRUE);
-			showHideSavedItems();
+			gtk_widget_set_visible(frSavedItems, TRUE);
 		}else {
 			showHideSavedItems();
+			if(!gtk_widget_get_visible(swLeftTop)) {  
+			    gtk_widget_set_visible(vbLeft, FALSE);
+			}
+		}
+	}
+	
+	void btnSavedItemsStateDisabled() {
+		gtk_widget_set_visible(frSavedItems, FALSE);
+		if(gtk_widget_get_visible(vbLeft)) {
 			if(!gtk_widget_get_visible(swLeftTop)) {  
 			    gtk_widget_set_visible(vbLeft, FALSE);
 			}

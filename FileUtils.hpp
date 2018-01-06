@@ -36,9 +36,10 @@ class FileUtils {
 		g_remove(filename.c_str());
 	}
 	
-	static void listSavedFiles(GtkWidget *tvSavedItems) {
+	static void listSavedFiles(GtkWidget *tvSavedItems, GtkToolItem *btnSavedItems) {
 		GtkListStore *storeSavedItems = GTK_LIST_STORE(gtk_tree_view_get_model(
 		                                GTK_TREE_VIEW(tvSavedItems)));
+		int count = 0;
 		gtk_list_store_clear(storeSavedItems);
 		GdkPixbuf *icon = IconsFactory::getLinkIcon();
 		GtkTreeIter iter;
@@ -55,9 +56,16 @@ class FileUtils {
 			                       icon,
 			                       TITLE_COLUMN, 
 			                       filename,
-			                       -1);                                    
+			                       -1);  
+			    count++;                                  
 			}
 			g_dir_close(dir);
+		}
+		// Disable/enable show/hide list saved items button
+		if(count > 0) {
+			gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), TRUE);
+		}else {
+			gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), FALSE);
 		}
 	}
 };
