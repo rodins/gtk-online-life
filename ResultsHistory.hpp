@@ -559,7 +559,7 @@ class ResultsHistory {
 	
 	void setSensitiveItemsPlaylists() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), results != NULL);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 	}
