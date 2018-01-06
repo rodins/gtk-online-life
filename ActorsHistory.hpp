@@ -41,6 +41,7 @@ class ActorsHistory {
     GtkWidget *btnDelete;
     GtkWidget *tvSavedItems;
     GtkToolItem *btnSavedItems;
+    GtkToolItem *btnActors;
     
     LinksErrorType linksError;
     
@@ -63,7 +64,8 @@ class ActorsHistory {
 				  GtkWidget *btnSave,
 				  GtkWidget *btnDelete,
 				  GtkWidget *tvSavedItems,
-				  GtkToolItem *btnSavedItems) {
+				  GtkToolItem *btnSavedItems,
+				  GtkToolItem *btnActors) {
 		this->window = window;			  
 		tvActors = a;
 		tvBackActors = pa;
@@ -85,6 +87,7 @@ class ActorsHistory {
 		this->btnDelete = btnDelete;
 		this->tvSavedItems = tvSavedItems;
 		this->btnSavedItems = btnSavedItems;
+		this->btnActors = btnActors;
 		
 		icon = IconsFactory::getLinkIcon();
 		
@@ -483,6 +486,7 @@ class ActorsHistory {
 		gtk_widget_set_visible(spActors, TRUE);
 		gtk_spinner_start(GTK_SPINNER(spActors));
 		gtk_widget_set_visible(vbRight, TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnActors), TRUE);
 	}
 	
 	void showActors() {

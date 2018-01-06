@@ -699,7 +699,8 @@ int main( int   argc,
                                                      btnSave,
                                                      btnDelete,
                                                      tvSavedItems,
-                                                     btnSavedItems);
+                                                     btnSavedItems,
+                                                     btnActors);
                                                      
     g_signal_connect(selection,
 	                 "changed", 
@@ -762,7 +763,6 @@ int main( int   argc,
                                                         vbCenter,
                                                         hbResultsError,
                                                         btnUp,
-                                                        btnActors,
                                                         btnRefresh,
                                                         imageIndexes,
                                                         imagesCache,

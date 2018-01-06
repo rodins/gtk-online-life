@@ -55,7 +55,6 @@ class ResultsHistory {
 	GtkWidget *hbResultsError;
 	
 	GtkToolItem *btnUp;
-	GtkToolItem *btnActors;
     GtkToolItem *btnRefresh;
     
     set<int> *imageIndexes;
@@ -84,7 +83,6 @@ class ResultsHistory {
                    GtkWidget *vb_center,
                    GtkWidget *hb_results_error,
                    GtkToolItem *btn_up,
-                   GtkToolItem *rb_actors,
                    GtkToolItem *btn_refresh,
                    set<int> *ii,
                    map<string, GdkPixbuf*> *cache,
@@ -102,7 +100,6 @@ class ResultsHistory {
 		hbResultsError = hb_results_error;
 		
 		btnUp = btn_up;
-		btnActors = rb_actors;
 		btnRefresh = btn_refresh;
 		
 		imageIndexes = ii;
@@ -356,7 +353,6 @@ class ResultsHistory {
 	void setSensitiveItemsResults() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
-	    gtk_widget_set_sensitive(GTK_WIDGET(btnActors), TRUE);
 	}
 	
 	void switchToTreeView() {
@@ -566,7 +562,6 @@ class ResultsHistory {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), TRUE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
-	    gtk_widget_set_sensitive(GTK_WIDGET(btnActors), FALSE);
 	}
 	
 	void displayPlaylists() {
