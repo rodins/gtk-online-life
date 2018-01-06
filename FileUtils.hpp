@@ -41,7 +41,7 @@ class FileUtils {
 		                                GTK_TREE_VIEW(tvSavedItems)));
 		int count = 0;
 		gtk_list_store_clear(storeSavedItems);
-		GdkPixbuf *icon = IconsFactory::getLinkIcon();
+		GdkPixbuf *icon = IconsFactory::getFloppyIcon();
 		GtkTreeIter iter;
 		GDir *dir;
 		const gchar *filename;
