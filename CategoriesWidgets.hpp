@@ -3,7 +3,7 @@
 
 class CategoriesWidgets {  
     GtkWidget *vbLeft;
-    GtkWidget *swLeftTop;
+    GtkWidget *swCategories;
     GtkWidget *frSavedItems;
     
     GtkWidget *spCategories;
@@ -23,7 +23,7 @@ class CategoriesWidgets {
                       GtkWidget *tvSavedItems,
                       GtkWidget *frSavedItems) {
 	    vbLeft = vb_left;
-	    swLeftTop = sw_left_top;
+	    swCategories = sw_left_top;
 	    spCategories = sp_categories;
 	    hbCategoriesError = hb_categories_error;
 	    tvCategories = tv_categories;
@@ -50,15 +50,15 @@ class CategoriesWidgets {
 			//Starting new thread to get categories from the net  
             newThread();
 		}else {
-			gtk_widget_set_visible(swLeftTop, TRUE);
+			gtk_widget_set_visible(swCategories, TRUE);
 		}	
 	}
 	
 	void showHideCategories() {
-		if(!gtk_widget_get_visible(swLeftTop)) {
+		if(!gtk_widget_get_visible(swCategories)) {
 			showCategories();
 		}else {
-			gtk_widget_set_visible(swLeftTop, FALSE);
+			gtk_widget_set_visible(swCategories, FALSE);
 		}
 	}
 	
@@ -88,7 +88,7 @@ class CategoriesWidgets {
 			gtk_widget_set_visible(frSavedItems, TRUE);
 		}else {
 			showHideSavedItems();
-			if(!gtk_widget_get_visible(swLeftTop)) {  
+			if(!gtk_widget_get_visible(swCategories)) {  
 			    gtk_widget_set_visible(vbLeft, FALSE);
 			}
 		}
@@ -97,7 +97,7 @@ class CategoriesWidgets {
 	void btnSavedItemsStateDisabled() {
 		gtk_widget_set_visible(frSavedItems, FALSE);
 		if(gtk_widget_get_visible(vbLeft)) {
-			if(!gtk_widget_get_visible(swLeftTop)) {  
+			if(!gtk_widget_get_visible(swCategories)) {  
 			    gtk_widget_set_visible(vbLeft, FALSE);
 			}
 		}
@@ -110,7 +110,7 @@ class CategoriesWidgets {
 			gtk_widget_set_visible(hbCategoriesError, FALSE);
 			gtk_widget_set_visible(spCategories, FALSE);
 			gtk_spinner_stop(GTK_SPINNER(spCategories));
-			gtk_widget_set_visible(swLeftTop, TRUE);
+			gtk_widget_set_visible(swCategories, TRUE);
 			
 			GtkTreeModel *model;
 			model = categoriesParser.getModel();
@@ -137,7 +137,7 @@ class CategoriesWidgets {
 	
 	void showSpCategories() {
 		gtk_widget_set_visible(vbLeft, TRUE);
-		gtk_widget_set_visible(swLeftTop, FALSE);
+		gtk_widget_set_visible(swCategories, FALSE);
 		gtk_widget_set_visible(hbCategoriesError, FALSE);
 		gtk_widget_set_visible(spCategories, TRUE);
 		gtk_spinner_start(GTK_SPINNER(spCategories));
@@ -145,7 +145,7 @@ class CategoriesWidgets {
 	
 	void showCategoriesError() {
 		gtk_widget_set_visible(vbLeft, TRUE);
-		gtk_widget_set_visible(swLeftTop, FALSE);
+		gtk_widget_set_visible(swCategories, FALSE);
 		gtk_widget_set_visible(hbCategoriesError, TRUE);
 		gtk_widget_set_visible(spCategories, FALSE);
 		gtk_spinner_stop(GTK_SPINNER(spCategories));

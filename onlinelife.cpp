@@ -369,7 +369,7 @@ int main( int   argc,
               
     GtkWidget *spCategories;
     GtkWidget *hbCategoriesError;
-    GtkWidget *swLeftTop,
+    GtkWidget *swCategories,
               *swSavedItems;
 	
     GtkWidget *vbox;
@@ -571,14 +571,14 @@ int main( int   argc,
                             GTK_TREE_MODEL(savedItemsStore));
     g_object_unref(savedItemsStore);
     
-    swLeftTop = gtk_scrolled_window_new(NULL, NULL);
+    swCategories = gtk_scrolled_window_new(NULL, NULL);
     swRightTop = gtk_scrolled_window_new(NULL, NULL);
     swRightBottom = gtk_scrolled_window_new(NULL, NULL);
     swSavedItems = gtk_scrolled_window_new(NULL, NULL);
     
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swLeftTop),
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swCategories),
             GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swLeftTop),
+    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swCategories),
             GTK_SHADOW_ETCHED_IN);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swRightTop),
             GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
@@ -603,7 +603,7 @@ int main( int   argc,
     gtk_widget_set_size_request(vbRight, SIDE_SIZE, -1);
     
     // Scroll containers
-    gtk_container_add(GTK_CONTAINER(swLeftTop), tvCategories);
+    gtk_container_add(GTK_CONTAINER(swCategories), tvCategories);
     gtk_container_add(GTK_CONTAINER(swRightTop), tvActors);
     gtk_container_add(GTK_CONTAINER(swRightBottom), tvBackActors);
     gtk_container_add(GTK_CONTAINER(swSavedItems), tvSavedItems);
@@ -622,7 +622,7 @@ int main( int   argc,
     gtk_container_add(GTK_CONTAINER(frSavedItems), swSavedItems);
     
     gtk_box_pack_start(GTK_BOX(hbCategoriesError), btnCategoriesError, TRUE, FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(vbLeft), swLeftTop, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(vbLeft), swCategories, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeft), spCategories, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeft), hbCategoriesError, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeft), frSavedItems, TRUE, TRUE, 1);
@@ -826,7 +826,7 @@ int main( int   argc,
     
     CategoriesWidgets *categoriesWidgets = new CategoriesWidgets(
                                                vbLeft,
-                                               swLeftTop,
+                                               swCategories,
                                                spCategories,
                                                hbCategoriesError,
                                                tvCategories,
@@ -875,7 +875,7 @@ int main( int   argc,
     gtk_widget_show_all(window);
     
     gtk_widget_set_visible(vbLeft, FALSE);
-    gtk_widget_set_visible(swLeftTop, FALSE);
+    gtk_widget_set_visible(swCategories, FALSE);
     gtk_widget_set_visible(frSavedItems, FALSE);
     
     gtk_widget_set_visible(vbRight, FALSE);
