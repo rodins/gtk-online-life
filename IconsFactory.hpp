@@ -39,4 +39,12 @@ class IconsFactory {
 	static GdkPixbuf* getFloppyIcon() {
 		return create_pixbuf("images/floppy_16.png");
 	}
+	
+	static GdkPixbuf* getBookmarkIcon() {
+		return create_pixbuf("images/bookmark_16.png");
+	}
+	
+	static GdkPixbuf* getBookmarkIcon24() {
+		return create_pixbuf("images/bookmark_24.png");
+	}
 };

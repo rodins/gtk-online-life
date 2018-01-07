@@ -480,8 +480,10 @@ int main( int   argc,
     sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
 	
-	btnSavedItems = gtk_tool_button_new_from_stock(GTK_STOCK_FLOPPY);
-	gtk_tool_item_set_tooltip_text(btnSavedItems, "Show/hide saved items");
+	GtkWidget *bookmarkIcon = gtk_image_new_from_pixbuf(
+	                                        IconsFactory::getBookmarkIcon24());
+	btnSavedItems = gtk_tool_button_new(bookmarkIcon, NULL);
+	gtk_tool_item_set_tooltip_text(btnSavedItems, "Show/hide bookmarks");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnSavedItems, -1);
 	
 	sep = gtk_separator_tool_item_new();
@@ -669,17 +671,17 @@ int main( int   argc,
     
     //btnSave
     btnSave = gtk_button_new();
-    GtkWidget *saveImage = gtk_image_new_from_stock(GTK_STOCK_SAVE,
+    GtkWidget *saveImage = gtk_image_new_from_stock(GTK_STOCK_ADD,
                                                     GTK_ICON_SIZE_BUTTON);
     gtk_button_set_image(GTK_BUTTON(btnSave), saveImage);
-    gtk_widget_set_tooltip_text(btnSave, "Save item");
+    gtk_widget_set_tooltip_text(btnSave, "Add to bookmarks");
     
     //btnDelete
     btnDelete = gtk_button_new();
-    GtkWidget *deleteImage = gtk_image_new_from_stock(GTK_STOCK_DELETE,
+    GtkWidget *deleteImage = gtk_image_new_from_stock(GTK_STOCK_REMOVE,
                                                       GTK_ICON_SIZE_BUTTON);
     gtk_button_set_image(GTK_BUTTON(btnDelete), deleteImage);
-    gtk_widget_set_tooltip_text(btnDelete, "Delete item");
+    gtk_widget_set_tooltip_text(btnDelete, "Remove from bookmarks");
     
     spLinks = gtk_spinner_new();
     hbActions = gtk_hbox_new(TRUE, 1);
