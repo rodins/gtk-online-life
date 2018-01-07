@@ -646,9 +646,28 @@ int main( int   argc,
     
     // Links frame in actors pane
     frLinks = gtk_frame_new("Links");
-    btnGetLinks = gtk_button_new_from_stock(GTK_STOCK_COPY);
-    btnListEpisodes = gtk_button_new_from_stock(GTK_STOCK_OPEN);
-    btnLinksError = gtk_button_new_from_stock(GTK_STOCK_REFRESH);
+    
+    //btnGetLinks
+    btnGetLinks = gtk_button_new();
+    GtkWidget *copyImage = gtk_image_new_from_stock(GTK_STOCK_COPY,
+                                                    GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image(GTK_BUTTON(btnGetLinks), copyImage);
+    gtk_widget_set_tooltip_text(btnGetLinks, "Get links");
+    
+    //btnListEpisodes
+    btnListEpisodes = gtk_button_new();
+    GtkWidget *openImage = gtk_image_new_from_stock(GTK_STOCK_OPEN,
+                                                    GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image(GTK_BUTTON(btnListEpisodes), openImage);
+    gtk_widget_set_tooltip_text(btnListEpisodes, "List episodes");
+    
+    //btnLinksError
+    btnLinksError = gtk_button_new();
+    GtkWidget *refreshImage = gtk_image_new_from_stock(GTK_STOCK_REFRESH,
+                                                       GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image(GTK_BUTTON(btnLinksError), refreshImage);
+    gtk_widget_set_tooltip_text(btnLinksError, "Repeat");
+    
     spLinks = gtk_spinner_new();
     hbLinks = gtk_hbox_new(FALSE, 1);
     gtk_box_pack_start(GTK_BOX(hbLinks), spLinks, TRUE, FALSE, 10);
@@ -659,8 +678,21 @@ int main( int   argc,
     
     // Save frame in actors pane
     frSave = gtk_frame_new("Save");
-    btnSave = gtk_button_new_from_stock(GTK_STOCK_SAVE);
-    btnDelete = gtk_button_new_from_stock(GTK_STOCK_DELETE);
+    
+    //btnSave
+    btnSave = gtk_button_new();
+    GtkWidget *saveImage = gtk_image_new_from_stock(GTK_STOCK_SAVE,
+                                                    GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image(GTK_BUTTON(btnSave), saveImage);
+    gtk_widget_set_tooltip_text(btnSave, "Save item");
+    
+    //btnDelete
+    btnDelete = gtk_button_new();
+    GtkWidget *deleteImage = gtk_image_new_from_stock(GTK_STOCK_DELETE,
+                                                      GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_image(GTK_BUTTON(btnDelete), deleteImage);
+    gtk_widget_set_tooltip_text(btnDelete, "Delete item");
+    
     hbSave = gtk_hbox_new(FALSE, 1);
     gtk_box_pack_start(GTK_BOX(hbSave), btnSave, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(hbSave), btnDelete, TRUE, FALSE, 10);
