@@ -349,8 +349,7 @@ int main( int   argc,
 	GtkWidget *lbInfo;
 	GtkWidget *frRightTop,
 	          *frInfo,
-	          *frLinks, 
-	          *frSave,
+	          *frActions, 
 	          *frSavedItems;
 	          
 	GtkWidget *spActors, *spLinks;
@@ -385,7 +384,7 @@ int main( int   argc,
               *btnLinksError, 
               *btnSave,
               *btnDelete;
-    GtkWidget *hbLinks, *hbSave;
+    GtkWidget *hbActions;
     
 	GtkToolItem *btnCategories;
 	GtkToolItem *btnSavedItems;
@@ -645,7 +644,7 @@ int main( int   argc,
     btnActorsError = gtk_button_new_with_label("Repeat");
     
     // Links frame in actors pane
-    frLinks = gtk_frame_new("Links");
+    frActions = gtk_frame_new("Actions");
     
     //btnGetLinks
     btnGetLinks = gtk_button_new();
@@ -668,17 +667,6 @@ int main( int   argc,
     gtk_button_set_image(GTK_BUTTON(btnLinksError), refreshImage);
     gtk_widget_set_tooltip_text(btnLinksError, "Repeat");
     
-    spLinks = gtk_spinner_new();
-    hbLinks = gtk_hbox_new(FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(hbLinks), spLinks, TRUE, FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(hbLinks), btnLinksError, TRUE, FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(hbLinks), btnGetLinks, TRUE, FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(hbLinks), btnListEpisodes, TRUE, FALSE, 10);
-    gtk_container_add(GTK_CONTAINER(frLinks), hbLinks);
-    
-    // Save frame in actors pane
-    frSave = gtk_frame_new("Save");
-    
     //btnSave
     btnSave = gtk_button_new();
     GtkWidget *saveImage = gtk_image_new_from_stock(GTK_STOCK_SAVE,
@@ -693,16 +681,20 @@ int main( int   argc,
     gtk_button_set_image(GTK_BUTTON(btnDelete), deleteImage);
     gtk_widget_set_tooltip_text(btnDelete, "Delete item");
     
-    hbSave = gtk_hbox_new(FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(hbSave), btnSave, TRUE, FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(hbSave), btnDelete, TRUE, FALSE, 10);
-    gtk_container_add(GTK_CONTAINER(frSave), hbSave);
+    spLinks = gtk_spinner_new();
+    hbActions = gtk_hbox_new(FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(hbActions), spLinks, TRUE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbActions), btnLinksError, TRUE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbActions), btnGetLinks, TRUE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbActions), btnListEpisodes, TRUE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbActions), btnSave, TRUE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(hbActions), btnDelete, TRUE, FALSE, 10);
+    gtk_container_add(GTK_CONTAINER(frActions), hbActions);
     
     gtk_box_pack_start(GTK_BOX(hbActorsError), btnActorsError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbRight), spActors, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbRight), hbActorsError, TRUE, FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(vbRight), frLinks, FALSE, FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(vbRight), frSave, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(vbRight), frActions, FALSE, FALSE, 1);
     gtk_widget_set_size_request(spActors, 32, 32);
     gtk_widget_set_size_request(spLinks, 32, 32);
     
