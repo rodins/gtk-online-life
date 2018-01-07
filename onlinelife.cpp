@@ -646,9 +646,9 @@ int main( int   argc,
     
     // Links frame in actors pane
     frLinks = gtk_frame_new("Links");
-    btnGetLinks = gtk_button_new_with_label("Get links");
-    btnListEpisodes = gtk_button_new_with_label("List episodes");
-    btnLinksError = gtk_button_new_with_label("Repeat");
+    btnGetLinks = gtk_button_new_from_stock(GTK_STOCK_COPY);
+    btnListEpisodes = gtk_button_new_from_stock(GTK_STOCK_OPEN);
+    btnLinksError = gtk_button_new_from_stock(GTK_STOCK_REFRESH);
     spLinks = gtk_spinner_new();
     hbLinks = gtk_hbox_new(FALSE, 1);
     gtk_box_pack_start(GTK_BOX(hbLinks), spLinks, TRUE, FALSE, 10);
@@ -659,8 +659,8 @@ int main( int   argc,
     
     // Save frame in actors pane
     frSave = gtk_frame_new("Save");
-    btnSave = gtk_button_new_with_label("Save");
-    btnDelete = gtk_button_new_with_label("Delete");
+    btnSave = gtk_button_new_from_stock(GTK_STOCK_SAVE);
+    btnDelete = gtk_button_new_from_stock(GTK_STOCK_DELETE);
     hbSave = gtk_hbox_new(FALSE, 1);
     gtk_box_pack_start(GTK_BOX(hbSave), btnSave, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(hbSave), btnDelete, TRUE, FALSE, 10);
