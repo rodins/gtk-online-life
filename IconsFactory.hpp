@@ -36,10 +36,6 @@ class IconsFactory {
 		return create_pixbuf("images/blank.png");
 	}
 	
-	static GdkPixbuf* getFloppyIcon() {
-		return create_pixbuf("images/floppy_16.png");
-	}
-	
 	static GdkPixbuf* getBookmarkIcon() {
 		return create_pixbuf("images/bookmark_16.png");
 	}

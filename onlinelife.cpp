@@ -657,7 +657,7 @@ int main( int   argc,
     
     //btnListEpisodes
     btnListEpisodes = gtk_button_new();
-    GtkWidget *openImage = gtk_image_new_from_stock(GTK_STOCK_OPEN,
+    GtkWidget *openImage = gtk_image_new_from_stock(GTK_STOCK_DIRECTORY,
                                                     GTK_ICON_SIZE_BUTTON);
     gtk_button_set_image(GTK_BUTTON(btnListEpisodes), openImage);
     gtk_widget_set_tooltip_text(btnListEpisodes, "List episodes");
