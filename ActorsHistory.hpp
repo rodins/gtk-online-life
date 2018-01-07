@@ -451,17 +451,18 @@ class ActorsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spDialog));
 		gtk_widget_set_visible(spDialog, FALSE);
 		
-		if(sizeFile != "") {
+		if(!sizeFile.empty()) {
 			string sizeFileTitle = "Play (" + sizeFile + " Mb)";
-			gtk_widget_set_sensitive(btnPlay, TRUE);
 			gtk_button_set_label(GTK_BUTTON(btnPlay), sizeFileTitle.c_str());
 		}
 		
-		if(sizeDownload != "") {
+		if(!sizeDownload.empty()) {
 			string sizeDownloadTitle = "Download (" + sizeDownload + " Mb)";
-			gtk_widget_set_sensitive(btnDownload, TRUE);
 			gtk_button_set_label(GTK_BUTTON(btnDownload), sizeDownloadTitle.c_str());
 		}
+		
+		gtk_widget_set_sensitive(btnPlay, TRUE);
+		gtk_widget_set_sensitive(btnDownload, TRUE);
 		
 		gdk_threads_leave();
 	}
