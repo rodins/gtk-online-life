@@ -407,8 +407,8 @@ int main( int   argc,
 	
 	 /* Must initialize libcurl before any threads are started */ 
     curl_global_init(CURL_GLOBAL_ALL);
-    
-    g_thread_init(NULL); // for Wary-5.5 (old gtk)
+    //TODO: make autodetection of old gtk
+    //g_thread_init(NULL); // for Wary-5.5 (old gtk)
     
     gdk_threads_init ();
     gdk_threads_enter ();
