@@ -99,13 +99,17 @@ class Playlists {
 					
 			PlayItem playItem = PlaylistsUtils::parse_play_item(item);
 			if(comment.empty()) {
-				addItemToTopLevel(playItem.comment, 
+				if(!playItem.comment.empty()) {
+					addItemToTopLevel(playItem.comment, 
 				                  playItem.file, 
 				                  playItem.download);
+				}
 			}else {
-				addItemToChild(playItem.comment,
-				               playItem.file, 
-				               playItem.download);
+				if(!playItem.comment.empty()) {
+					addItemToChild(playItem.comment,
+				                   playItem.file, 
+				                   playItem.download);
+				}
 			}
 					
 			item_start = items.find("{", item_end+1);

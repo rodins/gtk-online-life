@@ -441,9 +441,13 @@ class ActorsHistory {
 		
 		// Async part
 		string sizeFile, sizeDownload;
-		sizeFile = HtmlString::getSizeOfLink(playItem->file);
-		sizeDownload = HtmlString::getSizeOfLink(playItem->download);
-		
+		if(!playItem->file.empty()) {
+			sizeFile = HtmlString::getSizeOfLink(playItem->file);
+		}
+		if(!playItem->download.empty()) {
+			sizeDownload = HtmlString::getSizeOfLink(playItem->download);
+		}
+	
 		gdk_threads_enter();
 		//On post execute
 		// Show label (title) and hide spinner
@@ -460,9 +464,13 @@ class ActorsHistory {
 			string sizeDownloadTitle = "Download (" + sizeDownload + " Mb)";
 			gtk_button_set_label(GTK_BUTTON(btnDownload), sizeDownloadTitle.c_str());
 		}
+		if(!playItem->file.empty()) {
+			gtk_widget_set_sensitive(btnPlay, TRUE);
+		}
 		
-		gtk_widget_set_sensitive(btnPlay, TRUE);
-		gtk_widget_set_sensitive(btnDownload, TRUE);
+		if(!playItem->download.empty()) {
+			gtk_widget_set_sensitive(btnDownload, TRUE);
+		}
 		
 		gdk_threads_leave();
 	}
