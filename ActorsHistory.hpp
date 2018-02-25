@@ -362,7 +362,12 @@ class ActorsHistory {
 	
 	static void processPlayItem(PlayItem* item) {
 		if(!item->comment.empty()) {
-			string command = detectPlayer() + item->file + " &";
+			string command;
+			if(!item->fileSize.empty()) {
+				command = detectPlayer() + item->file + " &";
+			}else if(!item->downloadSize.empty()){
+				command = detectPlayer() + item->download + " &";
+			}
 		    system(command.c_str());
 		}
 	}
@@ -459,12 +464,11 @@ class ActorsHistory {
 		gdk_threads_leave();
 		
 		// Async part
-		string sizeFile, sizeDownload;
 		if(!playItem->file.empty()) {
-			sizeFile = HtmlString::getSizeOfLink(playItem->file);
+			playItem->fileSize = HtmlString::getSizeOfLink(playItem->file);
 		}
 		if(!playItem->download.empty()) {
-			sizeDownload = HtmlString::getSizeOfLink(playItem->download);
+			playItem->downloadSize = HtmlString::getSizeOfLink(playItem->download);
 		}
 	
 		gdk_threads_enter();
@@ -474,13 +478,13 @@ class ActorsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spDialog));
 		gtk_widget_set_visible(spDialog, FALSE);
 		
-		if(!sizeFile.empty()) {
-			string sizeFileTitle = "Play (" + sizeFile + " Mb)";
+		if(!playItem->fileSize.empty()) {
+			string sizeFileTitle = "Play (" + playItem->fileSize + " Mb)";
 			gtk_button_set_label(GTK_BUTTON(btnPlay), sizeFileTitle.c_str());
 		}
 		
-		if(!sizeDownload.empty()) {
-			string sizeDownloadTitle = "Download (" + sizeDownload + " Mb)";
+		if(!playItem->downloadSize.empty()) {
+			string sizeDownloadTitle = "Download (" + playItem->downloadSize + " Mb)";
 			gtk_button_set_label(GTK_BUTTON(btnDownload), sizeDownloadTitle.c_str());
 		}
 		if(!playItem->file.empty()) {
