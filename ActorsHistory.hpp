@@ -350,6 +350,23 @@ class ActorsHistory {
 		}
 	}
 	
+	static string detectPlayer() {
+		if(system("which mpv") == 0) {
+			return "mpv ";
+		}
+		if(system("which mplayer") == 0) {
+			return "mplayer -cache 2048 ";
+		}
+		return "";
+	}
+	
+	static void processPlayItem(PlayItem* item) {
+		if(!item->comment.empty()) {
+			string command = detectPlayer() + item->file + " &";
+		    system(command.c_str());
+		}
+	}
+	
 	static void dialogResponse(GtkWidget *dialog,
 	                           gint response_id, 
 	                           gpointer user_data) {
@@ -367,6 +384,8 @@ class ActorsHistory {
 			    gtk_clipboard_set_text(clipboardX,
 			                           playItem->file.c_str(),
 			                           playItem->file.size());
+			                           
+			    processPlayItem(playItem);
 			break;
 			case LINK_RESPONSE_DOWNLOAD:
 			    gtk_clipboard_set_text(clipboard,
@@ -400,7 +419,7 @@ class ActorsHistory {
 		spDialog = gtk_spinner_new();
 		gtk_widget_set_size_request(spDialog, 32, 32);
 		
-		dialog = gtk_dialog_new_with_buttons ("Copy to clipboard...",
+		dialog = gtk_dialog_new_with_buttons ("Play or copy link...",
                                               GTK_WINDOW(actorsHistory->window),
                                               (GtkDialogFlags)(GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT),
                                               NULL);
@@ -411,7 +430,7 @@ class ActorsHistory {
         gtk_widget_set_sensitive(btnPlay, FALSE);
         
         btnDownload = gtk_dialog_add_button(GTK_DIALOG(dialog),
-		                      "Download",
+		                      "Copy",
                               LINK_RESPONSE_DOWNLOAD);
         gtk_widget_set_sensitive(btnDownload, FALSE);
         
