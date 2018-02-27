@@ -33,7 +33,6 @@ class Results {
         
         count = 0;
         
-        
         iconViewStore = gtk_list_store_new(
 		     ICON_NUM_COLS,   // Number of columns
 		     GDK_TYPE_PIXBUF, // Image poster

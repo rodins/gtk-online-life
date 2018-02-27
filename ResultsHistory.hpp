@@ -365,23 +365,35 @@ class ResultsHistory {
 	
 	void onPostExecuteNew(CURLcode res) {
 		if(res == CURLE_OK) {
-			//TODO: maybe I need to clear it while saving....
-			// clear forward results stack on fetching new results
-		    clearForwardResultsStack();
-			removeBackStackDuplicate();
-			
-		    // Clear results links set if not paging
-		    resultsThreadsLinks.clear();
-		    
-		    // Attempt to fix refresh on error problem
-			if(results->isRefresh()) {
-				results->setRefresh(FALSE);
+			if(gtk_widget_get_visible(spCenter)) {
+				switchToIconView();
+			    setSensitiveItemsResults();
+			    // Create dialog for nothing found
+			    GtkWidget* dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+			                                               GTK_DIALOG_MODAL,
+			                                               GTK_MESSAGE_INFO,
+			                                               GTK_BUTTONS_OK,
+			                                               "Nothing found.");
+			    gtk_dialog_run(GTK_DIALOG(dialog));
+			    gtk_widget_destroy(dialog);
+			}else {
+				//TODO: maybe I need to clear it while saving....
+				// clear forward results stack on fetching new results
+			    clearForwardResultsStack();
+				removeBackStackDuplicate();
+				
+			    // Clear results links set if not paging
+			    resultsThreadsLinks.clear();
+			    
+			    // Attempt to fix refresh on error problem
+				if(results->isRefresh()) {
+					results->setRefresh(FALSE);
+				}
 			}
 		}else { //error
 			showResultsRepeat(FALSE);
 			error = RESULTS_NEW_ERROR;
 		}
-		
 	}
 	
 	void onPostExecuteAppend(Results *resultsAppend, CURLcode res) {
