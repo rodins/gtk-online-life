@@ -355,18 +355,19 @@ class ActorsHistory {
 			return "mpv ";
 		}
 		if(system("which mplayer") == 0) {
-			return "mplayer -cache 2048 ";
+			return "mplayer ";
 		}
 		return "";
 	}
 	
 	static void processPlayItem(PlayItem* item) {
 		if(!item->comment.empty()) {
+			string cache = "-cache 2048 ";
 			string command;
 			if(!item->fileSize.empty()) {
-				command = detectPlayer() + item->file + " &";
+				command = detectPlayer() + cache + item->file + " &";
 			}else if(!item->downloadSize.empty()){
-				command = detectPlayer() + item->download + " &";
+				command = detectPlayer() + cache + item->download + " &";
 			}
 		    system(command.c_str());
 		}
@@ -484,10 +485,20 @@ class ActorsHistory {
 		}
 		
 		if(!playItem->downloadSize.empty()) {
-			string sizeDownloadTitle = "Download (" + playItem->downloadSize + " Mb)";
+			string sizeDownloadTitle = "Copy (" + playItem->downloadSize + " Mb)";
 			gtk_button_set_label(GTK_BUTTON(btnDownload), sizeDownloadTitle.c_str());
 		}
-		if(!playItem->file.empty()) {
+		
+		playItem->player = detectPlayer();
+		string msg;
+		if(!playItem->player.empty()) {
+			msg = "Play in " + playItem->player;
+		}else {
+			msg = "Mplayer or mpv not detected. Copy to clipboard";
+		}
+		gtk_widget_set_tooltip_text(btnPlay, msg.c_str());
+		
+		if(!playItem->file.empty() && (!playItem->fileSize.empty() || !playItem->downloadSize.empty())) {
 			gtk_widget_set_sensitive(btnPlay, TRUE);
 		}
 		

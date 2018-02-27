@@ -4,4 +4,5 @@ struct PlayItem {
 	string fileSize;
 	string download;
 	string downloadSize;
+	string player;
 };
