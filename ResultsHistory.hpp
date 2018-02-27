@@ -376,7 +376,11 @@ class ResultsHistory {
 			                                               "Nothing found.");
 			    gtk_dialog_run(GTK_DIALOG(dialog));
 			    gtk_widget_destroy(dialog);
-			    updateTitle();
+			    if(results != NULL) {
+					updateTitle();
+				}else {
+					updateTitle("");
+				}
 			}else {
 				//TODO: maybe I need to clear it while saving....
 				// clear forward results stack on fetching new results
@@ -588,8 +592,12 @@ class ResultsHistory {
 	}
 	
 	void updateTitle(string resultsTitle) {
-		string title = progName + " - " + resultsTitle;
-		gtk_window_set_title(GTK_WINDOW(window), title.c_str());
+		if(!resultsTitle.empty()) {
+			string title = progName + " - " + resultsTitle;
+		    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
+		}else {
+			gtk_window_set_title(GTK_WINDOW(window), progName.c_str());
+		}
 	}
 	
 	void newThread(ResultsArgs *resultsArgs) {
