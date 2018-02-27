@@ -376,6 +376,7 @@ class ResultsHistory {
 			                                               "Nothing found.");
 			    gtk_dialog_run(GTK_DIALOG(dialog));
 			    gtk_widget_destroy(dialog);
+			    updateTitle();
 			}else {
 				//TODO: maybe I need to clear it while saving....
 				// clear forward results stack on fetching new results
