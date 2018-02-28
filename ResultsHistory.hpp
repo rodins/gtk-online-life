@@ -149,6 +149,7 @@ class ResultsHistory {
 	}
 	
 	void btnPrevClicked() {
+		//removeBackStackDuplicate();
 		// Save current results to forwardResultsStack
 		saveToForwardStack();
 		// Display top results from backResultsStack
@@ -160,6 +161,7 @@ class ResultsHistory {
 	}
 	
 	void btnNextClicked() {
+		//removeBackStackDuplicate();
 		// Save current results to backResultsStack
 		saveToBackStack();
 	    // Display top result from forwardResultsStack
@@ -437,6 +439,8 @@ class ResultsHistory {
 		if(eraseIndex != -1) {
 			backResultsStack.erase(backResultsStack.begin() + eraseIndex);
 		}
+		
+		updatePrevNextButtons();
 	}
 	
 	void saveResultsPostion() {
@@ -450,6 +454,7 @@ class ResultsHistory {
 	}
 	
 	void saveToBackStack() {
+		removeBackStackDuplicate();
 		// Save position and copy to save variable
 		if(results != NULL) {
 			if(!results->isEmpty()) {
