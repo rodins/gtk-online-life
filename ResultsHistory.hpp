@@ -149,6 +149,7 @@ class ResultsHistory {
 	}
 	
 	void btnPrevClicked() {
+		//removeBackStackDuplicate();
 		// Save current results to forwardResultsStack
 		saveToForwardStack();
 		// Display top results from backResultsStack
@@ -160,6 +161,7 @@ class ResultsHistory {
 	}
 	
 	void btnNextClicked() {
+		//removeBackStackDuplicate();
 		// Save current results to backResultsStack
 		saveToBackStack();
 	    // Display top result from forwardResultsStack
@@ -364,24 +366,43 @@ class ResultsHistory {
 	}
 	
 	void onPostExecuteNew(CURLcode res) {
+		if(results != NULL) {
+		    removeBackStackDuplicate();	
+		}
 		if(res == CURLE_OK) {
-			//TODO: maybe I need to clear it while saving....
-			// clear forward results stack on fetching new results
-		    clearForwardResultsStack();
-			removeBackStackDuplicate();
-			
-		    // Clear results links set if not paging
-		    resultsThreadsLinks.clear();
-		    
-		    // Attempt to fix refresh on error problem
-			if(results->isRefresh()) {
-				results->setRefresh(FALSE);
+			if(gtk_widget_get_visible(spCenter)) {
+				switchToIconView();
+			    setSensitiveItemsResults();
+			    // Create dialog for nothing found
+			    GtkWidget* dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+			                                               GTK_DIALOG_MODAL,
+			                                               GTK_MESSAGE_INFO,
+			                                               GTK_BUTTONS_OK,
+			                                               "Nothing found.");
+			    gtk_dialog_run(GTK_DIALOG(dialog));
+			    gtk_widget_destroy(dialog);
+			    if(results != NULL) {
+					updateTitle();
+				}else {
+					updateTitle("");
+				}
+			}else {
+				//TODO: maybe I need to clear it while saving....
+				// clear forward results stack on fetching new results
+			    clearForwardResultsStack();
+				
+			    // Clear results links set if not paging
+			    resultsThreadsLinks.clear();
+			    
+			    // Attempt to fix refresh on error problem
+				if(results->isRefresh()) {
+					results->setRefresh(FALSE);
+				}
 			}
 		}else { //error
 			showResultsRepeat(FALSE);
 			error = RESULTS_NEW_ERROR;
 		}
-		
 	}
 	
 	void onPostExecuteAppend(Results *resultsAppend, CURLcode res) {
@@ -420,6 +441,8 @@ class ResultsHistory {
 		if(eraseIndex != -1) {
 			backResultsStack.erase(backResultsStack.begin() + eraseIndex);
 		}
+		
+		updatePrevNextButtons();
 	}
 	
 	void saveResultsPostion() {
@@ -433,6 +456,7 @@ class ResultsHistory {
 	}
 	
 	void saveToBackStack() {
+		removeBackStackDuplicate();
 		// Save position and copy to save variable
 		if(results != NULL) {
 			if(!results->isEmpty()) {
@@ -575,8 +599,12 @@ class ResultsHistory {
 	}
 	
 	void updateTitle(string resultsTitle) {
-		string title = progName + " - " + resultsTitle;
-		gtk_window_set_title(GTK_WINDOW(window), title.c_str());
+		if(!resultsTitle.empty()) {
+			string title = progName + " - " + resultsTitle;
+		    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
+		}else {
+			gtk_window_set_title(GTK_WINDOW(window), progName.c_str());
+		}
 	}
 	
 	void newThread(ResultsArgs *resultsArgs) {

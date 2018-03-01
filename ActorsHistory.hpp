@@ -350,6 +350,29 @@ class ActorsHistory {
 		}
 	}
 	
+	static string detectPlayer() {
+		if(system("which mpv") == 0) {
+			return "mpv ";
+		}
+		if(system("which mplayer") == 0) {
+			return "mplayer ";
+		}
+		return "";
+	}
+	
+	static void processPlayItem(PlayItem* item) {
+		if(!item->comment.empty()) {
+			string cache = "-cache 2048 ";
+			string command;
+			if(!item->fileSize.empty()) {
+				command = detectPlayer() + cache + item->file + " &";
+			}else if(!item->downloadSize.empty()){
+				command = detectPlayer() + cache + item->download + " &";
+			}
+		    system(command.c_str());
+		}
+	}
+	
 	static void dialogResponse(GtkWidget *dialog,
 	                           gint response_id, 
 	                           gpointer user_data) {
@@ -367,6 +390,8 @@ class ActorsHistory {
 			    gtk_clipboard_set_text(clipboardX,
 			                           playItem->file.c_str(),
 			                           playItem->file.size());
+			                           
+			    processPlayItem(playItem);
 			break;
 			case LINK_RESPONSE_DOWNLOAD:
 			    gtk_clipboard_set_text(clipboard,
@@ -400,7 +425,7 @@ class ActorsHistory {
 		spDialog = gtk_spinner_new();
 		gtk_widget_set_size_request(spDialog, 32, 32);
 		
-		dialog = gtk_dialog_new_with_buttons ("Copy to clipboard...",
+		dialog = gtk_dialog_new_with_buttons ("Play or copy link...",
                                               GTK_WINDOW(actorsHistory->window),
                                               (GtkDialogFlags)(GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT),
                                               NULL);
@@ -411,7 +436,7 @@ class ActorsHistory {
         gtk_widget_set_sensitive(btnPlay, FALSE);
         
         btnDownload = gtk_dialog_add_button(GTK_DIALOG(dialog),
-		                      "Download",
+		                      "Copy",
                               LINK_RESPONSE_DOWNLOAD);
         gtk_widget_set_sensitive(btnDownload, FALSE);
         
@@ -440,10 +465,13 @@ class ActorsHistory {
 		gdk_threads_leave();
 		
 		// Async part
-		string sizeFile, sizeDownload;
-		sizeFile = HtmlString::getSizeOfLink(playItem->file);
-		sizeDownload = HtmlString::getSizeOfLink(playItem->download);
-		
+		if(!playItem->file.empty()) {
+			playItem->fileSize = HtmlString::getSizeOfLink(playItem->file);
+		}
+		if(!playItem->download.empty()) {
+			playItem->downloadSize = HtmlString::getSizeOfLink(playItem->download);
+		}
+	
 		gdk_threads_enter();
 		//On post execute
 		// Show label (title) and hide spinner
@@ -451,18 +479,32 @@ class ActorsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spDialog));
 		gtk_widget_set_visible(spDialog, FALSE);
 		
-		if(!sizeFile.empty()) {
-			string sizeFileTitle = "Play (" + sizeFile + " Mb)";
+		if(!playItem->fileSize.empty()) {
+			string sizeFileTitle = "Play (" + playItem->fileSize + " Mb)";
 			gtk_button_set_label(GTK_BUTTON(btnPlay), sizeFileTitle.c_str());
 		}
 		
-		if(!sizeDownload.empty()) {
-			string sizeDownloadTitle = "Download (" + sizeDownload + " Mb)";
+		if(!playItem->downloadSize.empty()) {
+			string sizeDownloadTitle = "Copy (" + playItem->downloadSize + " Mb)";
 			gtk_button_set_label(GTK_BUTTON(btnDownload), sizeDownloadTitle.c_str());
 		}
 		
-		gtk_widget_set_sensitive(btnPlay, TRUE);
-		gtk_widget_set_sensitive(btnDownload, TRUE);
+		playItem->player = detectPlayer();
+		string msg;
+		if(!playItem->player.empty()) {
+			msg = "Play in " + playItem->player;
+		}else {
+			msg = "Mplayer or mpv not detected. Copy to clipboard";
+		}
+		gtk_widget_set_tooltip_text(btnPlay, msg.c_str());
+		
+		if(!playItem->file.empty() && (!playItem->fileSize.empty() || !playItem->downloadSize.empty())) {
+			gtk_widget_set_sensitive(btnPlay, TRUE);
+		}
+		
+		if(!playItem->download.empty()) {
+			gtk_widget_set_sensitive(btnDownload, TRUE);
+		}
 		
 		gdk_threads_leave();
 	}
