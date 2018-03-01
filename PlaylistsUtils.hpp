@@ -28,6 +28,14 @@ class PlaylistsUtils {
 		return "http://dterod.com/player.php?newsid=" + id;
 	}
 	
+	static string getCidwoUrl(string id) {
+		return "http://play.cidwo.com/js.php?id" + id;
+	}
+	
+	static string getCidwoReferer(string id) {
+		return "http://play.cidwo.com/player.php?newsid=" + id;
+	}
+	
 	static string getTrailerId(string &page) {
 		size_t begin = page.find("?trailer_id=");
 		size_t end = page.find("' ", begin+13);
