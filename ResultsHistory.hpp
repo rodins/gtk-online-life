@@ -366,6 +366,9 @@ class ResultsHistory {
 	}
 	
 	void onPostExecuteNew(CURLcode res) {
+		if(results != NULL) {
+		    removeBackStackDuplicate();	
+		}
 		if(res == CURLE_OK) {
 			if(gtk_widget_get_visible(spCenter)) {
 				switchToIconView();
@@ -387,7 +390,6 @@ class ResultsHistory {
 				//TODO: maybe I need to clear it while saving....
 				// clear forward results stack on fetching new results
 			    clearForwardResultsStack();
-				removeBackStackDuplicate();
 				
 			    // Clear results links set if not paging
 			    resultsThreadsLinks.clear();
