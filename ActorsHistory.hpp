@@ -129,7 +129,6 @@ class ActorsHistory {
 		actors.setNetworkOk(FALSE);
 		showSaveOrDeleteButton();
 		newThread();
-		detectThread();
 	}
 	
 	void newThread() {
@@ -578,10 +577,12 @@ class ActorsHistory {
 	
 	string onPreExecute() {
 	    showSpActors();
+	    showSpLinks();
 	    return actors.getUrl();
 	}
 	
 	void onPostExecute(string &page) {
+		detectThread();
 		if(!page.empty()) {
 			actors.setNetworkOk(TRUE);
 			actors.parse(page);
