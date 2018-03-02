@@ -281,8 +281,11 @@ class ActorsHistory {
 		gdk_threads_leave();
 		string id = PlaylistsUtils::getHrefId(href);	
 		if(!id.empty()) {
-			string url = PlaylistsUtils::getUrl(id);
-			string referer = PlaylistsUtils::getReferer(id);
+			//string url = PlaylistsUtils::getUrl(id);
+			//string referer = PlaylistsUtils::getReferer(id);
+			string referer = actorsHistory->actors.getPlayerUrl();
+			string player = HtmlString::getPage(referer);
+			string url = PlaylistsUtils::parsePlayerForUrl(player);
 			string js = HtmlString::getPage(url, referer);
 			
 			gdk_threads_enter();

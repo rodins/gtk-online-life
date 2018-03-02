@@ -61,7 +61,8 @@ class HtmlString {
 	    // Find begining
 	    size_t begin = strData.find(to_cp1251("Название:"));
 	    // Find end
-	    string strEnd = to_cp1251("Премьера в мире:");
+	    //string strEnd = to_cp1251("Премьера в мире:");
+	    string strEnd = "</iframe>";
 	    size_t end = strData.find(strEnd);
 	    
 	    // Append begining
