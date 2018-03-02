@@ -2,31 +2,6 @@
 
 class PlaylistsUtils {
 	public:
-    static string getHrefId(string url) {
-		//Find id
-		string domain = DomainFactory::getWwwDomainNoSuffix();
-		size_t id_begin = url.find(domain);
-		// Make parser domain end independent
-		if(id_begin != string::npos) {
-			id_begin = url.find("/", id_begin+1);
-		}
-		size_t id_end = url.find("-", id_begin + domain.length());
-		if(id_begin != string::npos && id_end != string::npos) {
-			size_t id_length = id_end - id_begin - domain.length();
-			string id_str = url.substr(id_begin + domain.length(), id_length);
-			//cout << "Id: " << id_str << endl;
-			return id_str;
-		}
-		return "";
-	}
-	
-	static string getUrl(string id) {
-		return "http://dterod.com/js.php?id=" + id;
-	}
-	
-	static string getReferer(string id) {
-		return "http://dterod.com/player.php?newsid=" + id;
-	}
 	
 	static string parsePlayerForUrl(string &player) {
 		size_t script_begin = player.find("<script");
@@ -50,25 +25,6 @@ class PlaylistsUtils {
 			script_end = player.find(">", script_begin);
 		}
 		return "";
-	}
-	
-	static string getTrailerId(string &page) {
-		size_t begin = page.find("?trailer_id=");
-		size_t end = page.find("' ", begin+13);
-		if(begin != string::npos && end != string::npos) {
-			size_t length = end - begin;
-			string trailerId = page.substr(begin+12, length-12);
-			return trailerId;
-		}
-		return "";
-	}
-	
-	static string getTrailerUrl(string id) {
-		return "http://dterod.com/js.php?id=" + id + "&trailer=1";
-	}
-	
-	static string getTrailerReferer(string id) {
-		return "http://dterod.com/player.php?trailer_id=" + id;
 	}
 	
 	static string get_txt_link(string &page) {
