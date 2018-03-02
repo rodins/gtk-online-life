@@ -48,7 +48,7 @@ class PlaylistsUtils {
 		return "";
 	}
 	
-	static PlayItem parse_play_item(string &page, bool isUtf8 = TRUE) {
+	static PlayItem parse_play_item(string page, bool isUtf8 = TRUE) {
 		PlayItem play_item;
 		string comment, file, download;
 		//Search for file

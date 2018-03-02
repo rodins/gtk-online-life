@@ -1,11 +1,5 @@
 //Actors.hpp
 
-struct GetLinksArgs {
-	string js;
-	string href;
-	string referer;
-};
-
 struct ListEpisodesArgs {
 	string title;
 	string playlist_link;
@@ -27,9 +21,8 @@ class Actors {
     
     int count;
     
-    string url, playerUrl;
+    string url, playerUrl, js;
     
-    GetLinksArgs getLinksArgs;
     ListEpisodesArgs listEpisodesArgs;
     LinksMode linksMode;
     
@@ -54,12 +47,12 @@ class Actors {
 		return playerUrl;
 	}
 	
-	void setGetLinksArgs(GetLinksArgs getLinksArgs) {
-	    this->getLinksArgs = getLinksArgs;
+	void setJs(string js) {
+		this->js = js;
 	}
 	
-	GetLinksArgs getGetLinksArgs() {
-		return getLinksArgs;
+	string getJs() {
+		return js;
 	}
 	
 	void setListEpisodesArgs(ListEpisodesArgs listEpisodesArgs) {

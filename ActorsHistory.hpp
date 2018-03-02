@@ -182,8 +182,8 @@ class ActorsHistory {
 	}
 	
 	void btnGetLinksClicked() {
-		GetLinksArgs getLinksArgs = actors.getGetLinksArgs();
-		PlayItem playItem = PlaylistsUtils::parse_play_item(getLinksArgs.js, FALSE);
+		string js = actors.getJs();
+		PlayItem playItem = PlaylistsUtils::parse_play_item(js, FALSE);
 		
 		if(!playItem.comment.empty()) { // PlayItem found
 		    linksSizeDialogThread(playItem);
@@ -275,12 +275,8 @@ class ActorsHistory {
 				actorsHistory->actors.setListEpisodesArgs(listEpisodesArgs);
 				actorsHistory->actors.setLinksMode(LINKS_MODE_SERIAL);
 			}else {
-				GetLinksArgs getLinksArgs;
-				getLinksArgs.js = js;
-				getLinksArgs.href = href;
-				getLinksArgs.referer = referer; 
 				actorsHistory->showGetLinksButton();
-				actorsHistory->actors.setGetLinksArgs(getLinksArgs);
+				actorsHistory->actors.setJs(js);
 				actorsHistory->actors.setLinksMode(LINKS_MODE_MOVIE);
 			}
 		}else {
