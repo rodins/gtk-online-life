@@ -290,19 +290,18 @@ class ActorsHistory {
 			return "mpv ";
 		}
 		if(system("which mplayer") == 0) {
-			return "mplayer ";
+			return "mplayer -cache 2048 ";
 		}
 		return "";
 	}
 	
-	static void processPlayItem(PlayItem* item) {
-		if(!item->comment.empty()) {
-			string cache = "-cache=2048 ";
+	static void processPlayItem(PlayItem* playItem) {
+		if(!playItem->comment.empty()) {
 			string command;
-			if(!item->fileSize.empty()) {
-				command = detectPlayer() + cache + item->file + " &";
-			}else if(!item->downloadSize.empty()){
-				command = detectPlayer() + cache + item->download + " &";
+			if(!playItem->fileSize.empty()) {
+				command = playItem->player + playItem->file + " &";
+			}else if(!playItem->downloadSize.empty()){
+				command = playItem->player + playItem->download + " &";
 			}
 		    system(command.c_str());
 		}
