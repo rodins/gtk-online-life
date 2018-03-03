@@ -4,25 +4,15 @@ class PlaylistsUtils {
 	public:
 	
 	static string parsePlayerForUrl(string &player) {
-		size_t script_begin = player.find("<script");
-		size_t script_end = player.find(">", script_begin);
-		while(script_begin != string::npos && script_end != string::npos) {
-			size_t script_length = script_end - script_begin;
-			string script = player.substr(script_begin, script_length);
-			
-			size_t js_detect = script.find("js.php");
-			if(js_detect != string::npos) {
-				size_t js_begin = script.find("src=");
-				size_t js_end = script.find("\"", js_begin+6);
-				if(js_begin != string::npos && js_end != string::npos) {
-					size_t js_length = js_end - js_begin;
-					string js = script.substr(js_begin+5, js_length-5);
-					return "http:" + js;
-				}
+		size_t js_detect = player.find("js.php");
+		if(js_detect != string::npos) {
+			size_t js_begin = player.rfind("src=", js_detect);
+			size_t js_end = player.find("\"", js_begin+6);
+			if(js_begin != string::npos && js_end != string::npos) {
+				size_t js_length = js_end - js_begin;
+				string js = player.substr(js_begin+5, js_length-5);
+				return "http:" + js;
 			}
-			
-			script_begin = player.find("<script", script_end);
-			script_end = player.find(">", script_begin);
 		}
 		return "";
 	}
