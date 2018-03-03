@@ -296,15 +296,13 @@ class ActorsHistory {
 	}
 	
 	static void processPlayItem(PlayItem* playItem) {
-		if(!playItem->comment.empty()) {
-			string command;
-			if(!playItem->fileSize.empty()) {
-				command = playItem->player + playItem->file + " &";
-			}else if(!playItem->downloadSize.empty()){
-				command = playItem->player + playItem->download + " &";
-			}
-		    system(command.c_str());
+		string command;
+		if(!playItem->fileSize.empty()) {
+			command = playItem->player + playItem->file + " &";
+		}else if(!playItem->downloadSize.empty()){
+			command = playItem->player + playItem->download + " &";
 		}
+	    system(command.c_str());
 	}
 	
 	static void dialogResponse(GtkWidget *dialog,
@@ -385,6 +383,11 @@ class ActorsHistory {
 						 playItem);
                                               
         content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+        
+        if(playItem->comment.size() == 1) {
+			playItem->comment = actorsHistory->actors.getTitle();
+		}
+        
 	    label = gtk_label_new (playItem->comment.c_str());
 	    
 	    /* Add the label, and show everything we've added to the dialog. */
