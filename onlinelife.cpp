@@ -684,13 +684,13 @@ int main( int   argc,
     gtk_widget_set_tooltip_text(btnDelete, "Remove from bookmarks");
     
     spLinks = gtk_spinner_new();
-    hbActions = gtk_hbox_new(TRUE, 1);
+    hbActions = gtk_hbox_new(FALSE, 1);
     gtk_box_pack_start(GTK_BOX(hbActions), spLinks, TRUE, FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(hbActions), btnLinksError, TRUE, TRUE, 5);
-    gtk_box_pack_start(GTK_BOX(hbActions), btnGetLinks, TRUE, TRUE, 5);
-    gtk_box_pack_start(GTK_BOX(hbActions), btnListEpisodes, TRUE, TRUE, 5);
-    gtk_box_pack_start(GTK_BOX(hbActions), btnSave, TRUE, TRUE, 5);
-    gtk_box_pack_start(GTK_BOX(hbActions), btnDelete, TRUE, TRUE, 5);
+    gtk_box_pack_start(GTK_BOX(hbActions), btnLinksError, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(hbActions), btnGetLinks, TRUE, TRUE, 1);
+    gtk_box_pack_start(GTK_BOX(hbActions), btnListEpisodes, TRUE, TRUE, 1);
+    gtk_box_pack_end(GTK_BOX(hbActions), btnSave, TRUE, TRUE, 1);
+    gtk_box_pack_end(GTK_BOX(hbActions), btnDelete, TRUE, TRUE, 1);
     gtk_container_add(GTK_CONTAINER(frActions), hbActions);
     
     gtk_box_pack_start(GTK_BOX(hbActorsError), btnActorsError, TRUE, FALSE, 10);

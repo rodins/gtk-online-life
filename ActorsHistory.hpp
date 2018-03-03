@@ -251,6 +251,14 @@ class ActorsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
+	void hideAllLinksButtons() {
+		gtk_widget_set_visible(btnGetLinks, FALSE);
+		gtk_widget_set_visible(btnListEpisodes, FALSE);
+		gtk_widget_set_visible(btnLinksError, FALSE);
+		gtk_widget_set_visible(spLinks, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spLinks));
+	}
+	
 	static void detectTask(gpointer arg, gpointer arg2) {
 		ActorsHistory *actorsHistory = (ActorsHistory *)arg2;
 	    // On pre execute
@@ -512,13 +520,13 @@ class ActorsHistory {
 	
 	string onPreExecute() {
 	    showSpActors();
-	    showSpLinks();
+	    hideAllLinksButtons();
 	    return actors.getUrl();
 	}
 	
 	void onPostExecute(string &page) {
-		detectThread();
 		if(!page.empty()) {
+			detectThread();
 			actors.setNetworkOk(TRUE);
 			actors.parse(page);
 			// Save to back actors map
