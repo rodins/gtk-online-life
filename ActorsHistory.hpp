@@ -8,11 +8,6 @@ enum LinkResponse {
 	LINK_RESPONSE_CANCEL
 };
 
-enum LinksErrorType {
-	DETECT_TASK,
-    GET_LINKS_TASK
-};
-
 class ActorsHistory {
     Actors actors, prevActors;
     map <string, Actors> backActors;
@@ -29,7 +24,6 @@ class ActorsHistory {
     GtkWidget *vbRight;
     
     GThreadPool *actorsThreadPool;
-    GThreadPool *getLinksThreadPool;
     GThreadPool *linksSizeThreadPool;
     GThreadPool *detectThreadPool;
     
@@ -42,8 +36,6 @@ class ActorsHistory {
     GtkWidget *tvSavedItems;
     GtkToolItem *btnSavedItems;
     GtkToolItem *btnActors;
-    
-    LinksErrorType linksError;
     
     public:
     
@@ -98,13 +90,6 @@ class ActorsHistory {
 	                                   FALSE,
 	                                   NULL);
 	                                   
-	    // GThreadPool for getLinks
-	    getLinksThreadPool = g_thread_pool_new(ActorsHistory::getLinksTask,
-	                                   this,
-	                                   1, // Run one thread at the time
-	                                   FALSE,
-	                                   NULL);
-	                                   
 	    // GThreadPool for links sizes
 	    linksSizeThreadPool = g_thread_pool_new(ActorsHistory::linksSizeTask,
 	                                   this,
@@ -129,7 +114,6 @@ class ActorsHistory {
 		actors.setNetworkOk(FALSE);
 		showSaveOrDeleteButton();
 		newThread();
-		detectThread();
 	}
 	
 	void newThread() {
@@ -198,20 +182,16 @@ class ActorsHistory {
 	}
 	
 	void btnGetLinksClicked() {
-		g_thread_pool_push(getLinksThreadPool, 
-		                   (gpointer)1, 
-		                   NULL);
+		string js = actors.getJs();
+		PlayItem playItem = PlaylistsUtils::parse_play_item(js, FALSE);
+		
+		if(!playItem.comment.empty()) { // PlayItem found
+		    linksSizeDialogThread(playItem);
+		}
 	}
 	
 	void btnLinksErrorClicked() {
-		switch(linksError) {
-			case DETECT_TASK:
-			    detectThread();
-			break;
-			case GET_LINKS_TASK:
-			    btnGetLinksClicked();
-			break;
-		}
+		detectThread();
 	}
 	
 	void btnSaveClicked() {
@@ -271,6 +251,14 @@ class ActorsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
+	void hideAllLinksButtons() {
+		gtk_widget_set_visible(btnGetLinks, FALSE);
+		gtk_widget_set_visible(btnListEpisodes, FALSE);
+		gtk_widget_set_visible(btnLinksError, FALSE);
+		gtk_widget_set_visible(spLinks, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spLinks));
+	}
+	
 	static void detectTask(gpointer arg, gpointer arg2) {
 		ActorsHistory *actorsHistory = (ActorsHistory *)arg2;
 	    // On pre execute
@@ -278,76 +266,31 @@ class ActorsHistory {
 		string href = actorsHistory->actors.getUrl();
 		// Show links spinner
 		actorsHistory->showSpLinks();
-		gdk_threads_leave();
-		string id = PlaylistsUtils::getHrefId(href);	
-		if(!id.empty()) {
-			string url = PlaylistsUtils::getUrl(id);
-			string referer = PlaylistsUtils::getReferer(id);
-			string js = HtmlString::getPage(url, referer);
-			
-			gdk_threads_enter();
-			if(!js.empty()) {
-				string playlist_link = PlaylistsUtils::get_txt_link(js);
-				if(!playlist_link.empty()) { // Playlists found
-					actorsHistory->showListEpisodesButton();
-					ListEpisodesArgs listEpisodesArgs;
-					listEpisodesArgs.title = actorsHistory->actors.getTitle();
-					listEpisodesArgs.playlist_link = playlist_link;
-					actorsHistory->actors.setListEpisodesArgs(listEpisodesArgs);
-					actorsHistory->actors.setLinksMode(LINKS_MODE_SERIAL);
-				}else {
-					GetLinksArgs getLinksArgs;
-					getLinksArgs.js = js;
-					getLinksArgs.href = href;
-					getLinksArgs.referer = referer; 
-					actorsHistory->showGetLinksButton();
-					actorsHistory->actors.setGetLinksArgs(getLinksArgs);
-					actorsHistory->actors.setLinksMode(LINKS_MODE_MOVIE);
-				}
-			}else {
-				actorsHistory->showLinksErrorButton();
-				actorsHistory->linksError = DETECT_TASK;
-			}
-			gdk_threads_leave();
-		}
-	}
-	
-	static void getLinksTask(gpointer args, gpointer args2) {
-		ActorsHistory *actorsHistory = (ActorsHistory *)args2;
-		// On pre execute
+		gdk_threads_leave();	
+		string referer = actorsHistory->actors.getPlayerUrl();
+		string player = HtmlString::getPage(referer);
+		string url = PlaylistsUtils::parsePlayerForUrl(player);
+		string js = HtmlString::getPage(url, referer);
+		
 		gdk_threads_enter();
-		GetLinksArgs getLinksArgs = actorsHistory->actors.getGetLinksArgs();
-		// Show links spinner
-		actorsHistory->showSpLinks();
-		gdk_threads_leave();
-		PlayItem playItem = PlaylistsUtils::parse_play_item(getLinksArgs.js, FALSE);
-		if(!playItem.comment.empty()) { // PlayItem found
-			gdk_threads_enter();
-		    actorsHistory->linksSizeDialogThread(playItem);
-		    actorsHistory->showGetLinksButton();
-		    gdk_threads_leave();
-		}else {
-			// Searching for alternative trailers links
-            string infoHtml = HtmlString::getPage(getLinksArgs.href,
-                                                  getLinksArgs.referer);
-            string trailerId = PlaylistsUtils::getTrailerId(infoHtml); 
-            string url = PlaylistsUtils::getTrailerUrl(trailerId);
-            string referer = PlaylistsUtils::getTrailerReferer(trailerId);
-            string json = HtmlString::getPage(url, referer);
-            PlayItem playItem = PlaylistsUtils::parse_play_item(json);
-            if(!playItem.comment.empty()) {
-				gdk_threads_enter();
-				playItem.comment = actorsHistory->actors.getTitle();
-				actorsHistory->showGetLinksButton();
-		        actorsHistory->linksSizeDialogThread(playItem);
-				gdk_threads_leave();
+		if(!js.empty()) {
+			string playlist_link = PlaylistsUtils::get_txt_link(js);
+			if(!playlist_link.empty()) { // Playlists found
+				actorsHistory->showListEpisodesButton();
+				ListEpisodesArgs listEpisodesArgs;
+				listEpisodesArgs.title = actorsHistory->actors.getTitle();
+				listEpisodesArgs.playlist_link = playlist_link;
+				actorsHistory->actors.setListEpisodesArgs(listEpisodesArgs);
+				actorsHistory->actors.setLinksMode(LINKS_MODE_SERIAL);
 			}else {
-				gdk_threads_enter();
-				actorsHistory->showLinksErrorButton();
-				actorsHistory->linksError = GET_LINKS_TASK;
-			    gdk_threads_leave();
+				actorsHistory->showGetLinksButton();
+				actorsHistory->actors.setJs(js);
+				actorsHistory->actors.setLinksMode(LINKS_MODE_MOVIE);
 			}
+		}else {
+			actorsHistory->showLinksErrorButton();
 		}
+		gdk_threads_leave();
 	}
 	
 	static string detectPlayer() {
@@ -355,22 +298,19 @@ class ActorsHistory {
 			return "mpv ";
 		}
 		if(system("which mplayer") == 0) {
-			return "mplayer ";
+			return "mplayer -cache 2048 ";
 		}
 		return "";
 	}
 	
-	static void processPlayItem(PlayItem* item) {
-		if(!item->comment.empty()) {
-			string cache = "-cache 2048 ";
-			string command;
-			if(!item->fileSize.empty()) {
-				command = detectPlayer() + cache + item->file + " &";
-			}else if(!item->downloadSize.empty()){
-				command = detectPlayer() + cache + item->download + " &";
-			}
-		    system(command.c_str());
+	static void processPlayItem(PlayItem* playItem) {
+		string command;
+		if(!playItem->fileSize.empty()) {
+			command = playItem->player + playItem->file + " &";
+		}else if(!playItem->downloadSize.empty()){
+			command = playItem->player + playItem->download + " &";
 		}
+	    system(command.c_str());
 	}
 	
 	static void dialogResponse(GtkWidget *dialog,
@@ -451,6 +391,11 @@ class ActorsHistory {
 						 playItem);
                                               
         content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+        
+        if(playItem->comment.size() == 1) {
+			playItem->comment = actorsHistory->actors.getTitle();
+		}
+        
 	    label = gtk_label_new (playItem->comment.c_str());
 	    
 	    /* Add the label, and show everything we've added to the dialog. */
@@ -575,11 +520,13 @@ class ActorsHistory {
 	
 	string onPreExecute() {
 	    showSpActors();
+	    hideAllLinksButtons();
 	    return actors.getUrl();
 	}
 	
 	void onPostExecute(string &page) {
 		if(!page.empty()) {
+			detectThread();
 			actors.setNetworkOk(TRUE);
 			actors.parse(page);
 			// Save to back actors map

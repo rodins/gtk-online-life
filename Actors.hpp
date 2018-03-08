@@ -1,11 +1,5 @@
 //Actors.hpp
 
-struct GetLinksArgs {
-	string js;
-	string href;
-	string referer;
-};
-
 struct ListEpisodesArgs {
 	string title;
 	string playlist_link;
@@ -27,9 +21,8 @@ class Actors {
     
     int count;
     
-    string url;
+    string url, playerUrl, js;
     
-    GetLinksArgs getLinksArgs;
     ListEpisodesArgs listEpisodesArgs;
     LinksMode linksMode;
     
@@ -50,12 +43,16 @@ class Actors {
 		return url;
 	}
 	
-	void setGetLinksArgs(GetLinksArgs getLinksArgs) {
-	    this->getLinksArgs = getLinksArgs;
+	string getPlayerUrl() {
+		return playerUrl;
 	}
 	
-	GetLinksArgs getGetLinksArgs() {
-		return getLinksArgs;
+	void setJs(string js) {
+		this->js = js;
+	}
+	
+	string getJs() {
+		return js;
 	}
 	
 	void setListEpisodesArgs(ListEpisodesArgs listEpisodesArgs) {
@@ -116,9 +113,26 @@ class Actors {
 		info = actorsTitle + " - " + year + " - " + country;
 		parse_info(page, "Режиссер:", " (режиссер)");
 		parse_info(page, "В ролях:", "");
+		parse_iframe(page);
 	}
 	
 	private:
+	
+	void parse_iframe(string &page) {
+		size_t iframe_begin = page.find("<iframe");
+		size_t iframe_end = page.find("</iframe>", iframe_begin+10);
+		if(iframe_begin != string::npos && iframe_end != string::npos) {
+			size_t iframe_length = iframe_end - iframe_begin;
+			string iframe = page.substr(iframe_begin, iframe_length);
+
+			size_t link_begin = iframe.find("src=");
+			size_t link_end = iframe.find("'", link_begin+6);
+			if(link_begin != string::npos && link_end != string::npos) {
+				size_t link_length = link_end - link_begin;
+			    playerUrl = iframe.substr(link_begin+5, link_length-5);
+			}
+		}
+	}
 	
 	void addToStore(string title, string link) {
 		gtk_list_store_append(store, &iter);
