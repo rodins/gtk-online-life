@@ -427,6 +427,9 @@ class ActorsHistory {
 		if(!playItem->fileSize.empty()) {
 			string sizeFileTitle = "Play (" + playItem->fileSize + " Mb)";
 			gtk_button_set_label(GTK_BUTTON(btnPlay), sizeFileTitle.c_str());
+		}else if(!playItem->downloadSize.empty()) {
+			string sizeFileTitle = "Play (" + playItem->downloadSize + " Mb)";
+			gtk_button_set_label(GTK_BUTTON(btnPlay), sizeFileTitle.c_str());
 		}
 		
 		if(!playItem->downloadSize.empty()) {
@@ -442,6 +445,7 @@ class ActorsHistory {
 			msg = "Mplayer or mpv not detected. Copy to clipboard";
 		}
 		gtk_widget_set_tooltip_text(btnPlay, msg.c_str());
+		gtk_widget_set_tooltip_text(btnDownload, "Copy to clipboard");
 		
 		if(!playItem->file.empty() && (!playItem->fileSize.empty() || !playItem->downloadSize.empty())) {
 			gtk_widget_set_sensitive(btnPlay, TRUE);
