@@ -13,6 +13,10 @@ struct LinkSizeTaskArgs {
 	GtkWidget *dialog;
 };
 
+struct DialogResponseArgs {
+	string linkFile, linkDownload, player;
+};
+
 class ProcessPlayItemDialog {
 	
 	GtkWidget* window;
@@ -74,12 +78,6 @@ class ProcessPlayItemDialog {
 		                      "Cancel",
                               LINK_RESPONSE_CANCEL);
                                               
-        /* Ensure that the dialog box is destroyed when the user responds. */
-		g_signal_connect(dialog,
-						 "response",
-					     G_CALLBACK (ProcessPlayItemDialog::dialogResponse),
-					     this);
-                                              
         content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
         
 	    label = gtk_label_new (playItem.comment.c_str());
@@ -98,6 +96,17 @@ class ProcessPlayItemDialog {
 		gtk_widget_set_tooltip_text(btnFlv, msg.c_str());
 		gtk_widget_set_tooltip_text(btnMp4, msg.c_str());
 		
+		DialogResponseArgs *rargs = new DialogResponseArgs();
+        rargs->linkFile = playItem.file;
+        rargs->linkDownload = playItem.download;
+        rargs->player = playItem.player;
+                                              
+        /* Ensure that the dialog box is destroyed when the user responds. */
+		g_signal_connect(dialog,
+						 "response",
+					     G_CALLBACK (ProcessPlayItemDialog::dialogResponse),
+					     rargs);
+		
 		LinkSizeTaskArgs *args = new LinkSizeTaskArgs();
 		args->linkFile = playItem.file;
 		args->linkDownload = playItem.download;
@@ -110,15 +119,15 @@ class ProcessPlayItemDialog {
 		                   NULL);
 	}
 	
-	void playLink(string link) {
-		string command = playItem.player + link + " &";
+	static void playLink(string player, string link) {
+		string command = player + link + " &";
 		system(command.c_str());
 	}
 	
 	static void dialogResponse(GtkWidget *dialog,
 	                           gint response_id, 
 	                           gpointer user_data) {
-		ProcessPlayItemDialog *ppid = (ProcessPlayItemDialog*)user_data;
+		DialogResponseArgs *args = (DialogResponseArgs*)user_data;
 		gtk_widget_destroy(dialog);
 		
 		// For pasting with "paste" or ctrl-v
@@ -128,27 +137,28 @@ class ProcessPlayItemDialog {
         switch(response_id) {
 			case LINK_RESPONSE_PLAY:
 			    gtk_clipboard_set_text(clipboard,
-			                           ppid->playItem.file.c_str(),
-			                           ppid->playItem.file.size());
+			                           args->linkFile.c_str(),
+			                           args->linkFile.size());
 			    gtk_clipboard_set_text(clipboardX,
-			                           ppid->playItem.file.c_str(),
-			                           ppid->playItem.file.size());
+			                           args->linkFile.c_str(),
+			                           args->linkFile.size());
 			                           
-			    ppid->playLink(ppid->playItem.file);
+			    playLink(args->player, args->linkFile);
 			break;
 			case LINK_RESPONSE_DOWNLOAD:
 			    gtk_clipboard_set_text(clipboard,
-			                           ppid->playItem.download.c_str(),
-			                           ppid->playItem.download.size());
+			                           args->linkDownload.c_str(),
+			                           args->linkDownload.size());
 			    gtk_clipboard_set_text(clipboardX,
-			                           ppid->playItem.download.c_str(),
-			                           ppid->playItem.download.size());
-			    ppid->playLink(ppid->playItem.download);
+			                           args->linkDownload.c_str(),
+			                           args->linkDownload.size());
+			    playLink(args->player, args->linkDownload);
 			break;
 			case LINK_RESPONSE_CANCEL:
 			    // Do nothing. Dialog should already be destroyed.
 			break;
 		}
+		g_free(args);
 	}
 	
 	static void linksSizeTask(gpointer args1, gpointer args2) {
