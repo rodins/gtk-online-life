@@ -2,6 +2,7 @@
 #include "PlayItem.hpp"
 #include "PlaylistsUtils.hpp"
 #include "Playlists.hpp"
+#include "ProcessPlayItemDialog.hpp"
 #include "ActorsHistory.hpp"
 #include "ErrorType.hpp"
 

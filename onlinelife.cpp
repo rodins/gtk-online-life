@@ -126,7 +126,8 @@ void playlistClicked(GtkTreeView *treeView,
 		playItem.comment = comment;
 		playItem.file = file;
 		playItem.download = download;
-		actorsHistory->linksSizeDialogThread(playItem);
+		//actorsHistory->linksSizeDialogThread(playItem);
+		ProcessPlayItemDialog ppid(actorsHistory->getWindow(), playItem);
 	}
 	
 	g_free(comment);
