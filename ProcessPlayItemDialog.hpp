@@ -7,10 +7,10 @@ enum LinkResponse {
 };
 
 struct LinkSizeTaskArgs {
-	string link;
-	GtkWidget *button;
-	GtkWidget *label;
-	GtkWidget *spinner;
+	string linkFile, linkDownload;
+	GtkWidget *btnFlv;
+	GtkWidget *btnMp4;
+	GtkWidget *dialog;
 };
 
 class ProcessPlayItemDialog {
@@ -19,10 +19,9 @@ class ProcessPlayItemDialog {
 	PlayItem playItem;
 	GThreadPool *linksSizeThreadPool;
 	
-	GtkWidget *btnPlay,
-	          *btnDownload,
-	          *label,
-	          *spinner;
+	GtkWidget *btnFlv,
+	          *btnMp4,
+	          *label;
 	
 	public:
 	
@@ -55,24 +54,21 @@ class ProcessPlayItemDialog {
 		// Create dialog, add buttons to it, get size information and display it
 		GtkWidget *dialog,  
 		          *content_area;
-		          
-		spinner = gtk_spinner_new();
-		gtk_widget_set_size_request(spinner, 32, 32);
 		
-		dialog = gtk_dialog_new_with_buttons ("Play or copy link...",
+		dialog = gtk_dialog_new_with_buttons ("Play and copy links",
                                               GTK_WINDOW(window),
                                               (GtkDialogFlags)(GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT),
                                               NULL);
                                               
-        btnPlay = gtk_dialog_add_button(GTK_DIALOG(dialog),
+        btnFlv = gtk_dialog_add_button(GTK_DIALOG(dialog),
 		                      "FLV",
                               LINK_RESPONSE_PLAY);                   
-        gtk_widget_set_sensitive(btnPlay, FALSE);
+        gtk_widget_set_sensitive(btnFlv, FALSE);
         
-        btnDownload = gtk_dialog_add_button(GTK_DIALOG(dialog),
+        btnMp4 = gtk_dialog_add_button(GTK_DIALOG(dialog),
 		                      "MP4",
                               LINK_RESPONSE_DOWNLOAD);
-        gtk_widget_set_sensitive(btnDownload, FALSE);
+        gtk_widget_set_sensitive(btnMp4, FALSE);
         
         gtk_dialog_add_button(GTK_DIALOG(dialog),
 		                      "Cancel",
@@ -89,46 +85,29 @@ class ProcessPlayItemDialog {
 	    label = gtk_label_new (playItem.comment.c_str());
 	    
 	    /* Add the label, and show everything we've added to the dialog. */
-	    gtk_box_pack_start(GTK_BOX(content_area), spinner, TRUE, FALSE, 1);
 	    gtk_box_pack_start(GTK_BOX(content_area), label, TRUE, FALSE, 5);
-        //gtk_widget_show_all(dialog);
-      
-        // Hide label (title) and show spinner
-        gtk_widget_hide(label);
-        gtk_widget_show(spinner);
-        gtk_spinner_start(GTK_SPINNER(spinner));
+	    gtk_widget_show_all(content_area);
         
         playItem.player = detectPlayer();
 		string msg;
 		if(!playItem.player.empty()) {
-			msg = "Play in " + playItem.player;
+			msg = "Play in " + playItem.player + ". Copy to clipboard";
 		}else {
 			msg = "Mplayer or mpv not detected. Copy to clipboard";
 		}
-		gtk_widget_set_tooltip_text(btnPlay, msg.c_str());
-		gtk_widget_set_tooltip_text(btnDownload, msg.c_str());
+		gtk_widget_set_tooltip_text(btnFlv, msg.c_str());
+		gtk_widget_set_tooltip_text(btnMp4, msg.c_str());
 		
-		LinkSizeTaskArgs *fileArgs = new LinkSizeTaskArgs();
-		fileArgs->link = playItem.file;
-		fileArgs->button = btnPlay;
-		fileArgs->label = label;
-		fileArgs->spinner = spinner;
+		LinkSizeTaskArgs *args = new LinkSizeTaskArgs();
+		args->linkFile = playItem.file;
+		args->linkDownload = playItem.download;
+		args->btnFlv = btnFlv;
+		args->btnMp4 = btnMp4;
+		args->dialog = dialog;
 		
 		g_thread_pool_push(linksSizeThreadPool, 
-		                   (gpointer)fileArgs, 
+		                   (gpointer)args, 
 		                   NULL);
-		                   
-		LinkSizeTaskArgs *downloadArgs = new LinkSizeTaskArgs();
-		downloadArgs->link = playItem.download;
-		downloadArgs->button = btnDownload;
-		downloadArgs->label = label;
-		downloadArgs->spinner = spinner;                   
-		                   
-		g_thread_pool_push(linksSizeThreadPool, 
-		                   (gpointer)downloadArgs, 
-		                   NULL);
-	    
-		gtk_dialog_run(GTK_DIALOG(dialog));
 	}
 	
 	void playLink(string link) {
@@ -172,22 +151,27 @@ class ProcessPlayItemDialog {
 		}
 	}
 	
-	static void linksSizeTask(gpointer args, gpointer args2) {
-		LinkSizeTaskArgs *linkArgs = (LinkSizeTaskArgs*)args;
-		string size = HtmlString::getSizeOfLink(linkArgs->link);
-		if(!size.empty()) {
-			gdk_threads_enter();
-			string buttonText = string(gtk_button_get_label(GTK_BUTTON(linkArgs->button))); 
-			string sizeTitle = buttonText + " (" + size + " Mb)";
-			g_return_if_fail(GTK_IS_BUTTON(linkArgs->button));
-			gtk_button_set_label(GTK_BUTTON(linkArgs->button), sizeTitle.c_str());
-			gtk_widget_set_sensitive(linkArgs->button, TRUE);
-			gtk_spinner_stop(GTK_SPINNER(linkArgs->spinner));
-			gtk_widget_hide(linkArgs->spinner);
-			gtk_widget_show(linkArgs->label);
-			gdk_threads_leave();
-	    }
-	    
-	    g_free(linkArgs);
+	static void linksSizeTask(gpointer args1, gpointer args2) {
+		LinkSizeTaskArgs *args = (LinkSizeTaskArgs*)args1;
+		string sizeFile = HtmlString::getSizeOfLink(args->linkFile);
+		string sizeDownload = HtmlString::getSizeOfLink(args->linkDownload);
+		gdk_threads_enter();
+		
+		if(!sizeFile.empty()) {
+			string buttonText = string(gtk_button_get_label(GTK_BUTTON(args->btnFlv))); 
+			string sizeTitle = buttonText + " (" + sizeFile + " Mb)";
+			gtk_button_set_label(GTK_BUTTON(args->btnFlv), sizeTitle.c_str());
+			gtk_widget_set_sensitive(args->btnFlv, TRUE);
+		}
+		
+		if(!sizeDownload.empty()) {
+			string buttonText = string(gtk_button_get_label(GTK_BUTTON(args->btnMp4))); 
+			string sizeTitle = buttonText + " (" + sizeDownload + " Mb)";
+			gtk_button_set_label(GTK_BUTTON(args->btnMp4), sizeTitle.c_str());
+			gtk_widget_set_sensitive(args->btnMp4, TRUE);
+		}
+		gtk_dialog_run(GTK_DIALOG(args->dialog));
+		gdk_threads_leave();
+	    g_free(args);
 	}
 };
