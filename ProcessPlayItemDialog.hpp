@@ -64,6 +64,8 @@ class ProcessPlayItemDialog {
                                               (GtkDialogFlags)(GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT),
                                               NULL);
                                               
+        gtk_widget_set_size_request(dialog, 400, -1);
+                                              
         btnFlv = gtk_dialog_add_button(GTK_DIALOG(dialog),
 		                      "FLV",
                               LINK_RESPONSE_PLAY);                   
@@ -81,6 +83,9 @@ class ProcessPlayItemDialog {
         content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
         
 	    label = gtk_label_new (playItem.comment.c_str());
+	    //gtk_widget_set_size_request(label, 390, -1);
+        gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+        //gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_CENTER);
 	    
 	    /* Add the label, and show everything we've added to the dialog. */
 	    gtk_box_pack_start(GTK_BOX(content_area), label, TRUE, FALSE, 5);
