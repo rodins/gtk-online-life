@@ -42,15 +42,7 @@ class ImagesDownloader {
 	{
 		size_t realsize = size * nmemb;
 		struct ArgsStruct *args = (struct ArgsStruct *)userp;
-		// Setting new partially downloaded image here
 		gdk_pixbuf_loader_write(args->loader, (const guchar*)contents, realsize, NULL);
-		GdkPixbuf* pixbufOrig = gdk_pixbuf_loader_get_pixbuf(args->loader);
-		if(pixbufOrig != NULL) {
-			gdk_threads_enter();
-			gtk_list_store_set(args->store, &args->iter, IMAGE_COLUMN, pixbufOrig, -1);  
-			gdk_threads_leave();
-		}
-		
 		return realsize;
 	}
 	
@@ -90,16 +82,29 @@ class ImagesDownloader {
 		}
 	}
 	
+	static void loaderAreaPrepared(GdkPixbufLoader *loader, gpointer user_data) {
+		struct ArgsStruct *args = (struct ArgsStruct *)user_data;
+		GdkPixbuf *pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+		gdk_threads_enter();
+		gtk_list_store_set(args->store, &args->iter, IMAGE_COLUMN, pixbuf, -1);  
+		gdk_threads_leave();
+	}
+	
 	void getPixbufFromUrl(string url, GtkTreeIter iter, int index, GtkListStore* store) {
 		CURL *curl_handle;
 		CURLcode res;
 		GdkPixbuf *pixbuf;
 		
 		GdkPixbufLoader* loader = gdk_pixbuf_loader_new();
+		 
 		struct ArgsStruct args;
 		args.loader = loader;
 		args.iter = iter;
 		args.store = store;
+		g_signal_connect(loader,
+		                 "area-prepared",
+		                 G_CALLBACK(ImagesDownloader::loaderAreaPrepared),
+		                 (void *)&args);
 		
 		/* init the curl session */ 
 		curl_handle = curl_easy_init();
@@ -148,11 +153,6 @@ class ImagesDownloader {
 				pixbuf = GDK_PIXBUF(g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader)));
 				gdk_threads_enter();
 				(*imagesCache)[url] = pixbuf; 
-				gtk_list_store_set(store, 
-				                   &iter, 
-				                   IMAGE_COLUMN, 
-				                   pixbuf,
-				                   -1);
 				gdk_threads_leave();
 	        }
 		}
@@ -160,8 +160,8 @@ class ImagesDownloader {
 		/* cleanup curl stuff */ 
 		curl_easy_cleanup(curl_handle);
 		
-		//free(chunk.memory);
-		g_object_unref(loader);
+		// close loader
+		gdk_pixbuf_loader_close(loader, NULL);
 	}
 	
 	static gboolean iconViewExposed(GtkIconView *icon_view, 
