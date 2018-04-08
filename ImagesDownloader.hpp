@@ -1,7 +1,6 @@
 //ImagesDownloader.hpp
 
 struct ArgsStruct {
-	GdkPixbufLoader* loader;
 	GtkTreeIter iter;
 	GtkListStore *store;
 };
@@ -41,8 +40,8 @@ class ImagesDownloader {
 	WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 	{
 		size_t realsize = size * nmemb;
-		struct ArgsStruct *args = (struct ArgsStruct *)userp;
-		gdk_pixbuf_loader_write(args->loader, (const guchar*)contents, realsize, NULL);
+		GdkPixbufLoader *loader = (GdkPixbufLoader*)userp;
+		gdk_pixbuf_loader_write(loader, (const guchar*)contents, realsize, NULL);
 		return realsize;
 	}
 	
@@ -93,18 +92,16 @@ class ImagesDownloader {
 	void getPixbufFromUrl(string url, GtkTreeIter iter, int index, GtkListStore* store) {
 		CURL *curl_handle;
 		CURLcode res;
-		GdkPixbuf *pixbuf;
 		
 		GdkPixbufLoader* loader = gdk_pixbuf_loader_new();
 		 
 		struct ArgsStruct args;
-		args.loader = loader;
 		args.iter = iter;
 		args.store = store;
 		g_signal_connect(loader,
 		                 "area-prepared",
 		                 G_CALLBACK(ImagesDownloader::loaderAreaPrepared),
-		                 (void *)&args);
+		                 &args);
 		
 		/* init the curl session */ 
 		curl_handle = curl_easy_init();
@@ -121,7 +118,7 @@ class ImagesDownloader {
 		                 ImagesDownloader::WriteMemoryCallback);
 		
 		/* we pass our 'chunk' struct to the callback function */ 
-		curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&args);
+		curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, loader);
 		
 		/* some servers don't like requests that are made without a user-agent
 		 field, so we provide one */ 
@@ -137,7 +134,9 @@ class ImagesDownloader {
 					curl_easy_strerror(res));
 			// In case of error remove index from imageIndexes 
 	        // to have a chance to reload image
+	        gdk_threads_enter();
 	        imageIndexes->erase(index);
+	        gdk_threads_leave();
 		}else { 
 	        GError *error = NULL;
 			gboolean ok = gdk_pixbuf_loader_close(loader, &error);
@@ -148,10 +147,9 @@ class ImagesDownloader {
 		        //imageIndexes->erase(index);
 	            g_error_free(error);
 			}else {
-				// Setting new fully downloaded image here
-	            //Make copy of pixbuf to be able to free loader
-				pixbuf = GDK_PIXBUF(g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader)));
 				gdk_threads_enter();
+	            //Make copy of pixbuf to be able to free loader
+				GdkPixbuf *pixbuf = GDK_PIXBUF(g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader)));
 				(*imagesCache)[url] = pixbuf; 
 				gdk_threads_leave();
 	        }
@@ -160,8 +158,7 @@ class ImagesDownloader {
 		/* cleanup curl stuff */ 
 		curl_easy_cleanup(curl_handle);
 		
-		// close loader
-		gdk_pixbuf_loader_close(loader, NULL);
+		g_object_unref(loader);
 	}
 	
 	static gboolean iconViewExposed(GtkIconView *icon_view, 
