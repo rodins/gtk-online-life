@@ -150,7 +150,8 @@ class ImagesDownloader {
 				gdk_threads_enter();
 	            //Make copy of pixbuf to be able to free loader
 				GdkPixbuf *pixbuf = GDK_PIXBUF(g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader)));
-				(*imagesCache)[url] = pixbuf; 
+				(*imagesCache)[url] = pixbuf;
+				gtk_list_store_set(store, &iter, IMAGE_COLUMN, pixbuf, -1);
 				gdk_threads_leave();
 	        }
 		}
