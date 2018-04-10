@@ -46,7 +46,7 @@ class ProcessPlayItemDialog {
 	
 	static string detectPlayer() {
 		if(system("which mpv") == 0) {
-			return "mpv ";
+			return "mpv --cache=2048 ";
 		}
 		if(system("which mplayer") == 0) {
 			return "mplayer -cache 2048 ";
