@@ -141,6 +141,9 @@ class ActorsHistory {
 			case LINKS_MODE_SERIAL:
 			    showListEpisodesButton();
 			break;
+			case LINKS_MODE_HIDE:
+			    hideAllLinksButtons();
+			break;
 		}
 		
 		// Save or delete button change
@@ -352,9 +355,15 @@ class ActorsHistory {
 	
 	void onPostExecute(string &page) {
 		if(!page.empty()) {
-			detectThread();
 			actors.setNetworkOk(TRUE);
 			actors.parse(page);
+			
+			if(!actors.getPlayerUrl().empty()) {
+				detectThread();
+			}else {
+				actors.setLinksMode(LINKS_MODE_HIDE);
+			}
+			
 			// Save to back actors map
 			if(backActors.count(prevActors.getTitle()) == 0 
 			        && prevActors.getCount() > 0

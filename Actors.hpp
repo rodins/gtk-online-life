@@ -7,7 +7,8 @@ struct ListEpisodesArgs {
 
 enum LinksMode {
 	LINKS_MODE_SERIAL,
-	LINKS_MODE_MOVIE
+	LINKS_MODE_MOVIE, 
+	LINKS_MODE_HIDE
 };
 
 class Actors {
@@ -119,6 +120,7 @@ class Actors {
 	private:
 	
 	void parse_iframe(string &page) {
+		playerUrl = "";
 		size_t iframe_begin = page.find("<iframe");
 		size_t iframe_end = page.find("</iframe>", iframe_begin+10);
 		if(iframe_begin != string::npos && iframe_end != string::npos) {
