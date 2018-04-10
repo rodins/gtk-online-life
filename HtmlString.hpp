@@ -174,10 +174,8 @@ class HtmlString {
 				res = curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD,
 									  &filesize);
 				if((CURLE_OK == res) && (filesize>0.0)) {
-					int nSize = (int)filesize/1024/1024;
-					if(nSize != 0) {
-					    return SSTR(nSize);	
-					}
+					int nSize = (int)filesize;
+					return string(g_format_size(nSize));
 				}
 			}
 			

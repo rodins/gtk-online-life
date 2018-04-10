@@ -64,7 +64,7 @@ class ProcessPlayItemDialog {
                                               (GtkDialogFlags)(GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT),
                                               NULL);
                                               
-        gtk_widget_set_size_request(dialog, 400, -1);
+        gtk_widget_set_size_request(dialog, 405, -1);
                                               
         btnFlv = gtk_dialog_add_button(GTK_DIALOG(dialog),
 		                      "FLV",
@@ -174,14 +174,14 @@ class ProcessPlayItemDialog {
 		
 		if(!sizeFile.empty()) {
 			string buttonText = string(gtk_button_get_label(GTK_BUTTON(args->btnFlv))); 
-			string sizeTitle = buttonText + " (" + sizeFile + " Mb)";
+			string sizeTitle = buttonText + " (" + sizeFile + ")";
 			gtk_button_set_label(GTK_BUTTON(args->btnFlv), sizeTitle.c_str());
 			gtk_widget_set_sensitive(args->btnFlv, TRUE);
 		}
 		
 		if(!sizeDownload.empty()) {
 			string buttonText = string(gtk_button_get_label(GTK_BUTTON(args->btnMp4))); 
-			string sizeTitle = buttonText + " (" + sizeDownload + " Mb)";
+			string sizeTitle = buttonText + " (" + sizeDownload + ")";
 			gtk_button_set_label(GTK_BUTTON(args->btnMp4), sizeTitle.c_str());
 			gtk_widget_set_sensitive(args->btnMp4, TRUE);
 		}
