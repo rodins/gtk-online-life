@@ -64,8 +64,6 @@ class ProcessPlayItemDialog {
                                               (GtkDialogFlags)(GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT),
                                               NULL);
                                               
-        gtk_widget_set_size_request(dialog, 405, -1);
-                                              
         btnFlv = gtk_dialog_add_button(GTK_DIALOG(dialog),
 		                      "FLV",
                               LINK_RESPONSE_PLAY);                   
