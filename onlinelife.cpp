@@ -474,8 +474,8 @@ int main( int   argc,
 	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
 	gtk_container_set_border_width(GTK_CONTAINER(toolbar), 2);
 	
-    btnCategories = gtk_tool_button_new_from_stock(GTK_STOCK_DIRECTORY);
-    gtk_tool_item_set_tooltip_text(btnCategories, "Show/hide categories");
+    btnCategories = gtk_toggle_tool_button_new_from_stock(GTK_STOCK_DIRECTORY);
+    gtk_tool_item_set_tooltip_text(btnCategories, "Show categories");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnCategories, -1);
         
     sep = gtk_separator_tool_item_new();
@@ -483,8 +483,9 @@ int main( int   argc,
 	
 	GtkWidget *bookmarkIcon = gtk_image_new_from_pixbuf(
 	                                        IconsFactory::getBookmarkIcon24());
-	btnSavedItems = gtk_tool_button_new(bookmarkIcon, NULL);
-	gtk_tool_item_set_tooltip_text(btnSavedItems, "Show/hide bookmarks");
+	btnSavedItems = gtk_toggle_tool_button_new();
+	gtk_tool_button_set_icon_widget(GTK_TOOL_BUTTON(btnSavedItems), bookmarkIcon);
+	gtk_tool_item_set_tooltip_text(btnSavedItems, "Show bookmarks");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnSavedItems, -1);
 	
 	sep = gtk_separator_tool_item_new();
@@ -516,9 +517,9 @@ int main( int   argc,
 	gtk_container_add(GTK_CONTAINER(entryItem), entry);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), entryItem, -1);
     
-    btnActors = gtk_tool_button_new_from_stock("gtk-info");
+    btnActors = gtk_toggle_tool_button_new_from_stock("gtk-info");
         
-    gtk_tool_item_set_tooltip_text(btnActors, "Show/hide info");
+    gtk_tool_item_set_tooltip_text(btnActors, "Show info");
     
     sep = gtk_separator_tool_item_new();
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
