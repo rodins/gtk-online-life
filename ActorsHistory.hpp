@@ -12,7 +12,7 @@ class ActorsHistory {
     GdkPixbuf *icon;
     GtkWidget *lbInfo;
     
-    GtkWidget *frRightTop, *frInfo;
+    GtkWidget *frRightTop, *frInfo, *frActions;
     GtkWidget *spActors;
     GtkWidget *hbActorsError;
     GtkWidget *vbRight;
@@ -40,6 +40,7 @@ class ActorsHistory {
                   GtkWidget* li,
                   GtkWidget *frt, 
                   GtkWidget *fri, 
+                  GtkWidget *frActions,
                   GtkWidget *sa, 
                   GtkWidget *hba,
                   GtkWidget *vbr,
@@ -60,6 +61,7 @@ class ActorsHistory {
 		
 		frRightTop = frt;
 		frInfo = fri;
+		this->frActions = frActions;
 		spActors = sa;
 		hbActorsError = hba;
 		vbRight = vbr;
@@ -70,6 +72,7 @@ class ActorsHistory {
 		this->btnListEpisodes = btnListEpisodes;
 		
 		this->btnSave = btnSave;
+		gtk_widget_set_sensitive(this->btnSave, FALSE);
 		this->btnDelete = btnDelete;
 		this->tvSavedItems = tvSavedItems;
 		this->btnSavedItems = btnSavedItems;
@@ -152,20 +155,15 @@ class ActorsHistory {
 	
 	void btnActorsClicked(GtkWidget *widget) {
 		//Toggle visibility of actors list (vbRight)
-		if(!gtk_widget_get_visible(vbRight)) {
-			if(actors.getCount() > 0) {
-				gtk_widget_set_visible(vbRight, TRUE);
-			}
-		}else {
-			gtk_widget_set_visible(vbRight, FALSE);
-		}
+		gtk_widget_set_visible(vbRight,
+		                       !gtk_widget_get_visible(vbRight));
 	}
 	
 	ListEpisodesArgs getCurrentActorsListEpisodesArgs() {
 		return actors.getListEpisodesArgs();
 	}
 	
-	void btnGetLinksClicked() {
+	void runPlayItemDialog() {
 		string js = actors.getJs();
 		PlayItem playItem = PlaylistsUtils::parse_play_item(js, FALSE);
 		
@@ -180,6 +178,10 @@ class ActorsHistory {
 		}
 	}
 	
+	void btnGetLinksClicked() {
+		runPlayItemDialog();
+	}
+	
 	void btnLinksErrorClicked() {
 		detectThread();
 	}
@@ -192,6 +194,14 @@ class ActorsHistory {
 	void btnDeleteClicked() {
 		FileUtils::removeFile(actors.getTitle());
 		showSaveOrDeleteButton();
+	}
+	
+	void hideAllLinksButtons() {
+		gtk_widget_hide(btnGetLinks);
+		gtk_widget_hide(btnListEpisodes);
+		gtk_widget_hide(btnLinksError);
+		gtk_widget_hide(spLinks);
+		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
 	private:
@@ -210,42 +220,34 @@ class ActorsHistory {
 	
 	// Info links frame functions
     void showSpLinks() {
-		gtk_widget_set_visible(btnGetLinks, FALSE);
-		gtk_widget_set_visible(btnListEpisodes, FALSE);
-		gtk_widget_set_visible(btnLinksError, FALSE);
-		gtk_widget_set_visible(spLinks, TRUE);
+		gtk_widget_hide(btnGetLinks);
+		gtk_widget_hide(btnListEpisodes);
+		gtk_widget_hide(btnLinksError);
+		gtk_widget_show(spLinks);
 		gtk_spinner_start(GTK_SPINNER(spLinks));
 	}
 	
 	void showListEpisodesButton() {
-		gtk_widget_set_visible(btnGetLinks, FALSE);
-		gtk_widget_set_visible(btnListEpisodes, TRUE);
-		gtk_widget_set_visible(btnLinksError, FALSE);
-		gtk_widget_set_visible(spLinks, FALSE);
+		gtk_widget_hide(btnGetLinks);
+		gtk_widget_show(btnListEpisodes);
+		gtk_widget_hide(btnLinksError);
+		gtk_widget_hide(spLinks);
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
 	void showGetLinksButton() {
-		gtk_widget_set_visible(btnGetLinks, TRUE);
-		gtk_widget_set_visible(btnListEpisodes, FALSE);
-		gtk_widget_set_visible(btnLinksError, FALSE);
-		gtk_widget_set_visible(spLinks, FALSE);
+		gtk_widget_show(btnGetLinks);
+		gtk_widget_hide(btnListEpisodes);
+		gtk_widget_hide(btnLinksError);
+		gtk_widget_hide(spLinks);
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
 	void showLinksErrorButton() {
-		gtk_widget_set_visible(btnGetLinks, FALSE);
-		gtk_widget_set_visible(btnListEpisodes, FALSE);
-		gtk_widget_set_visible(btnLinksError, TRUE);
-		gtk_widget_set_visible(spLinks, FALSE);
-		gtk_spinner_stop(GTK_SPINNER(spLinks));
-	}
-	
-	void hideAllLinksButtons() {
-		gtk_widget_set_visible(btnGetLinks, FALSE);
-		gtk_widget_set_visible(btnListEpisodes, FALSE);
-		gtk_widget_set_visible(btnLinksError, FALSE);
-		gtk_widget_set_visible(spLinks, FALSE);
+		gtk_widget_hide(btnGetLinks);
+		gtk_widget_hide(btnListEpisodes);
+		gtk_widget_show(btnLinksError);
+		gtk_widget_hide(spLinks);
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
@@ -272,10 +274,18 @@ class ActorsHistory {
 				listEpisodesArgs.playlist_link = playlist_link;
 				actorsHistory->actors.setListEpisodesArgs(listEpisodesArgs);
 				actorsHistory->actors.setLinksMode(LINKS_MODE_SERIAL);
+				if(!gtk_toggle_tool_button_get_active(
+				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
+					gtk_button_clicked(GTK_BUTTON(actorsHistory->btnListEpisodes));
+				}
 			}else {
 				actorsHistory->showGetLinksButton();
 				actorsHistory->actors.setJs(js);
 				actorsHistory->actors.setLinksMode(LINKS_MODE_MOVIE);
+				if(!gtk_toggle_tool_button_get_active(
+				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
+					actorsHistory->runPlayItemDialog();
+				}
 			}
 		}else {
 			actorsHistory->showLinksErrorButton();
@@ -297,29 +307,30 @@ class ActorsHistory {
 	}
 	
 	void showSpActors() {
-		gtk_widget_set_visible(frInfo, FALSE);
-		gtk_widget_set_visible(frRightTop, FALSE);
-		gtk_widget_set_visible(hbActorsError, FALSE);
-		gtk_widget_set_visible(spActors, TRUE);
+		gtk_widget_hide(frInfo);
+		gtk_widget_hide(frRightTop);
+		gtk_widget_hide(hbActorsError);
+		gtk_widget_show(spActors);
 		gtk_spinner_start(GTK_SPINNER(spActors));
-		gtk_widget_set_visible(vbRight, TRUE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnActors), TRUE);
+	    gtk_widget_hide(frActions);
 	}
 	
 	void showActors() {
-		gtk_widget_set_visible(frInfo, TRUE);
-		gtk_widget_set_visible(frRightTop, TRUE);
-		gtk_widget_set_visible(hbActorsError, FALSE);
-		gtk_widget_set_visible(spActors, FALSE);
+		gtk_widget_show(frInfo);
+		gtk_widget_show(frRightTop);
+		gtk_widget_hide(hbActorsError);
+		gtk_widget_hide(spActors);
 		gtk_spinner_stop(GTK_SPINNER(spActors));
+		gtk_widget_show(frActions);
 	}
 	
 	void showActorsError() {
-		gtk_widget_set_visible(frInfo, FALSE);
-		gtk_widget_set_visible(frRightTop, FALSE);
-		gtk_widget_set_visible(hbActorsError, TRUE);
-		gtk_widget_set_visible(spActors, FALSE);
+		gtk_widget_hide(frInfo);
+		gtk_widget_hide(frRightTop);
+		gtk_widget_show(hbActorsError);
+		gtk_widget_hide(spActors);
 		gtk_spinner_stop(GTK_SPINNER(spActors));
+		gtk_widget_hide(frActions);
 	}
 	
 	void updateActors() {

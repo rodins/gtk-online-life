@@ -717,6 +717,7 @@ int main( int   argc,
                                                      lbInfo,
                                                      frRightTop,
                                                      frInfo,
+                                                     frActions,
                                                      spActors,
                                                      hbActorsError,
                                                      vbRight,
@@ -779,6 +780,7 @@ int main( int   argc,
                      "item-activated", 
                      G_CALLBACK(resultActivated), 
                      actorsHistory);
+                    
     
 	ResultsHistory *resultsHistory = new ResultsHistory(window,
                                                         ivResults,
@@ -802,7 +804,6 @@ int main( int   argc,
 	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
-	gtk_widget_set_sensitive(GTK_WIDGET(btnActors), FALSE);
 	
 	// Disable listItems button only if there are saved items
 	FileUtils::listSavedFiles(tvSavedItems, btnSavedItems);
@@ -900,33 +901,30 @@ int main( int   argc,
     
     gtk_window_set_default_size(GTK_WINDOW(window), 700, 400);
     
+    //TODO: not show all and hide afterwards, show only what is needed
     gtk_widget_show_all(window);
     
-    gtk_widget_set_visible(vbLeft, FALSE);
-    gtk_widget_set_visible(swCategories, FALSE);
-    gtk_widget_set_visible(frSavedItems, FALSE);
+    gtk_widget_hide(vbLeft);
+    gtk_widget_hide(swCategories);
+    gtk_widget_hide(frSavedItems);
     
-    gtk_widget_set_visible(vbRight, FALSE);
+    gtk_widget_hide(vbRight);
     
-    gtk_widget_set_visible(swTree, FALSE);
-    gtk_widget_set_visible(frRightBottom, FALSE);
+    gtk_widget_hide(swTree);
+    gtk_widget_hide(frRightBottom);
     
-    gtk_widget_set_visible(spCenter, FALSE);
+    gtk_widget_hide(spCenter);
     gtk_widget_set_size_request(spCenter, 32, 32);
     
-    gtk_widget_set_visible(spCategories, FALSE);
-    gtk_widget_set_visible(hbCategoriesError, FALSE);
+    gtk_widget_hide(spCategories);
+    gtk_widget_hide(hbCategoriesError);
     gtk_widget_set_size_request(spCategories, 32, 32);
     
-    gtk_widget_set_visible(spActors, FALSE);
-    gtk_widget_set_visible(hbActorsError, FALSE);
+    gtk_widget_hide(spActors);
+    gtk_widget_hide(hbActorsError);
+    gtk_widget_hide(frActions);
     
-    gtk_widget_set_visible(btnLinksError, FALSE);
-    gtk_widget_set_visible(btnGetLinks, FALSE);
-    gtk_widget_set_visible(btnListEpisodes, FALSE);
-    gtk_widget_set_visible(btnDelete, FALSE);
-    
-    gtk_widget_set_visible(hbResultsError, FALSE);
+    gtk_widget_hide(hbResultsError);
                                    
     // IconView scroll to the bottom detection code
     GtkAdjustment *vadjustment;
