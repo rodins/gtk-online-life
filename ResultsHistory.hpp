@@ -2,8 +2,6 @@
 #include "PlayItem.hpp"
 #include "PlaylistsUtils.hpp"
 #include "Playlists.hpp"
-#include "ProcessPlayItemDialog.hpp"
-#include "ActorsHistory.hpp"
 #include "ErrorType.hpp"
 
 class ResultsHistory;
@@ -64,12 +62,15 @@ class ResultsHistory {
     GThreadPool *resultsAppendThreadPool;
     GThreadPool *listEpisodesThreadPool;
     
-    ActorsHistory *actorsHistory;
     map<string, GdkPixbuf*> *imagesCache;
     
     ErrorType error;
     
     string repeatTitle, repeatLink;
+    
+    GtkToolItem* btnActors;
+    
+    ListEpisodesArgs listEpisodesArgs;
     
     public:
     
@@ -87,8 +88,8 @@ class ResultsHistory {
                    GtkToolItem *btn_refresh,
                    set<int> *ii,
                    map<string, GdkPixbuf*> *cache,
-                   ActorsHistory *ah,
-                   string pn) {
+                   string pn,
+                   GtkToolItem *btnActors) {
 		window = w;
 		ivResults = iv;
 		btnPrev = bp;
@@ -107,6 +108,7 @@ class ResultsHistory {
 		imagesCache = cache;
 		results = NULL;
 		progName = pn;
+		this->btnActors = btnActors;
 		
 		// GThreadPool for new results
 	    resultsNewThreadPool = g_thread_pool_new(ResultsHistory::resultsNewTask,
@@ -133,13 +135,15 @@ class ResultsHistory {
 	        gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists))
         );
         
-        actorsHistory = ah;
-        
         error = NONE_ERROR;
 	}
 	
 	~ResultsHistory(){
 		g_free(playlists);
+	}
+	
+	void setListEpisodesArgs(ListEpisodesArgs listEpisodesArgs){
+		this->listEpisodesArgs = listEpisodesArgs;
 	}
 	
 	void btnUpClicked() {
@@ -246,13 +250,38 @@ class ResultsHistory {
 	}
 	
 	void btnListEpisodesClicked() {
-		ListEpisodesArgs listEpisodesArgs = actorsHistory->getCurrentActorsListEpisodesArgs();
+		//TODO: do not need pointer, do as you did in image downloader
 		ListEpisodesArgs *listEpisodesArgsPtr = new ListEpisodesArgs();
 		listEpisodesArgsPtr->title = listEpisodesArgs.title;
 		listEpisodesArgsPtr->playlist_link = listEpisodesArgs.playlist_link;
 	    g_thread_pool_push(listEpisodesThreadPool, 
 		                   (gpointer)listEpisodesArgsPtr, 
 		                   NULL);
+	}
+	
+	void switchToIconView() {
+		gtk_widget_set_visible(swTree, FALSE);
+		gtk_widget_set_visible(swIcon, TRUE);
+		gtk_widget_set_visible(spCenter, FALSE);
+		gtk_widget_set_visible(hbResultsError, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spCenter));
+	}
+	
+	void showSpCenter(bool isPage) {
+		gtk_widget_set_visible(swTree, FALSE);
+		// Show and hide of ivResults depends on isPage
+		gtk_widget_set_visible(swIcon, isPage);
+		// Change packing params of spCenter
+		gtk_box_set_child_packing(
+		    GTK_BOX(vbCenter),
+		    spCenter,
+		    !isPage,
+		    FALSE,
+		    1,
+		    GTK_PACK_START);
+		gtk_widget_set_visible(spCenter, TRUE);
+		gtk_widget_set_visible(hbResultsError, FALSE);
+		gtk_spinner_start(GTK_SPINNER(spCenter));
 	}
 	
 	private:
@@ -324,9 +353,16 @@ class ResultsHistory {
 		if(playlists->getCount() > 0) {
 			resultsHistory->displayPlaylists();
 		}else {
-			resultsHistory->showResultsRepeat(FALSE);
-			resultsHistory->setSensitiveItemsPlaylists();
-			resultsHistory->error = PLAYLISTS_ERROR;
+			// If actors pane is not shown
+			if(!gtk_toggle_tool_button_get_active(
+			    GTK_TOGGLE_TOOL_BUTTON(resultsHistory->btnActors))) {
+				// On playlists error show results back
+			    resultsHistory->btnUpClicked();
+			}else {
+				resultsHistory->showResultsRepeat(FALSE);
+				resultsHistory->setSensitiveItemsPlaylists();
+				resultsHistory->error = PLAYLISTS_ERROR;
+			}
 		}
 		g_free(listEpisodesArgs);
 		gdk_threads_leave();
@@ -334,23 +370,6 @@ class ResultsHistory {
 	
 	Playlists* getPlaylists() {
 		return playlists;
-	}
-	
-	void showSpCenter(bool isPage) {
-		gtk_widget_set_visible(swTree, FALSE);
-		// Show and hide of ivResults depends on isPage
-		gtk_widget_set_visible(swIcon, isPage);
-		// Change packing params of spCenter
-		gtk_box_set_child_packing(
-		    GTK_BOX(vbCenter),
-		    spCenter,
-		    !isPage,
-		    FALSE,
-		    1,
-		    GTK_PACK_START);
-		gtk_widget_set_visible(spCenter, TRUE);
-		gtk_widget_set_visible(hbResultsError, FALSE);
-		gtk_spinner_start(GTK_SPINNER(spCenter));
 	}
 	
 	void setSensitiveItemsResults() {
@@ -572,14 +591,6 @@ class ResultsHistory {
 		gtk_widget_set_visible(spCenter, FALSE);
 		gtk_spinner_stop(GTK_SPINNER(spCenter));
 		gtk_widget_set_visible(hbResultsError, TRUE);
-	}
-	
-	void switchToIconView() {
-		gtk_widget_set_visible(swTree, FALSE);
-		gtk_widget_set_visible(swIcon, TRUE);
-		gtk_widget_set_visible(spCenter, FALSE);
-		gtk_widget_set_visible(hbResultsError, FALSE);
-		gtk_spinner_stop(GTK_SPINNER(spCenter));
 	}
 	
 	void setSensitiveItemsPlaylists() {

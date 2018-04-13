@@ -17,7 +17,7 @@
 #include "IconsFactory.hpp"
 #include "ColumnsEnum.hpp"
 #include "Results.hpp"
-#include "ResultsHistory.hpp"
+#include "ActorsHistory.hpp"
 #include "CategoriesWidgets.hpp"
 
 #include "ImagesDownloader.hpp"
@@ -126,8 +126,8 @@ void playlistClicked(GtkTreeView *treeView,
 		playItem.comment = comment;
 		playItem.file = file;
 		playItem.download = download;
-		//actorsHistory->linksSizeDialogThread(playItem);
-		ProcessPlayItemDialog ppid(actorsHistory->getWindow(), playItem);
+		ProcessPlayItemDialog ppid(actorsHistory->getWindow(),
+		                           playItem);
 	}
 	
 	g_free(comment);
@@ -710,79 +710,7 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbCenter), spCenter, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbCenter), hbResultsError, TRUE, FALSE, 1);
     
-    ActorsHistory *actorsHistory = new ActorsHistory(window,
-                                                     tvActors,
-                                                     tvBackActors,
-                                                     frRightBottom,
-                                                     lbInfo,
-                                                     frRightTop,
-                                                     frInfo,
-                                                     frActions,
-                                                     spActors,
-                                                     hbActorsError,
-                                                     vbRight,
-                                                     spLinks,
-                                                     btnLinksError,
-                                                     btnGetLinks,
-                                                     btnListEpisodes,
-                                                     btnSave,
-                                                     btnDelete,
-                                                     tvSavedItems,
-                                                     btnSavedItems,
-                                                     btnActors);
-                                                     
-    g_signal_connect(selection,
-	                 "changed", 
-	                 G_CALLBACK(backActorsChanged), 
-	                 actorsHistory);
-	                                  
-    g_signal_connect(btnActors,
-                     "clicked", 
-                     G_CALLBACK(btnActorsClicked),
-                     actorsHistory);
-                     
-    g_signal_connect(btnActorsError,
-                     "clicked",
-                     G_CALLBACK(btnActorsRepeatClicked), 
-                     actorsHistory);
-                     
-    g_signal_connect(tvPlaylists,
-                     "row-activated", 
-                     G_CALLBACK(playlistClicked), 
-                     actorsHistory);
-                     
-    g_signal_connect(btnLinksError,
-                     "clicked",
-                     G_CALLBACK(btnLinksErrorClicked),
-                     actorsHistory);
-                     
-    g_signal_connect(btnGetLinks,
-                     "clicked",
-                     G_CALLBACK(btnGetLinksClicked),
-                     actorsHistory);
-                     
-    g_signal_connect(btnSave,
-                     "clicked",
-                     G_CALLBACK(btnSaveClicked),
-                     actorsHistory);
-                     
-    g_signal_connect(btnDelete,
-                     "clicked",
-                     G_CALLBACK(btnDeleteClicked),
-                     actorsHistory);
-                     
-    g_signal_connect(tvSavedItems,
-                     "row-activated", 
-                     G_CALLBACK(tvSavedItemsClicked), 
-                     actorsHistory);
-                     
-    g_signal_connect(ivResults, 
-                     "item-activated", 
-                     G_CALLBACK(resultActivated), 
-                     actorsHistory);
-                    
-    
-	ResultsHistory *resultsHistory = new ResultsHistory(window,
+    ResultsHistory *resultsHistory = new ResultsHistory(window,
                                                         ivResults,
                                                         tvPlaylists,
                                                         btnPrev,
@@ -796,8 +724,8 @@ int main( int   argc,
                                                         btnRefresh,
                                                         imageIndexes,
                                                         imagesCache,
-                                                        actorsHistory,
-                                                        PROG_NAME);
+                                                        PROG_NAME,
+                                                        btnActors);
     
     // Disable all items                                                
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
@@ -851,7 +779,79 @@ int main( int   argc,
     g_signal_connect(btnListEpisodes,
                      "clicked",
                      G_CALLBACK(btnListEpisodesClicked),
-                     resultsHistory);                 
+                     resultsHistory);
+    
+    ActorsHistory *actorsHistory = new ActorsHistory(window,
+                                                     tvActors,
+                                                     tvBackActors,
+                                                     frRightBottom,
+                                                     lbInfo,
+                                                     frRightTop,
+                                                     frInfo,
+                                                     frActions,
+                                                     spActors,
+                                                     hbActorsError,
+                                                     vbRight,
+                                                     spLinks,
+                                                     btnLinksError,
+                                                     btnGetLinks,
+                                                     btnListEpisodes,
+                                                     btnSave,
+                                                     btnDelete,
+                                                     tvSavedItems,
+                                                     btnSavedItems,
+                                                     btnActors,
+                                                     resultsHistory);
+                                                     
+    g_signal_connect(selection,
+	                 "changed", 
+	                 G_CALLBACK(backActorsChanged), 
+	                 actorsHistory);
+	                                  
+    g_signal_connect(btnActors,
+                     "clicked", 
+                     G_CALLBACK(btnActorsClicked),
+                     actorsHistory);
+                     
+    g_signal_connect(btnActorsError,
+                     "clicked",
+                     G_CALLBACK(btnActorsRepeatClicked), 
+                     actorsHistory);
+                     
+    g_signal_connect(tvPlaylists,
+                     "row-activated", 
+                     G_CALLBACK(playlistClicked), 
+                     actorsHistory);
+                     
+    g_signal_connect(btnLinksError,
+                     "clicked",
+                     G_CALLBACK(btnLinksErrorClicked),
+                     actorsHistory);
+                     
+    g_signal_connect(btnGetLinks,
+                     "clicked",
+                     G_CALLBACK(btnGetLinksClicked),
+                     actorsHistory);
+                     
+    g_signal_connect(btnSave,
+                     "clicked",
+                     G_CALLBACK(btnSaveClicked),
+                     actorsHistory);
+                     
+    g_signal_connect(btnDelete,
+                     "clicked",
+                     G_CALLBACK(btnDeleteClicked),
+                     actorsHistory);
+                     
+    g_signal_connect(tvSavedItems,
+                     "row-activated", 
+                     G_CALLBACK(tvSavedItemsClicked), 
+                     actorsHistory);
+                     
+    g_signal_connect(ivResults, 
+                     "item-activated", 
+                     G_CALLBACK(resultActivated), 
+                     actorsHistory);                 
     
     CategoriesWidgets *categoriesWidgets = new CategoriesWidgets(
                                                vbLeft,

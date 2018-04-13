@@ -29,7 +29,8 @@ class ProcessPlayItemDialog {
 	
 	public:
 	
-	ProcessPlayItemDialog(GtkWidget* window, PlayItem playItem) {
+	ProcessPlayItemDialog(GtkWidget* window,
+	                      PlayItem playItem) {
 		this->window = window;
 		this->playItem = playItem;
 		// GThreadPool for links sizes
@@ -37,14 +38,13 @@ class ProcessPlayItemDialog {
 	                                   NULL,
 	                                   2, // Run two threads at the time
 	                                   FALSE,
-	                                   NULL);
-	                                   
+	                                   NULL);              
 	    createDialog();
 	}
 	
 	private:
 	
-	static string detectPlayer() {
+	string detectPlayer() {
 		if(system("which mpv") == 0) {
 			return "mpv --cache=2048 ";
 		}
@@ -183,6 +183,7 @@ class ProcessPlayItemDialog {
 			gtk_button_set_label(GTK_BUTTON(args->btnMp4), sizeTitle.c_str());
 			gtk_widget_set_sensitive(args->btnMp4, TRUE);
 		}
+		
 		gtk_dialog_run(GTK_DIALOG(args->dialog));
 		gdk_threads_leave();
 	    g_free(args);

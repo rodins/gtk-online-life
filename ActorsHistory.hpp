@@ -1,6 +1,8 @@
 //ActorsHistory.hpp
 #include "Actors.hpp"
 #include "FileUtils.hpp"
+#include "ResultsHistory.hpp"
+#include "ProcessPlayItemDialog.hpp"
 
 class ActorsHistory {
     Actors actors, prevActors;
@@ -31,6 +33,12 @@ class ActorsHistory {
     GtkToolItem *btnSavedItems;
     GtkToolItem *btnActors;
     
+    GtkWidget *swTree, *swIcon;
+    GtkWidget *spCenter;
+    GtkWidget *hbResultsError;
+    
+    ResultsHistory *resultsHistory;
+    
     public:
     
     ActorsHistory(GtkWidget *window,
@@ -52,7 +60,8 @@ class ActorsHistory {
 				  GtkWidget *btnDelete,
 				  GtkWidget *tvSavedItems,
 				  GtkToolItem *btnSavedItems,
-				  GtkToolItem *btnActors) {
+				  GtkToolItem *btnActors,
+				  ResultsHistory *resultsHistory) {
 		this->window = window;			  
 		tvActors = a;
 		tvBackActors = pa;
@@ -77,6 +86,7 @@ class ActorsHistory {
 		this->tvSavedItems = tvSavedItems;
 		this->btnSavedItems = btnSavedItems;
 		this->btnActors = btnActors;
+		this->resultsHistory = resultsHistory;
 		
 		icon = IconsFactory::getLinkIcon();
 		
@@ -173,7 +183,6 @@ class ActorsHistory {
 				playItem.comment = actors.getTitle();
 			}
 			
-		    //linksSizeDialogThread(playItem);
 		    ProcessPlayItemDialog ppid(window, playItem);
 		}
 	}
@@ -274,6 +283,7 @@ class ActorsHistory {
 				listEpisodesArgs.playlist_link = playlist_link;
 				actorsHistory->actors.setListEpisodesArgs(listEpisodesArgs);
 				actorsHistory->actors.setLinksMode(LINKS_MODE_SERIAL);
+				actorsHistory->resultsHistory->setListEpisodesArgs(listEpisodesArgs);
 				if(!gtk_toggle_tool_button_get_active(
 				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
 					gtk_button_clicked(GTK_BUTTON(actorsHistory->btnListEpisodes));
@@ -284,6 +294,8 @@ class ActorsHistory {
 				actorsHistory->actors.setLinksMode(LINKS_MODE_MOVIE);
 				if(!gtk_toggle_tool_button_get_active(
 				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
+				    //TODO: showResults (title, toolbar, iconview)
+					actorsHistory->resultsHistory->switchToIconView();
 					actorsHistory->runPlayItemDialog();
 				}
 			}
@@ -313,6 +325,11 @@ class ActorsHistory {
 		gtk_widget_show(spActors);
 		gtk_spinner_start(GTK_SPINNER(spActors));
 	    gtk_widget_hide(frActions);
+	    // If actors pane is not shown
+		if(!gtk_toggle_tool_button_get_active(
+		    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
+			resultsHistory->showSpCenter(FALSE);
+		}
 	}
 	
 	void showActors() {
@@ -331,6 +348,24 @@ class ActorsHistory {
 		gtk_widget_hide(spActors);
 		gtk_spinner_stop(GTK_SPINNER(spActors));
 		gtk_widget_hide(frActions);
+		// If actors pane is not shown
+		if(!gtk_toggle_tool_button_get_active(
+		    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
+			//TODO: resultsHistory->showResults()
+			resultsHistory->switchToIconView();
+			runErrorDialog();
+		}
+	}
+	
+	void runErrorDialog() {
+		GtkWidget *dialog = gtk_message_dialog_new(
+		              GTK_WINDOW(window),
+		              GTK_DIALOG_DESTROY_WITH_PARENT,
+		              GTK_MESSAGE_ERROR,
+		              GTK_BUTTONS_OK,
+		              "Network problem");
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
 	}
 	
 	void updateActors() {
