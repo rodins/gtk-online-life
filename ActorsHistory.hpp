@@ -38,6 +38,7 @@ class ActorsHistory {
     GtkWidget *hbResultsError;
     
     ResultsHistory *resultsHistory;
+    string player;
     
     public:
     
@@ -103,6 +104,8 @@ class ActorsHistory {
 	                                   1, // Run one thread at the time
 	                                   FALSE,
 	                                   NULL);
+	                                   
+	    player = detectPlayer();
 	} 
 	
 	GtkWidget* getWindow() {
@@ -176,7 +179,7 @@ class ActorsHistory {
 	void runPlayItemDialog() {
 		string js = actors.getJs();
 		PlayItem playItem = PlaylistsUtils::parse_play_item(js, FALSE);
-		
+		playItem.player = player;
 		if(!playItem.comment.empty()) { // PlayItem found
 			// Set title for trailers
 			if(playItem.comment.size() == 1) {
@@ -213,7 +216,21 @@ class ActorsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
+	string getPlayer() {
+		return player;
+	}
+	
 	private:
+	
+	string detectPlayer() {
+		if(system("which mpv") == 0) {
+			return "mpv --cache=2048 ";
+		}
+		if(system("which mplayer") == 0) {
+			return "mplayer -cache 2048 ";
+		}
+		return "";
+	}
 	
 	void showSaveOrDeleteButton() {
 		if(FileUtils::isTitleSaved(actors.getTitle())) {
@@ -294,8 +311,7 @@ class ActorsHistory {
 				actorsHistory->actors.setLinksMode(LINKS_MODE_MOVIE);
 				if(!gtk_toggle_tool_button_get_active(
 				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
-				    //TODO: showResults (title, toolbar, iconview)
-					actorsHistory->resultsHistory->switchToIconView();
+					actorsHistory->resultsHistory->showResults();
 					actorsHistory->runPlayItemDialog();
 				}
 			}
@@ -351,8 +367,7 @@ class ActorsHistory {
 		// If actors pane is not shown
 		if(!gtk_toggle_tool_button_get_active(
 		    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
-			//TODO: resultsHistory->showResults()
-			resultsHistory->switchToIconView();
+			resultsHistory->showResults();
 			runErrorDialog();
 		}
 	}
@@ -364,6 +379,7 @@ class ActorsHistory {
 		              GTK_MESSAGE_ERROR,
 		              GTK_BUTTONS_OK,
 		              "Network problem");
+		gtk_window_set_title(GTK_WINDOW(dialog), "Error");
 		gtk_dialog_run(GTK_DIALOG(dialog));
 		gtk_widget_destroy(dialog);
 	}
@@ -408,6 +424,11 @@ class ActorsHistory {
 				detectThread();
 			}else {
 				actors.setLinksMode(LINKS_MODE_HIDE);
+				// If actors pane is not shown
+				if(!gtk_toggle_tool_button_get_active(
+				    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
+					resultsHistory->showResults();
+				}
 			}
 			
 			// Save to back actors map

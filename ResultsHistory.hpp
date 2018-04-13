@@ -224,31 +224,6 @@ class ResultsHistory {
 		}
 	}
 	
-	void parser(ResultsArgs *resultsArgs, int count, string div, set<string> &titles) {
-		// Prepare to show results when first result item comes
-		if(count == 0) {
-			switchToIconView();
-			setSensitiveItemsResults();
-			
-			if(resultsArgs->results == NULL) {
-				// Create new results object
-				results = new Results(resultsArgs->title,
-				                      resultsArgs->link,
-				                      imagesCache, 
-				                      ivResults);
-				// Save link to results also in resultsArgs                      
-				resultsArgs->results = results;
-				scrollToTopOfList();
-			}else if(resultsArgs->results->isRefresh()) {
-				// Clear existing model on refresh
-				resultsArgs->results->clearModel();	
-				scrollToTopOfList();
-			}
-		}
-		
-		resultsArgs->results->parser(div, titles);
-	}
-	
 	void btnListEpisodesClicked() {
 		//TODO: do not need pointer, do as you did in image downloader
 		ListEpisodesArgs *listEpisodesArgsPtr = new ListEpisodesArgs();
@@ -259,12 +234,14 @@ class ResultsHistory {
 		                   NULL);
 	}
 	
-	void switchToIconView() {
-		gtk_widget_set_visible(swTree, FALSE);
-		gtk_widget_set_visible(swIcon, TRUE);
-		gtk_widget_set_visible(spCenter, FALSE);
-		gtk_widget_set_visible(hbResultsError, FALSE);
-		gtk_spinner_stop(GTK_SPINNER(spCenter));
+	void showResults() {
+		// Title
+		updateTitle();
+		// Toolbar
+		setSensitiveItemsResults();
+		updatePrevNextButtons();
+		// IconView
+		switchToIconView();
 	}
 	
 	void showSpCenter(bool isPage) {
@@ -285,6 +262,30 @@ class ResultsHistory {
 	}
 	
 	private:
+	
+	void preParser(ResultsArgs *resultsArgs, int count, string div, set<string> &titles) {
+		// Prepare to show results when first result item comes
+		if(count == 0) {
+			switchToIconView();
+			setSensitiveItemsResults();
+			
+			if(resultsArgs->results == NULL) {
+				// Create new results object
+				results = new Results(resultsArgs->title,
+				                      resultsArgs->link,
+				                      imagesCache, 
+				                      ivResults);
+				// Save link to results also in resultsArgs                      
+				resultsArgs->results = results;
+			}else if(resultsArgs->results->isRefresh()) {
+				// Clear existing model on refresh
+				resultsArgs->results->clearModel();	
+			}
+			scrollToTopOfList();
+		}
+		
+		resultsArgs->results->parser(div, titles);
+	}
 	
 	void scrollToTopOfList() {
 		// Scroll to the top of the list on new results (not append to list)
@@ -375,6 +376,14 @@ class ResultsHistory {
 	void setSensitiveItemsResults() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
+	}
+	
+	void switchToIconView() {
+		gtk_widget_set_visible(swTree, FALSE);
+		gtk_widget_set_visible(swIcon, TRUE);
+		gtk_widget_set_visible(spCenter, FALSE);
+		gtk_widget_set_visible(hbResultsError, FALSE);
+		gtk_spinner_stop(GTK_SPINNER(spCenter));
 	}
 	
 	void switchToTreeView() {
@@ -606,8 +615,12 @@ class ResultsHistory {
 	}
 	
 	void updateTitle() {
-		string title = progName + " - " + results->getTitle();
-		gtk_window_set_title(GTK_WINDOW(window), title.c_str());
+		if(results != NULL) {
+			string title = progName + " - " + results->getTitle();
+		    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
+		}else {
+			gtk_window_set_title(GTK_WINDOW(window), progName.c_str());
+		}
 	}
 	
 	void updateTitle(string resultsTitle) {
@@ -642,7 +655,7 @@ class ResultsHistory {
 		if(item_begin != string::npos && item_end != string::npos) {
 			string item = div.substr(item_begin, item_end - item_begin + 4);
 			gdk_threads_enter();
-			resultsArgs->resultsHistory->parser(resultsArgs,
+			resultsArgs->resultsHistory->preParser(resultsArgs,
 			                                    count,
 			                                    item,
 			                                    titles);

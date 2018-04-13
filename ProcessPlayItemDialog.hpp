@@ -18,7 +18,6 @@ struct DialogResponseArgs {
 };
 
 class ProcessPlayItemDialog {
-	
 	GtkWidget* window;
 	PlayItem playItem;
 	GThreadPool *linksSizeThreadPool;
@@ -43,16 +42,6 @@ class ProcessPlayItemDialog {
 	}
 	
 	private:
-	
-	string detectPlayer() {
-		if(system("which mpv") == 0) {
-			return "mpv --cache=2048 ";
-		}
-		if(system("which mplayer") == 0) {
-			return "mplayer -cache 2048 ";
-		}
-		return "";
-	}
 	
 	void createDialog() {
 		// Create dialog, add buttons to it, get size information and display it
@@ -89,7 +78,6 @@ class ProcessPlayItemDialog {
 	    gtk_box_pack_start(GTK_BOX(content_area), label, TRUE, FALSE, 5);
 	    gtk_widget_show_all(content_area);
         
-        playItem.player = detectPlayer();
 		string msg;
 		if(!playItem.player.empty()) {
 			msg = "Play in " + playItem.player + ". Copy to clipboard";
