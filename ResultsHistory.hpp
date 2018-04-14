@@ -416,6 +416,11 @@ class ResultsHistory {
 		}
 		if(res == CURLE_OK) {
 			if(gtk_widget_get_visible(spCenter)) {
+				if(results != NULL) {
+					updateTitle();
+				}else {
+					updateTitle("");
+				}
 				switchToIconView();
 			    setSensitiveItemsResults();
 			    // Create dialog for nothing found
@@ -426,11 +431,6 @@ class ResultsHistory {
 			                                               "Nothing found.");
 			    gtk_dialog_run(GTK_DIALOG(dialog));
 			    gtk_widget_destroy(dialog);
-			    if(results != NULL) {
-					updateTitle();
-				}else {
-					updateTitle("");
-				}
 			}else {
 				//TODO: maybe I need to clear it while saving....
 				// clear forward results stack on fetching new results
