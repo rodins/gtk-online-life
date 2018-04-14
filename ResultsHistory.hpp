@@ -282,14 +282,15 @@ class ResultsHistory {
 				                      ivResults);
 				// Save link to results also in resultsArgs                      
 				resultsArgs->results = results;
+				scrollToTopOfList();
+				updateTitle();
 			}else if(resultsArgs->results->isRefresh()) {
 				// Clear existing model on refresh
 				resultsArgs->results->clearModel();	
+				scrollToTopOfList();
+				updateTitle();
 			}
-			updateTitle();
-			scrollToTopOfList();
 		}
-		
 		resultsArgs->results->parser(div, titles);
 	}
 	

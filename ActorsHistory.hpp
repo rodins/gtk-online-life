@@ -334,16 +334,17 @@ class ActorsHistory {
 	}
 	
 	void showSpActors() {
-		gtk_widget_hide(frInfo);
-		gtk_widget_hide(frRightTop);
-		gtk_widget_hide(hbActorsError);
-		gtk_widget_show(spActors);
-		gtk_spinner_start(GTK_SPINNER(spActors));
-	    gtk_widget_hide(frActions);
 	    // If actors pane is not shown
 		if(!gtk_toggle_tool_button_get_active(
 		    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
 			resultsHistory->showSpCenter(FALSE);
+		}else {
+			gtk_widget_hide(frInfo);
+			gtk_widget_hide(frRightTop);
+			gtk_widget_hide(hbActorsError);
+			gtk_widget_show(spActors);
+			gtk_spinner_start(GTK_SPINNER(spActors));
+		    gtk_widget_hide(frActions);
 		}
 	}
 	
@@ -357,17 +358,18 @@ class ActorsHistory {
 	}
 	
 	void showActorsError() {
-		gtk_widget_hide(frInfo);
-		gtk_widget_hide(frRightTop);
-		gtk_widget_show(hbActorsError);
-		gtk_widget_hide(spActors);
-		gtk_spinner_stop(GTK_SPINNER(spActors));
-		gtk_widget_hide(frActions);
 		// If actors pane is not shown
 		if(!gtk_toggle_tool_button_get_active(
 		    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
 			resultsHistory->showResults();
 			runErrorDialog();
+		}else {
+			gtk_widget_hide(frInfo);
+			gtk_widget_hide(frRightTop);
+			gtk_widget_show(hbActorsError);
+			gtk_widget_hide(spActors);
+			gtk_spinner_stop(GTK_SPINNER(spActors));
+			gtk_widget_hide(frActions);
 		}
 	}
 	
