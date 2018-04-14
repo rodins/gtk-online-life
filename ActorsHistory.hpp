@@ -82,7 +82,6 @@ class ActorsHistory {
 		this->btnListEpisodes = btnListEpisodes;
 		
 		this->btnSave = btnSave;
-		gtk_widget_set_sensitive(this->btnSave, FALSE);
 		this->btnDelete = btnDelete;
 		this->tvSavedItems = tvSavedItems;
 		this->btnSavedItems = btnSavedItems;
