@@ -147,10 +147,10 @@ class ResultsHistory {
 	}
 	
 	void btnUpClicked() {
-		switchToIconView();
 		updateTitle();
 		updatePrevNextButtons();
 		setSensitiveItemsResults();
+		switchToIconView();
 	}
 	
 	void btnPrevClicked() {
@@ -203,14 +203,14 @@ class ResultsHistory {
 	void newThread(string title, string url) {
 		saveToBackStack();
 		ResultsArgs *resultsArgs = new ResultsArgs(title, url, this);
-		updateTitle(title);
+		//updateTitle(title);
 		newThread(resultsArgs);
 	}
 	
 	void newThreadSearch(string title, string base_url) {
 		saveToBackStack();
 		ResultsArgs *resultsArgs = new ResultsArgs(title, base_url, this);
-		updateTitle(title);
+		//updateTitle(title);
 		newThread(resultsArgs);
 	}
 	
@@ -245,7 +245,11 @@ class ResultsHistory {
 	}
 	
 	void showSpCenter(bool isPage) {
-		gtk_widget_set_visible(swTree, FALSE);
+		if(!isPage) {
+			updateTitle("Loading...");
+			setSensitiveItemsLoading();
+		}
+		gtk_widget_hide(swTree);
 		// Show and hide of ivResults depends on isPage
 		gtk_widget_set_visible(swIcon, isPage);
 		// Change packing params of spCenter
@@ -256,8 +260,8 @@ class ResultsHistory {
 		    FALSE,
 		    1,
 		    GTK_PACK_START);
-		gtk_widget_set_visible(spCenter, TRUE);
-		gtk_widget_set_visible(hbResultsError, FALSE);
+		gtk_widget_show(spCenter);
+		gtk_widget_hide(hbResultsError);
 		gtk_spinner_start(GTK_SPINNER(spCenter));
 	}
 	
@@ -266,8 +270,9 @@ class ResultsHistory {
 	void preParser(ResultsArgs *resultsArgs, int count, string div, set<string> &titles) {
 		// Prepare to show results when first result item comes
 		if(count == 0) {
-			switchToIconView();
 			setSensitiveItemsResults();
+			updatePrevNextButtons();
+			switchToIconView();
 			
 			if(resultsArgs->results == NULL) {
 				// Create new results object
@@ -281,6 +286,7 @@ class ResultsHistory {
 				// Clear existing model on refresh
 				resultsArgs->results->clearModel();	
 			}
+			updateTitle();
 			scrollToTopOfList();
 		}
 		
@@ -324,7 +330,7 @@ class ResultsHistory {
 		// On pre execute
 		gdk_threads_enter();
 		// Display spinner at the bottom of list
-		resultsHistory->showSpCenter(TRUE);;
+		resultsHistory->showSpCenter(TRUE);
 		gdk_threads_leave();
 		// async part
 		CURLcode res = resultsHistory->getResultsFromNet(resultsArgs);
@@ -341,8 +347,6 @@ class ResultsHistory {
 		
 		// On pre execute
 		gdk_threads_enter();
-		// Set title
-		resultsHistory->updateTitle(listEpisodesArgs->title);
 		// Show spinner fullscreen
 		resultsHistory->showSpCenter(FALSE);
 		gdk_threads_leave();
@@ -352,6 +356,8 @@ class ResultsHistory {
 		gdk_threads_enter();
 		playlists->parse(json);
 		if(playlists->getCount() > 0) {
+			// Set title
+		    resultsHistory->updateTitle(listEpisodesArgs->title);
 			resultsHistory->displayPlaylists();
 		}else {
 			// If actors pane is not shown
@@ -360,6 +366,7 @@ class ResultsHistory {
 				// On playlists error show results back
 			    resultsHistory->btnUpClicked();
 			}else {
+				resultsHistory->updateTitle("Playlists error!");
 				resultsHistory->showResultsRepeat(FALSE);
 				resultsHistory->setSensitiveItemsPlaylists();
 				resultsHistory->error = PLAYLISTS_ERROR;
@@ -374,23 +381,32 @@ class ResultsHistory {
 	}
 	
 	void setSensitiveItemsResults() {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnActors), TRUE);
+	}
+	
+	void setSensitiveItemsLoading() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnActors), FALSE);
 	}
 	
 	void switchToIconView() {
-		gtk_widget_set_visible(swTree, FALSE);
-		gtk_widget_set_visible(swIcon, TRUE);
-		gtk_widget_set_visible(spCenter, FALSE);
-		gtk_widget_set_visible(hbResultsError, FALSE);
+		gtk_widget_hide(swTree);
+		gtk_widget_show(swIcon);
+		gtk_widget_hide(spCenter);
+		gtk_widget_hide(hbResultsError);
 		gtk_spinner_stop(GTK_SPINNER(spCenter));
 	}
 	
 	void switchToTreeView() {
-		gtk_widget_set_visible(swTree, TRUE);
-		gtk_widget_set_visible(swIcon, FALSE);
-		gtk_widget_set_visible(spCenter, FALSE);
-		gtk_widget_set_visible(hbResultsError, FALSE);
+		gtk_widget_show(swTree);
+		gtk_widget_hide(swIcon);
+		gtk_widget_hide(spCenter);
+		gtk_widget_hide(hbResultsError);
 		gtk_spinner_stop(GTK_SPINNER(spCenter));
 	}
 	
@@ -429,6 +445,7 @@ class ResultsHistory {
 				}
 			}
 		}else { //error
+			updateTitle("Results error!");
 			showResultsRepeat(FALSE);
 			error = RESULTS_NEW_ERROR;
 		}
@@ -607,6 +624,7 @@ class ResultsHistory {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), results != NULL);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnActors), TRUE);
 	}
 	
 	void displayPlaylists() {
