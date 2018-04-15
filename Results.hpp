@@ -16,10 +16,14 @@ class Results {
 	int count;
 	public:
 	
-	Results(string title, 
-	        string url, 
-	        map<string, GdkPixbuf*> *cache, 
-	        GtkWidget *ivResults) {
+	Results() {
+		count = 0;
+	}
+	
+	void init(string title, 
+	          string url, 
+	          map<string, GdkPixbuf*> *cache, 
+	          GtkWidget *ivResults) {
 		this->title = title;
 		this->url = url;
 		this->base_url = url;

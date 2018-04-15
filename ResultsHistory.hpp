@@ -22,24 +22,24 @@ struct ResultsArgs {
 	
 	// For append task or refresh
 	ResultsArgs(Results *results, ResultsHistory *resultsHistory) {
-		this->title = results->getTitle();
+		title = results->getTitle();
 		if(results->isRefresh()) {
-			this->link = results->getUrl();
+			link = results->getUrl();
 		}else {
-			this->link = results->getNextLink();
+			link = results->getNextLink();
 		}
 		this->results = results;
-		this->resultsHistory = resultsHistory;
+		resultsHistory = resultsHistory;
 	}
 };
 
 class ResultsHistory {
-    Results *results;
+    Results displayedResults;
     Results *resultsAppendError;
     
     Playlists *playlists;
         
-    vector<Results*> backResultsStack, forwardResultsStack;
+    vector<Results> backResultsStack, forwardResultsStack;
     set<string> resultsThreadsLinks;
     
     GtkWidget *ivResults;
@@ -106,7 +106,7 @@ class ResultsHistory {
 		
 		imageIndexes = ii;
 		imagesCache = cache;
-		results = NULL;
+		
 		progName = pn;
 		this->btnActors = btnActors;
 		
@@ -178,8 +178,8 @@ class ResultsHistory {
 	}
 	
 	void btnRefreshClicked() {
-		results->setRefresh(TRUE);
-		ResultsArgs *resultsArgs = new ResultsArgs(results, this);
+		displayedResults.setRefresh(TRUE);
+		ResultsArgs *resultsArgs = new ResultsArgs(&displayedResults, this);
 	    newThread(resultsArgs);
 	}
 	
@@ -213,11 +213,13 @@ class ResultsHistory {
 	}
 	
 	void appendThread() {
-		if(!results->getNextLink().empty()) {
+		if(!displayedResults.getNextLink().empty()) {
 			// Search for the same link only once if it's not saved in set.
-			if(resultsThreadsLinks.count(results->getNextLink()) == 0) {
-				resultsThreadsLinks.insert(results->getNextLink());
-				g_thread_pool_push(resultsAppendThreadPool, (gpointer)results, NULL);
+			if(resultsThreadsLinks.count(displayedResults.getNextLink()) == 0) {
+				resultsThreadsLinks.insert(displayedResults.getNextLink());
+				g_thread_pool_push(resultsAppendThreadPool,
+				                   &displayedResults,
+				                   NULL);
 			}
 		}
 	}
@@ -262,29 +264,38 @@ class ResultsHistory {
 	private:
 	
 	void preParser(ResultsArgs *resultsArgs, int count, string div, set<string> &titles) {
+		//cout << "Pre parser in" << endl;
+		cout << count << endl;
 		// Prepare to show results when first result item comes
 		if(count == 0) {
-			setSensitiveItemsResults();
-			updatePrevNextButtons();
+			//cout << "If 1 in" << endl;
 			switchToIconView();
-			
+            // On new results
 			if(resultsArgs->results == NULL) {
+				setSensitiveItemsResults();
+			    updatePrevNextButtons();
 				// Create new results object
-				results = new Results(resultsArgs->title,
+				displayedResults.init(resultsArgs->title,
 				                      resultsArgs->link,
 				                      imagesCache, 
 				                      ivResults);
 				// Save link to results also in resultsArgs                      
-				resultsArgs->results = results;
+				resultsArgs->results = &displayedResults;
+				
 				scrollToTopOfList();
 				updateTitle();
+			// On refresh results
 			}else if(resultsArgs->results->isRefresh()) {
+				setSensitiveItemsResults();
+			    updatePrevNextButtons();
 				// Clear existing model on refresh
 				resultsArgs->results->clearModel();	
 				scrollToTopOfList();
 				updateTitle();
 			}
+			//cout << "If 1 out" << endl;
 		}
+		//cout << "Pre parser out" << endl;
 		resultsArgs->results->parser(div, titles);
 	}
 	
@@ -318,7 +329,7 @@ class ResultsHistory {
 	}
 	
 	static void resultsAppendTask(gpointer arg, gpointer arg1) {
-		Results *resultsAppend = (Results*) arg;
+		Results* resultsAppend = (Results*)arg;
 		ResultsHistory *resultsHistory = (ResultsHistory *)arg1;
 		ResultsArgs *resultsArgs = new ResultsArgs(resultsAppend, 
 		                                           resultsHistory);
@@ -406,12 +417,12 @@ class ResultsHistory {
 	}
 	
 	void onPostExecuteNew(CURLcode res) {
-		if(results != NULL) {
+		if(!displayedResults.isEmpty()) {
 		    removeBackStackDuplicate();	
 		}
 		if(res == CURLE_OK) {
 			if(gtk_widget_get_visible(spCenter)) {
-				if(results != NULL) {
+				if(!displayedResults.isEmpty()) {
 					updateTitle();
 				}else {
 					updateTitle("");
@@ -435,8 +446,8 @@ class ResultsHistory {
 			    resultsThreadsLinks.clear();
 			    
 			    // Attempt to fix refresh on error problem
-				if(results->isRefresh()) {
-					results->setRefresh(FALSE);
+				if(displayedResults.isRefresh()) {
+					displayedResults.setRefresh(FALSE);
 				}
 			}
 		}else { //error
@@ -456,11 +467,11 @@ class ResultsHistory {
 	
 	void clearForwardResultsStack() {
 		// Do not clear if refresh button clicked
-		if(!results->isRefresh()) {
+		if(!displayedResults.isRefresh()) {
 			// Free saved results first
-			for(unsigned i = 0; i < forwardResultsStack.size(); i++) {
+			/*for(unsigned i = 0; i < forwardResultsStack.size(); i++) {
 				g_free(forwardResultsStack[i]);
-			}
+			}*/
 			forwardResultsStack.clear();
 		    gtk_tool_item_set_tooltip_text(btnNext, 
 		                                   "Move forward in history");
@@ -473,7 +484,7 @@ class ResultsHistory {
 		int eraseIndex = -1;
 		// If back stack has title, remove results with it.
 		for(unsigned i = 0; i < backResultsStack.size(); i++) {
-			if(backResultsStack[i]->getTitle() == results->getTitle()) {
+			if(backResultsStack[i].getTitle() == displayedResults.getTitle()) {
 				eraseIndex = i;
 				break;
 			}
@@ -490,7 +501,7 @@ class ResultsHistory {
 		GtkTreePath *path1, *path2;
 		if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
 			string index(gtk_tree_path_to_string(path1));
-	        results->setIndex(index);
+	        displayedResults.setIndex(index);
 			gtk_tree_path_free(path1);
 		    gtk_tree_path_free(path2);
 		}
@@ -499,32 +510,28 @@ class ResultsHistory {
 	void saveToBackStack() {
 		removeBackStackDuplicate();
 		// Save position and copy to save variable
-		if(results != NULL) {
-			if(!results->isEmpty()) {
-				saveResultsPostion();
-		        backResultsStack.push_back(results);
-		        // Set tooltip with results title
-		        gtk_tool_item_set_tooltip_text(btnPrev, 
-		                                       results->getTitle().c_str());
-		        gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
-			}else {
-				g_free(results);
-				results = NULL;
-			}
+		if(!displayedResults.isEmpty()) {
+			saveResultsPostion();
+	        backResultsStack.push_back(displayedResults);
+	        // Set tooltip with results title
+	        gtk_tool_item_set_tooltip_text(btnPrev, 
+	                                       displayedResults
+	                                       .getTitle()
+	                                       .c_str());
+	        gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), TRUE);
 		}
 	}
 	
 	void saveToForwardStack() {
-		if(!results->isEmpty()) {
+		if(!displayedResults.isEmpty()) {
 			saveResultsPostion();
-			forwardResultsStack.push_back(results); 
+			forwardResultsStack.push_back(displayedResults); 
 			// Set tooltip with results title
 	        gtk_tool_item_set_tooltip_text(btnNext, 
-	                                       results->getTitle().c_str());
+	                                       displayedResults
+	                                       .getTitle()
+	                                       .c_str());
 	        gtk_widget_set_sensitive(GTK_WIDGET(btnNext), TRUE);
-		}else {
-			g_free(results);
-			results = NULL;
 		}
 	}
 	
@@ -534,16 +541,16 @@ class ResultsHistory {
 	    resultsThreadsLinks.clear(); 
 	    
 		// Update ivResults with history results
-		results->setModel(ivResults);
+		displayedResults.setModel(ivResults);
 		// Scroll to saved position after updating model
-		string index = results->getIndex();
+		string index = displayedResults.getIndex();
 		GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
 		gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), path1, FALSE, 0, 0);
 	    gtk_tree_path_free(path1);
 	}
 	
 	void restoreFromBackStack() {
-		results = backResultsStack.back();
+		displayedResults = backResultsStack.back();
 	    backResultsStack.pop_back();
 	    
 	    if(!backResultsStack.empty()) {
@@ -551,7 +558,8 @@ class ResultsHistory {
 			gtk_tool_item_set_tooltip_text(btnPrev, 
 										   backResultsStack
 											   .back()
-											   ->getTitle().c_str());
+											   .getTitle()
+											   .c_str());
 		}else {
 			// Set tooltip with results title
 		    gtk_tool_item_set_tooltip_text(btnPrev, "Move back in history");
@@ -564,14 +572,15 @@ class ResultsHistory {
 	}
 	
 	void restoreFromForwardStack() {
-		results = forwardResultsStack.back();
+		displayedResults = forwardResultsStack.back();
 	    forwardResultsStack.pop_back();
 	    if(!forwardResultsStack.empty()) {
 			// Set tooltip with results title
 		    gtk_tool_item_set_tooltip_text(btnNext, 
 		                                   forwardResultsStack
 		                                       .back()
-		                                       ->getTitle().c_str());                                   
+		                                       .getTitle()
+		                                       .c_str());                                   
 		}else {
 			// Set tooltip with results title
 		    gtk_tool_item_set_tooltip_text(btnNext, "Move forward in history");
@@ -616,7 +625,7 @@ class ResultsHistory {
 	
 	void setSensitiveItemsPlaylists() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), results != NULL);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), displayedResults.isEmpty());
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnActors), TRUE);
@@ -628,8 +637,8 @@ class ResultsHistory {
 	}
 	
 	void updateTitle() {
-		if(results != NULL) {
-			string title = progName + " - " + results->getTitle();
+		if(!displayedResults.isEmpty()) {
+			string title = progName + " - " + displayedResults.getTitle();
 		    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 		}else {
 			gtk_window_set_title(GTK_WINDOW(window), progName.c_str());
@@ -655,7 +664,7 @@ class ResultsHistory {
 	
 	void appendThreadOnError() {
 		g_thread_pool_push(resultsAppendThreadPool,
-		                   (gpointer)resultsAppendError,
+		                   &resultsAppendError,
 		                   NULL);
 	}
 	
@@ -669,9 +678,9 @@ class ResultsHistory {
 			string item = div.substr(item_begin, item_end - item_begin + 4);
 			gdk_threads_enter();
 			resultsArgs->resultsHistory->preParser(resultsArgs,
-			                                    count,
-			                                    item,
-			                                    titles);
+			                                       count,
+			                                       item,
+			                                       titles);
 			count++;
 			gdk_threads_leave();
 		}
