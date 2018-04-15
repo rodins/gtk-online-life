@@ -781,6 +781,12 @@ int main( int   argc,
                      "clicked",
                      G_CALLBACK(btnListEpisodesClicked),
                      &resultsHistory);
+                     
+    // IconView scroll to the bottom detection code
+    GtkAdjustment *vadjustment;
+    vadjustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(swIcon));
+    g_signal_connect(vadjustment, "value-changed",
+        G_CALLBACK(swIconVScrollChanged), &resultsHistory); 
     
     ActorsHistory actorsHistory(window,
                                 tvActors,
@@ -852,37 +858,35 @@ int main( int   argc,
     g_signal_connect(ivResults, 
                      "item-activated", 
                      G_CALLBACK(resultActivated), 
-                     &actorsHistory);                 
+                     &actorsHistory);                
     
-    CategoriesWidgets *categoriesWidgets = new CategoriesWidgets(
-                                               vbLeft,
-                                               swCategories,
-                                               spCategories,
-                                               hbCategoriesError,
-                                               tvCategories,
-                                               tvSavedItems,
-                                               frSavedItems
-                                           );
+    CategoriesWidgets categoriesWidgets(vbLeft,
+                                        swCategories,
+                                        spCategories,
+                                        hbCategoriesError,
+                                        tvCategories,
+                                        tvSavedItems,
+                                        frSavedItems);
                                            
     g_signal_connect(btnCategoriesError, 
                      "clicked", 
                      G_CALLBACK(btnCategoriesRepeatClicked), 
-                     categoriesWidgets);
+                     &categoriesWidgets);
                      
     g_signal_connect(GTK_WIDGET(btnCategories),
                      "clicked", 
                      G_CALLBACK(btnCategoriesClicked),
-                     categoriesWidgets);
+                     &categoriesWidgets);
                      
     g_signal_connect(GTK_WIDGET(btnSavedItems), 
 				     "clicked", 
 				     G_CALLBACK(btnSavedItemsClicked), 
-				     categoriesWidgets);
+				     &categoriesWidgets);
 				     
 	g_signal_connect(GTK_WIDGET(btnSavedItems), 
 				     "state-changed", 
 				     G_CALLBACK(btnSavedItemsStateChanged), 
-				     categoriesWidgets);
+				     &categoriesWidgets);
         
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
@@ -925,12 +929,6 @@ int main( int   argc,
     
     gtk_widget_hide(hbResultsError);
                                    
-    // IconView scroll to the bottom detection code
-    GtkAdjustment *vadjustment;
-    vadjustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(swIcon));
-    g_signal_connect(vadjustment, "value-changed",
-        G_CALLBACK(swIconVScrollChanged), &resultsHistory);
-    
     gtk_main();
     gdk_threads_leave ();
 
