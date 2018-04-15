@@ -782,77 +782,77 @@ int main( int   argc,
                      G_CALLBACK(btnListEpisodesClicked),
                      &resultsHistory);
     
-    ActorsHistory *actorsHistory = new ActorsHistory(window,
-                                                     tvActors,
-                                                     tvBackActors,
-                                                     frRightBottom,
-                                                     lbInfo,
-                                                     frRightTop,
-                                                     frInfo,
-                                                     frActions,
-                                                     spActors,
-                                                     hbActorsError,
-                                                     vbRight,
-                                                     spLinks,
-                                                     btnLinksError,
-                                                     btnGetLinks,
-                                                     btnListEpisodes,
-                                                     btnSave,
-                                                     btnDelete,
-                                                     tvSavedItems,
-                                                     btnSavedItems,
-                                                     btnActors,
-                                                     &resultsHistory);
+    ActorsHistory actorsHistory(window,
+                                tvActors,
+                                tvBackActors,
+                                frRightBottom,
+                                lbInfo,
+                                frRightTop,
+                                frInfo,
+                                frActions,
+                                spActors,
+                                hbActorsError,
+                                vbRight,
+                                spLinks,
+                                btnLinksError,
+                                btnGetLinks,
+                                btnListEpisodes,
+                                btnSave,
+                                btnDelete,
+                                tvSavedItems,
+                                btnSavedItems,
+                                btnActors,
+                                &resultsHistory);
                                                      
     g_signal_connect(selection,
 	                 "changed", 
 	                 G_CALLBACK(backActorsChanged), 
-	                 actorsHistory);
+	                 &actorsHistory);
 	                                  
     g_signal_connect(btnActors,
                      "clicked", 
                      G_CALLBACK(btnActorsClicked),
-                     actorsHistory);
+                     &actorsHistory);
                      
     g_signal_connect(btnActorsError,
                      "clicked",
                      G_CALLBACK(btnActorsRepeatClicked), 
-                     actorsHistory);
+                     &actorsHistory);
                      
     g_signal_connect(tvPlaylists,
                      "row-activated", 
                      G_CALLBACK(playlistClicked), 
-                     actorsHistory);
+                     &actorsHistory);
                      
     g_signal_connect(btnLinksError,
                      "clicked",
                      G_CALLBACK(btnLinksErrorClicked),
-                     actorsHistory);
+                     &actorsHistory);
                      
     g_signal_connect(btnGetLinks,
                      "clicked",
                      G_CALLBACK(btnGetLinksClicked),
-                     actorsHistory);
+                     &actorsHistory);
                      
     g_signal_connect(btnSave,
                      "clicked",
                      G_CALLBACK(btnSaveClicked),
-                     actorsHistory);
+                     &actorsHistory);
                      
     g_signal_connect(btnDelete,
                      "clicked",
                      G_CALLBACK(btnDeleteClicked),
-                     actorsHistory);
+                     &actorsHistory);
                      
     g_signal_connect(tvSavedItems,
                      "row-activated", 
                      G_CALLBACK(tvSavedItemsClicked), 
-                     actorsHistory);
+                     &actorsHistory);
                      
     g_signal_connect(ivResults, 
                      "item-activated", 
                      G_CALLBACK(resultActivated), 
-                     actorsHistory);                 
+                     &actorsHistory);                 
     
     CategoriesWidgets *categoriesWidgets = new CategoriesWidgets(
                                                vbLeft,
@@ -937,7 +937,6 @@ int main( int   argc,
     
     gdk_threads_leave ();
     
-    g_free(actorsHistory);
     g_free(imagesDownloader);
  
     /* we're done with libcurl, so clean it up */ 
