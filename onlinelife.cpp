@@ -894,9 +894,7 @@ int main( int   argc,
     
     gtk_box_pack_start(GTK_BOX(vbox), hbCenter, TRUE, TRUE, 1);
     
-    ImagesDownloader *imagesDownloader = new ImagesDownloader(ivResults,
-                                                              imageIndexes,
-                                                              imagesCache);    
+    ImagesDownloader imagesDownloader(ivResults, imageIndexes, imagesCache);    
     
     gtk_container_add(GTK_CONTAINER(window), vbox);
     
@@ -934,11 +932,8 @@ int main( int   argc,
         G_CALLBACK(swIconVScrollChanged), &resultsHistory);
     
     gtk_main();
-    
     gdk_threads_leave ();
-    
-    g_free(imagesDownloader);
- 
+
     /* we're done with libcurl, so clean it up */ 
 	curl_global_cleanup();
 
