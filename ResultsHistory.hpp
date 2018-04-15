@@ -203,14 +203,12 @@ class ResultsHistory {
 	void newThread(string title, string url) {
 		saveToBackStack();
 		ResultsArgs *resultsArgs = new ResultsArgs(title, url, this);
-		//updateTitle(title);
 		newThread(resultsArgs);
 	}
 	
 	void newThreadSearch(string title, string base_url) {
 		saveToBackStack();
 		ResultsArgs *resultsArgs = new ResultsArgs(title, base_url, this);
-		//updateTitle(title);
 		newThread(resultsArgs);
 	}
 	

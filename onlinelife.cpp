@@ -711,22 +711,22 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbCenter), spCenter, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbCenter), hbResultsError, TRUE, FALSE, 1);
     
-    ResultsHistory *resultsHistory = new ResultsHistory(window,
-                                                        ivResults,
-                                                        tvPlaylists,
-                                                        btnPrev,
-                                                        btnNext,
-                                                        swTree,
-                                                        swIcon,
-                                                        spCenter,
-                                                        vbCenter,
-                                                        hbResultsError,
-                                                        btnUp,
-                                                        btnRefresh,
-                                                        imageIndexes,
-                                                        imagesCache,
-                                                        PROG_NAME,
-                                                        btnActors);
+    ResultsHistory resultsHistory(window,
+								  ivResults,
+								  tvPlaylists,
+								  btnPrev,
+								  btnNext,
+								  swTree,
+								  swIcon,
+								  spCenter,
+								  vbCenter,
+								  hbResultsError,
+								  btnUp,
+								  btnRefresh,
+								  imageIndexes,
+								  imagesCache,
+								  PROG_NAME,
+								  btnActors);
     
     // Disable all items                                                
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
@@ -740,47 +740,47 @@ int main( int   argc,
     g_signal_connect(GTK_WIDGET(btnRefresh), 
 				     "clicked", 
 				     G_CALLBACK(btnRefreshClicked), 
-				     resultsHistory);
+				     &resultsHistory);
 				 
     g_signal_connect(GTK_WIDGET(btnUp),
                      "clicked", 
                      G_CALLBACK(btnUpClicked), 
-                     resultsHistory);
+                     &resultsHistory);
     
     g_signal_connect(btnPrev,
                      "clicked", 
                      G_CALLBACK(btnPrevClicked),
-                     resultsHistory);
+                     &resultsHistory);
                      
 	g_signal_connect(btnNext,
 				     "clicked", 
 				     G_CALLBACK(btnNextClicked),
-				     resultsHistory);
+				     &resultsHistory);
 				     
     g_signal_connect(btnResultsError,
                      "clicked",
                      G_CALLBACK(btnResultsRepeatClicked),
-                     resultsHistory);
+                     &resultsHistory);
 				     
     g_signal_connect(tvCategories,
                      "row-activated",
                      G_CALLBACK(categoriesClicked), 
-                     resultsHistory);
+                     &resultsHistory);
         
     g_signal_connect(tvActors, 
                      "row-activated",
                      G_CALLBACK(actorsClicked), 
-                     resultsHistory);
+                     &resultsHistory);
     
     g_signal_connect(entry,
                      "activate", 
                      G_CALLBACK(entryActivated), 
-                     resultsHistory);
+                     &resultsHistory);
                                       
     g_signal_connect(btnListEpisodes,
                      "clicked",
                      G_CALLBACK(btnListEpisodesClicked),
-                     resultsHistory);
+                     &resultsHistory);
     
     ActorsHistory *actorsHistory = new ActorsHistory(window,
                                                      tvActors,
@@ -802,7 +802,7 @@ int main( int   argc,
                                                      tvSavedItems,
                                                      btnSavedItems,
                                                      btnActors,
-                                                     resultsHistory);
+                                                     &resultsHistory);
                                                      
     g_signal_connect(selection,
 	                 "changed", 
@@ -931,13 +931,12 @@ int main( int   argc,
     GtkAdjustment *vadjustment;
     vadjustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(swIcon));
     g_signal_connect(vadjustment, "value-changed",
-        G_CALLBACK(swIconVScrollChanged), resultsHistory);
+        G_CALLBACK(swIconVScrollChanged), &resultsHistory);
     
     gtk_main();
     
     gdk_threads_leave ();
     
-    g_free(resultsHistory);
     g_free(actorsHistory);
     g_free(imagesDownloader);
  
