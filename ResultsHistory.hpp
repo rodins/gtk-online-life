@@ -225,12 +225,8 @@ class ResultsHistory {
 	}
 	
 	void btnListEpisodesClicked() {
-		//TODO: do not need pointer, do as you did in image downloader
-		ListEpisodesArgs *listEpisodesArgsPtr = new ListEpisodesArgs();
-		listEpisodesArgsPtr->title = listEpisodesArgs.title;
-		listEpisodesArgsPtr->playlist_link = listEpisodesArgs.playlist_link;
 	    g_thread_pool_push(listEpisodesThreadPool, 
-		                   (gpointer)listEpisodesArgsPtr, 
+		                   &listEpisodesArgs, 
 		                   NULL);
 	}
 	
@@ -373,7 +369,7 @@ class ResultsHistory {
 				resultsHistory->error = PLAYLISTS_ERROR;
 			}
 		}
-		g_free(listEpisodesArgs);
+		//g_free(listEpisodesArgs);
 		gdk_threads_leave();
 	}
 	
