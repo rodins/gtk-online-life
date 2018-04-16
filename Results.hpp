@@ -1,6 +1,8 @@
 // Results.hpp
 
 class Results {
+	
+	int id;
     string next_link;
 	string base_url;
 	string title;
@@ -18,9 +20,15 @@ class Results {
 	
 	Results() {
 		count = 0;
+		id = -1;
 	}
 	
-	void init(string title, 
+	int getId() {
+		return id;
+	}
+	
+	void init(int id,
+	          string title, 
 	          string url, 
 	          map<string, GdkPixbuf*> *cache, 
 	          GtkWidget *ivResults) {
@@ -37,6 +45,9 @@ class Results {
         
         count = 0;
         
+        // TODO: this model thing is strange, when should I free it
+        // as I could free model after setModel as I did in main
+        // with other models
         iconViewStore = gtk_list_store_new(
 		     ICON_NUM_COLS,   // Number of columns
 		     GDK_TYPE_PIXBUF, // Image poster
@@ -45,11 +56,16 @@ class Results {
 		     G_TYPE_STRING    // Image link
 		);
 		
+		// TODO: should ivResults be part of results class
 		setModel(ivResults);
+		cout << "init() " << id << endl;
 	}
 	
 	~Results(){
-		g_free(iconViewStore);
+		cout << "~Results " << endl;
+		cout << "Title: " << title << endl;
+		cout << "Id: " << id << endl;
+		//g_free(iconViewStore);
 	}
 	
 	bool isRefresh() {

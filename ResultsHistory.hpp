@@ -4,42 +4,17 @@
 #include "Playlists.hpp"
 #include "ErrorType.hpp"
 
-class ResultsHistory;
-
-struct ResultsArgs {
-	string title;
-	string link;
-	Results *results;
-	ResultsHistory *resultsHistory;
-	
-	// For new task
-	ResultsArgs(string title, string link, ResultsHistory *resultsHistory) {
-		this->title = title;
-		this->link = link;
-		this->resultsHistory = resultsHistory;
-		results = NULL;
-	} 
-	
-	// For append task or refresh
-	ResultsArgs(Results *results, ResultsHistory *resultsHistory) {
-		title = results->getTitle();
-		if(results->isRefresh()) {
-			link = results->getUrl();
-		}else {
-			link = results->getNextLink();
-		}
-		this->results = results;
-		resultsHistory = resultsHistory;
-	}
-};
-
 class ResultsHistory {
+	int resultsCount;
     Results displayedResults;
-    Results *resultsAppendError;
+    int appendId;
     
     Playlists *playlists;
         
     vector<Results> backResultsStack, forwardResultsStack;
+    // TODO: is guess it could be indexes, set of ints
+    // ... or do not use this at all, use appendId != -1 before starting task
+    // ... and set it to -1 in onPostExecuteNew and in onPostExecuteAppend
     set<string> resultsThreadsLinks;
     
     GtkWidget *ivResults;
@@ -65,8 +40,6 @@ class ResultsHistory {
     map<string, GdkPixbuf*> *imagesCache;
     
     ErrorType error;
-    
-    string repeatTitle, repeatLink;
     
     GtkToolItem* btnActors;
     
@@ -110,6 +83,9 @@ class ResultsHistory {
 		progName = pn;
 		this->btnActors = btnActors;
 		
+		appendId = -1;
+		resultsCount = 0;
+		
 		// GThreadPool for new results
 	    resultsNewThreadPool = g_thread_pool_new(ResultsHistory::resultsNewTask,
 	                                   this,
@@ -139,6 +115,7 @@ class ResultsHistory {
 	}
 	
 	~ResultsHistory(){
+		cout << "~ResultsHistory" << endl;
 		g_free(playlists);
 	}
 	
@@ -179,14 +156,13 @@ class ResultsHistory {
 	
 	void btnRefreshClicked() {
 		displayedResults.setRefresh(TRUE);
-		ResultsArgs *resultsArgs = new ResultsArgs(&displayedResults, this);
-	    newThread(resultsArgs);
+	    newThread();
 	}
 	
 	void btnResultsRepeatClicked() {
 		switch(error) {
 			case RESULTS_NEW_ERROR:
-			    newThread(repeatTitle, repeatLink);
+			    newThread();
 			break;
 			case RESULTS_APPEND_ERROR:
 			    appendThreadOnError();
@@ -201,15 +177,25 @@ class ResultsHistory {
 	}
 	
 	void newThread(string title, string url) {
+		cout << "New thread(title, url)" << endl;
 		saveToBackStack();
-		ResultsArgs *resultsArgs = new ResultsArgs(title, url, this);
-		newThread(resultsArgs);
+		displayedResults.init(resultsCount++,
+		                      title,
+				              url,
+				              imagesCache, 
+				              ivResults);
+	    appendId = displayedResults.getId();
+	    newThread();
 	}
 	
-	void newThreadSearch(string title, string base_url) {
-		saveToBackStack();
-		ResultsArgs *resultsArgs = new ResultsArgs(title, base_url, this);
-		newThread(resultsArgs);
+	void newThread() {
+		cout << "New thread()" << endl;
+		// New images for new indexes will be downloaded
+	    imageIndexes->clear();
+	    error = NONE_ERROR;
+		g_thread_pool_push(resultsNewThreadPool,
+		                  (gpointer)1,
+		                   NULL);
 	}
 	
 	void appendThread() {
@@ -217,8 +203,9 @@ class ResultsHistory {
 			// Search for the same link only once if it's not saved in set.
 			if(resultsThreadsLinks.count(displayedResults.getNextLink()) == 0) {
 				resultsThreadsLinks.insert(displayedResults.getNextLink());
+				appendId = displayedResults.getId();
 				g_thread_pool_push(resultsAppendThreadPool,
-				                   &displayedResults,
+				                   (gpointer)1,
 				                   NULL);
 			}
 		}
@@ -263,40 +250,28 @@ class ResultsHistory {
 	
 	private:
 	
-	void preParser(ResultsArgs *resultsArgs, int count, string div, set<string> &titles) {
-		//cout << "Pre parser in" << endl;
-		cout << count << endl;
+	void preParser(int count, string div, set<string> &titles) {
 		// Prepare to show results when first result item comes
 		if(count == 0) {
-			//cout << "If 1 in" << endl;
+			// On append and on all cases follow
 			switchToIconView();
             // On new results
-			if(resultsArgs->results == NULL) {
+			if(displayedResults.isEmpty()) {
 				setSensitiveItemsResults();
-			    updatePrevNextButtons();
-				// Create new results object
-				displayedResults.init(resultsArgs->title,
-				                      resultsArgs->link,
-				                      imagesCache, 
-				                      ivResults);
-				// Save link to results also in resultsArgs                      
-				resultsArgs->results = &displayedResults;
-				
+			    updatePrevNextButtons();                      
 				scrollToTopOfList();
 				updateTitle();
 			// On refresh results
-			}else if(resultsArgs->results->isRefresh()) {
+			}else if(displayedResults.isRefresh()) {
 				setSensitiveItemsResults();
 			    updatePrevNextButtons();
 				// Clear existing model on refresh
-				resultsArgs->results->clearModel();	
+				displayedResults.clearModel();	
 				scrollToTopOfList();
 				updateTitle();
 			}
-			//cout << "If 1 out" << endl;
 		}
-		//cout << "Pre parser out" << endl;
-		resultsArgs->results->parser(div, titles);
+		displayedResults.parser(div, titles);
 	}
 	
 	void scrollToTopOfList() {
@@ -310,18 +285,16 @@ class ResultsHistory {
 	}
 	
 	static void resultsNewTask(gpointer arg, gpointer arg1) {
-		ResultsArgs *resultsArgs = (ResultsArgs*)arg;
+		cout << "resultsNewTask()" << endl;
 		// On pre execute
 		gdk_threads_enter();
 		ResultsHistory *resultsHistory = (ResultsHistory*)arg1;
 		// Display spinner for new results
 	    resultsHistory->showSpCenter(FALSE);
-	    // Save title and link to be able to repeat the call 
-	    resultsHistory->repeatTitle = resultsArgs->title;
-	    resultsHistory->repeatLink = resultsArgs->link;
 	    gdk_threads_leave();
 	    // async part
-		CURLcode res = resultsHistory->getResultsFromNet(resultsArgs);
+		CURLcode res = resultsHistory->getResultsFromNet(
+		               resultsHistory->displayedResults.getUrl());
 		
 		gdk_threads_enter();
 		resultsHistory->onPostExecuteNew(res);                                 
@@ -329,20 +302,18 @@ class ResultsHistory {
 	}
 	
 	static void resultsAppendTask(gpointer arg, gpointer arg1) {
-		Results* resultsAppend = (Results*)arg;
 		ResultsHistory *resultsHistory = (ResultsHistory *)arg1;
-		ResultsArgs *resultsArgs = new ResultsArgs(resultsAppend, 
-		                                           resultsHistory);
 		// On pre execute
 		gdk_threads_enter();
 		// Display spinner at the bottom of list
 		resultsHistory->showSpCenter(TRUE);
 		gdk_threads_leave();
 		// async part
-		CURLcode res = resultsHistory->getResultsFromNet(resultsArgs);
+		CURLcode res = resultsHistory->getResultsFromNet(
+		               resultsHistory->displayedResults.getNextLink());
 		// On post execute
 		gdk_threads_enter();
-		resultsHistory->onPostExecuteAppend(resultsAppend, res);
+		resultsHistory->onPostExecuteAppend(res);
 		gdk_threads_leave();
 	}
 	
@@ -457,21 +428,16 @@ class ResultsHistory {
 		}
 	}
 	
-	void onPostExecuteAppend(Results *resultsAppend, CURLcode res) {
+	void onPostExecuteAppend(CURLcode res) {
 		if(res != CURLE_OK) { // error
 			showResultsRepeat(TRUE);
 			error = RESULTS_APPEND_ERROR;
-			resultsAppendError = resultsAppend;
 		}
 	}
 	
 	void clearForwardResultsStack() {
 		// Do not clear if refresh button clicked
 		if(!displayedResults.isRefresh()) {
-			// Free saved results first
-			/*for(unsigned i = 0; i < forwardResultsStack.size(); i++) {
-				g_free(forwardResultsStack[i]);
-			}*/
 			forwardResultsStack.clear();
 		    gtk_tool_item_set_tooltip_text(btnNext, 
 		                                   "Move forward in history");
@@ -508,6 +474,7 @@ class ResultsHistory {
 	}
 	
 	void saveToBackStack() {
+		cout << "saveToBackStack()" << endl;
 		removeBackStackDuplicate();
 		// Save position and copy to save variable
 		if(!displayedResults.isEmpty()) {
@@ -654,21 +621,17 @@ class ResultsHistory {
 		}
 	}
 	
-	void newThread(ResultsArgs *resultsArgs) {
-		// New images for new indexes will be downloaded
-	    imageIndexes->clear();
-	    error = NONE_ERROR;
-	    resultsAppendError = NULL;
-		g_thread_pool_push(resultsNewThreadPool, (gpointer)resultsArgs, NULL);
-	}
-	
 	void appendThreadOnError() {
 		g_thread_pool_push(resultsAppendThreadPool,
-		                   &resultsAppendError,
+		                   (gpointer)1,
 		                   NULL);
 	}
 	
-	static void find_item(ResultsArgs *resultsArgs, 
+	bool isNotValidModel() {
+		return displayedResults.getId() != appendId;
+	}
+	
+	static void find_item(ResultsHistory *resultsHistory, 
 	                      int &count, 
 	                      string &div, 
 	                      set<string> &titles) {				  
@@ -677,29 +640,29 @@ class ResultsHistory {
 		if(item_begin != string::npos && item_end != string::npos) {
 			string item = div.substr(item_begin, item_end - item_begin + 4);
 			gdk_threads_enter();
-			resultsArgs->resultsHistory->preParser(resultsArgs,
-			                                       count,
-			                                       item,
-			                                       titles);
+			resultsHistory->preParser(count, item, titles);
 			count++;
 			gdk_threads_leave();
 		}
 	}
 	
-	static void find_pager(Results *res, string &div) {
+	static void find_pager(Results res, string &div) {
 		size_t pager_begin = div.find("class=\"navigation\"");
 	    size_t pager_end = div.find("</div>", pager_begin+1);
 	    if(pager_begin != string::npos && pager_end != string::npos) {
 			string pager = div.substr(pager_begin, pager_end - pager_begin + 6);
-			res->parse_pager(pager);
+			res.parse_pager(pager);
 		}
 	}
 	
 	static int results_writer(char *data, size_t size, size_t nmemb,
-	                      ResultsArgs *resultsArgs)
+	                      ResultsHistory *resultsHistory)
 	{
-	    if (resultsArgs == NULL)
-	       return 0;
+	    gdk_threads_enter();
+	    if(resultsHistory->isNotValidModel()) {
+	        return CURL_READFUNC_ABORT; 
+	    }
+	    gdk_threads_leave();
 	    
 	    static int count = 0;    
 	    static set<string> titles;
@@ -731,11 +694,12 @@ class ResultsHistory {
 			if(count == 0) {
 				end = string::npos;
 			}
-			find_item(resultsArgs,
+			find_item(resultsHistory,
 			          count,
 			          partial_div,
 			          titles);
-			find_pager(resultsArgs->results, partial_div);
+			find_pager(resultsHistory->displayedResults, 
+			           partial_div);
 		}
 	    
 	    while(div_begin != string::npos && div_end != string::npos) {
@@ -744,11 +708,12 @@ class ResultsHistory {
 			if(count == 0) {
 				end = string::npos;
 			}
-			find_item(resultsArgs,
+			find_item(resultsHistory,
 			          count,
 			          div,
 			          titles);
-			find_pager(resultsArgs->results, div);
+			find_pager(resultsHistory->displayedResults,
+			           div);
 			div_begin = strData.find("<div", div_end+4);
 	        div_end = strData.find("</div>", div_begin+3);
 		}
@@ -768,7 +733,8 @@ class ResultsHistory {
 	    return size*nmemb;
 	}
 	
-	CURLcode getResultsFromNet(ResultsArgs *resultsArgs) {
+	CURLcode getResultsFromNet(string url) {
+		cout << "getResultsFromNet(url)" << endl;
 		CURL *curl_handle;
 	    
 		CURLcode res;		
@@ -780,7 +746,7 @@ class ResultsHistory {
 		    /* set url to get here */
 			curl_easy_setopt(curl_handle, 
 			                 CURLOPT_URL, 
-			                 resultsArgs->link.c_str());			
+			                 url.c_str());			
 			/* send all data to this function */		
 			curl_easy_setopt(curl_handle, 
 			                 CURLOPT_WRITEFUNCTION, 
@@ -788,7 +754,7 @@ class ResultsHistory {
 			curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);	
 			curl_easy_setopt(curl_handle,
 			                 CURLOPT_WRITEDATA, 
-			                 resultsArgs);			
+			                 this);			
 			/* get it */
 			res = curl_easy_perform(curl_handle);
 
@@ -796,7 +762,6 @@ class ResultsHistory {
 			curl_easy_cleanup(curl_handle);
 			
 		}
-		g_free(resultsArgs);
 		return res;
 	}
 };

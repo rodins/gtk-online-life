@@ -242,7 +242,7 @@ static void entryActivated( GtkWidget *widget,
 	    string base_url = DomainFactory::getDomain() + 
 	         "/?do=search&subaction=search&mode=simple&story=" + 
 	         to_cp1251(query);
-		resultsHistory->newThreadSearch(title, base_url);
+		resultsHistory->newThread(title, base_url);
 	}		  						  
 }
 
