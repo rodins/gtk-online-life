@@ -115,7 +115,6 @@ class ResultsHistory {
 	}
 	
 	~ResultsHistory(){
-		cout << "~ResultsHistory" << endl;
 		g_free(playlists);
 	}
 	
@@ -600,7 +599,7 @@ class ResultsHistory {
 	}
 	
 	void updateTitle() {
-		if(!displayedResults.isEmpty()) {
+		if(!displayedResults.getTitle().empty()) {
 			string title = progName + " - " + displayedResults.getTitle();
 		    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
 		}else {
