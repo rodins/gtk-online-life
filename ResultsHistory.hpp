@@ -44,6 +44,7 @@ class ResultsHistory {
     GtkToolItem* btnActors;
     
     ListEpisodesArgs listEpisodesArgs;
+    bool isResultsThreadStarted;
     
     public:
     
@@ -114,6 +115,7 @@ class ResultsHistory {
         displayedResults.setIvResultsAndImagesCache(ivResults, imagesCache);
         
         error = NONE_ERROR;
+        isResultsThreadStarted = FALSE;
 	}
 	
 	~ResultsHistory(){
@@ -190,6 +192,7 @@ class ResultsHistory {
 	    imageIndexes->clear();
 	    error = NONE_ERROR;
 	    appendId = displayedResults.getId();
+	    isResultsThreadStarted = TRUE;
 		g_thread_pool_push(resultsNewThreadPool,
 		                  (gpointer)1,
 		                   NULL);
@@ -198,7 +201,8 @@ class ResultsHistory {
 	void appendThread() {
 		if(!displayedResults.getNextLink().empty()) {
 			// Search for the same link only once if it's not saved in set.
-			if(appendId == -1){
+			if(!isResultsThreadStarted){
+				isResultsThreadStarted = TRUE;
 				appendId = displayedResults.getId();
 				g_thread_pool_push(resultsAppendThreadPool,
 				                   (gpointer)1,
@@ -383,7 +387,7 @@ class ResultsHistory {
 	}
 	
 	void onPostExecuteNew(CURLcode res) {
-		appendId = -1;
+	    isResultsThreadStarted = FALSE;
 		if(res == CURLE_OK) {
 			if(displayedResults.isEmpty()) { // Nothing found but network is good
 				updateTitle();
@@ -414,8 +418,9 @@ class ResultsHistory {
 	}
 	
 	void onPostExecuteAppend(CURLcode res) {
-		appendId = -1;
-		if(res != CURLE_OK) { // error
+		isResultsThreadStarted = FALSE;
+		// Write error will be on model replace from history
+		if(res != CURLE_OK && res != CURLE_WRITE_ERROR) { // error
 			showResultsRepeat(TRUE);
 			error = RESULTS_APPEND_ERROR;
 		}
@@ -609,8 +614,6 @@ class ResultsHistory {
 	}
 	
 	bool isNotValidModel() {
-		cout << "Results id: " << displayedResults.getId() << endl;
-		cout << "Append id: " << appendId << endl;
 		return displayedResults.getId() != appendId;
 	}
 	
