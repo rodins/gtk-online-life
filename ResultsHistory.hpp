@@ -198,9 +198,13 @@ class ResultsHistory {
 	void appendThread() {
 		if(!displayedResults.getNextLink().empty()) {
 			// Search for the same link only once if it's not saved in set.
-			if(resultsThreadsLinks.count(displayedResults.getNextLink()) == 0) {
+			cout << "Append id before: " << appendId << endl;
+			//if(resultsThreadsLinks.count(displayedResults.getNextLink()) == 0) {
+			if(appendId == -1){
 				resultsThreadsLinks.insert(displayedResults.getNextLink());
 				appendId = displayedResults.getId();
+				cout << "Append thread: " << displayedResults.getNextLink() << endl;
+				cout << "Append id after: " << appendId << endl;
 				g_thread_pool_push(resultsAppendThreadPool,
 				                   (gpointer)1,
 				                   NULL);
@@ -384,6 +388,7 @@ class ResultsHistory {
 	}
 	
 	void onPostExecuteNew(CURLcode res) {
+		appendId = -1;
 		if(res == CURLE_OK) {
 			if(displayedResults.isEmpty()) { // Nothing found but network is good
 				updateTitle();
@@ -416,6 +421,7 @@ class ResultsHistory {
 	}
 	
 	void onPostExecuteAppend(CURLcode res) {
+		appendId = -1;
 		if(res != CURLE_OK) { // error
 			showResultsRepeat(TRUE);
 			error = RESULTS_APPEND_ERROR;
