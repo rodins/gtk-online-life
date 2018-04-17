@@ -25,6 +25,7 @@ class Results {
 		// Initialize default pixbuf for ivResults here
         defaultPixbuf = IconsFactory::getBlankIcon();
         refresh = FALSE;
+        iconViewStore = NULL;
 	}
 	
 	int getId() {
@@ -57,6 +58,8 @@ class Results {
 		     G_TYPE_STRING,   // Href
 		     G_TYPE_STRING    // Image link
 		);
+		
+	    next_link = "";
 		
 		// TODO: should ivResults be part of results class
 		setModel(ivResults);
