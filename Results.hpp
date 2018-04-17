@@ -41,6 +41,7 @@ class Results {
 	void init(int id,
 	          string title, 
 	          string url) {
+		this->id = id;
 		this->title = title;
 		this->url = url;
 		this->base_url = url;

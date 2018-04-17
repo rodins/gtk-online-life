@@ -198,13 +198,8 @@ class ResultsHistory {
 	void appendThread() {
 		if(!displayedResults.getNextLink().empty()) {
 			// Search for the same link only once if it's not saved in set.
-			cout << "Append id before: " << appendId << endl;
-			//if(resultsThreadsLinks.count(displayedResults.getNextLink()) == 0) {
 			if(appendId == -1){
-				resultsThreadsLinks.insert(displayedResults.getNextLink());
 				appendId = displayedResults.getId();
-				cout << "Append thread: " << displayedResults.getNextLink() << endl;
-				cout << "Append id after: " << appendId << endl;
 				g_thread_pool_push(resultsAppendThreadPool,
 				                   (gpointer)1,
 				                   NULL);
@@ -409,8 +404,6 @@ class ResultsHistory {
 					// clear forward results stack on fetching new results
 				    clearForwardResultsStack();
 				}
-			    // Clear results links set if not paging
-			    resultsThreadsLinks.clear();
 			}
 		}else { //error
 			updateTitle("Results error!");
@@ -495,10 +488,6 @@ class ResultsHistory {
 	}
 	
 	void savedRecovery() {
-		// Clear results links set if not paging
-	    // (do not allow next page thread to be called twice)
-	    resultsThreadsLinks.clear(); 
-	    
 		// Update ivResults with history results
 		displayedResults.setModel();
 		// Scroll to saved position after updating model
