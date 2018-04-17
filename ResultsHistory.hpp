@@ -111,6 +111,8 @@ class ResultsHistory {
 	        gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists))
         );
         
+        displayedResults.setIvResultsAndImagesCache(ivResults, imagesCache);
+        
         error = NONE_ERROR;
 	}
 	
@@ -179,9 +181,7 @@ class ResultsHistory {
 		saveToBackStack();
 		displayedResults.init(resultsCount++,
 		                      title,
-				              url,
-				              imagesCache, 
-				              ivResults);
+				              url);
 	    appendId = displayedResults.getId();
 	    newThread();
 	}

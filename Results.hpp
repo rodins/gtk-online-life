@@ -6,6 +6,8 @@ class Results {
 	string base_url;
 	string title;
 	string url;
+	
+	GtkWidget *ivResults;
 	bool refresh;
 	
 	GtkListStore *iconViewStore;
@@ -20,28 +22,28 @@ class Results {
 	Results() {
 		count = 0;
 		id = -1;
+		// Initialize default pixbuf for ivResults here
+        defaultPixbuf = IconsFactory::getBlankIcon();
+        refresh = FALSE;
 	}
 	
 	int getId() {
 		return id;
 	}
 	
+	void setIvResultsAndImagesCache(GtkWidget *ivResults,
+	                                map<string, GdkPixbuf*> *imagesCache) {
+		this->ivResults = ivResults;
+		this->imagesCache = imagesCache;
+	}
+	
 	void init(int id,
 	          string title, 
-	          string url, 
-	          map<string, GdkPixbuf*> *cache, 
-	          GtkWidget *ivResults) {
+	          string url) {
 		this->title = title;
 		this->url = url;
 		this->base_url = url;
-		
 		refresh = FALSE;
-		
-		// Initialize default pixbuf for ivResults here
-        defaultPixbuf = IconsFactory::getBlankIcon();
-        
-        imagesCache = cache;
-        
         count = 0;
         
         // TODO: this model thing is strange, when should I free it
