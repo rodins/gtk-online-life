@@ -177,7 +177,6 @@ class ResultsHistory {
 	}
 	
 	void newThread(string title, string url) {
-		cout << "New thread(title, url)" << endl;
 		saveToBackStack();
 		displayedResults.init(resultsCount++,
 		                      title,
@@ -189,7 +188,6 @@ class ResultsHistory {
 	}
 	
 	void newThread() {
-		cout << "New thread()" << endl;
 		// New images for new indexes will be downloaded
 	    imageIndexes->clear();
 	    error = NONE_ERROR;
@@ -285,7 +283,6 @@ class ResultsHistory {
 	}
 	
 	static void resultsNewTask(gpointer arg, gpointer arg1) {
-		cout << "resultsNewTask()" << endl;
 		// On pre execute
 		gdk_threads_enter();
 		ResultsHistory *resultsHistory = (ResultsHistory*)arg1;
@@ -474,7 +471,6 @@ class ResultsHistory {
 	}
 	
 	void saveToBackStack() {
-		cout << "saveToBackStack()" << endl;
 		removeBackStackDuplicate();
 		// Save position and copy to save variable
 		if(!displayedResults.isEmpty()) {
@@ -646,7 +642,7 @@ class ResultsHistory {
 		}
 	}
 	
-	static void find_pager(Results res, string &div) {
+	static void find_pager(Results &res, string &div) {
 		size_t pager_begin = div.find("class=\"navigation\"");
 	    size_t pager_end = div.find("</div>", pager_begin+1);
 	    if(pager_begin != string::npos && pager_end != string::npos) {
@@ -734,7 +730,6 @@ class ResultsHistory {
 	}
 	
 	CURLcode getResultsFromNet(string url) {
-		cout << "getResultsFromNet(url)" << endl;
 		CURL *curl_handle;
 	    
 		CURLcode res;		
