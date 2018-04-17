@@ -654,7 +654,7 @@ class ResultsHistory {
 	        return CURL_READFUNC_ABORT; 
 	    }
 	    
-	    static int count = 0;    
+	    static bool isFirst = TRUE;    
 	    static set<string> titles;
 	    
 	    string strData(data);
@@ -669,7 +669,7 @@ class ResultsHistory {
 	    
 	    size_t starting_point = strData.find("tom-pos");
 	    // If starting point is not found, don't parse divs
-	    if(starting_point == string::npos && count == 0) {
+	    if(starting_point == string::npos && isFirst) {
 			return size*nmemb;
 		}
 	    
@@ -681,7 +681,8 @@ class ResultsHistory {
 			divBeginFound = FALSE;
 			partial_div += strData.substr(0, div_end_first+6);
 			// On first item found clear found end
-			if(count == 0) {
+			if(isFirst) {
+				isFirst = FALSE;
 				end = string::npos;
 			}
 			find_item(resultsHistory,
@@ -694,7 +695,8 @@ class ResultsHistory {
 	    while(div_begin != string::npos && div_end != string::npos) {
 			string div = strData.substr(div_begin, div_end - div_begin + 6);
 			// On first item found clear found end
-			if(count == 0) {
+			if(isFirst) {
+				isFirst = FALSE;
 				end = string::npos;
 			}
 			find_item(resultsHistory,
@@ -712,12 +714,12 @@ class ResultsHistory {
 		}
 
 		// Detect end
-		if(end != string::npos && count > 0) {
-			count = 0;
+		if(end != string::npos && !isFirst) {
+			isFirst = TRUE;
 			titles.clear();
 			//return CURL_READFUNC_ABORT; 
 		}
-	    
+		
 	    return size*nmemb;
 	}
 	
