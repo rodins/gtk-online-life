@@ -48,10 +48,6 @@ class Results {
 		refresh = FALSE;
         count = 0;
         
-        // TODO: this model thing is strange, when should I free it
-        // as I could free model after setModel as I did in main
-        // with other models
-        // TODO: fix iconViewStore memory leak ...
         iconViewStore = gtk_list_store_new(
 		     ICON_NUM_COLS,   // Number of columns
 		     GDK_TYPE_PIXBUF, // Image poster

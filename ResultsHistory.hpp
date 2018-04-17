@@ -45,6 +45,7 @@ class ResultsHistory {
     
     ListEpisodesArgs listEpisodesArgs;
     bool isResultsThreadStarted;
+    bool isFirstItem;
     
     public:
     
@@ -116,6 +117,7 @@ class ResultsHistory {
         
         error = NONE_ERROR;
         isResultsThreadStarted = FALSE;
+        isFirstItem = FALSE;
 	}
 	
 	~ResultsHistory(){
@@ -193,6 +195,7 @@ class ResultsHistory {
 	    error = NONE_ERROR;
 	    appendId = displayedResults.getId();
 	    isResultsThreadStarted = TRUE;
+	    isFirstItem = TRUE;
 		g_thread_pool_push(resultsNewThreadPool,
 		                  (gpointer)1,
 		                   NULL);
@@ -203,6 +206,7 @@ class ResultsHistory {
 			// Search for the same link only once if it's not saved in set.
 			if(!isResultsThreadStarted){
 				isResultsThreadStarted = TRUE;
+				isFirstItem = TRUE;
 				appendId = displayedResults.getId();
 				g_thread_pool_push(resultsAppendThreadPool,
 				                   (gpointer)1,
@@ -250,9 +254,10 @@ class ResultsHistory {
 	
 	private:
 	
-	void preParser(int count, string div, set<string> &titles) {
+	void preParser(string div, set<string> &titles) {
 		// Prepare to show results when first result item comes
-		if(count == 0) {
+		if(isFirstItem) {
+			isFirstItem = FALSE;
 			// On append and on all cases follow
 			switchToIconView();
             // On new results
@@ -618,7 +623,6 @@ class ResultsHistory {
 	}
 	
 	static void find_item(ResultsHistory *resultsHistory, 
-	                      int &count, 
 	                      string &div, 
 	                      set<string> &titles) {				  
 		size_t item_begin = div.find("<div class=\"custom-poster\"");
@@ -626,8 +630,7 @@ class ResultsHistory {
 		if(item_begin != string::npos && item_end != string::npos) {
 			string item = div.substr(item_begin, item_end - item_begin + 4);
 			gdk_threads_enter();
-			resultsHistory->preParser(count, item, titles);
-			count++;
+			resultsHistory->preParser(item, titles);
 			gdk_threads_leave();
 		}
 	}
@@ -648,7 +651,6 @@ class ResultsHistory {
 	    bool is_not_valid = resultsHistory->isNotValidModel();
 	    gdk_threads_leave();
 	    if(is_not_valid) {
-			cout << "Not valid model" << endl;
 	        return CURL_READFUNC_ABORT; 
 	    }
 	    
@@ -683,7 +685,6 @@ class ResultsHistory {
 				end = string::npos;
 			}
 			find_item(resultsHistory,
-			          count,
 			          partial_div,
 			          titles);
 			find_pager(resultsHistory->displayedResults, 
@@ -697,7 +698,6 @@ class ResultsHistory {
 				end = string::npos;
 			}
 			find_item(resultsHistory,
-			          count,
 			          div,
 			          titles);
 			find_pager(resultsHistory->displayedResults,
@@ -717,7 +717,7 @@ class ResultsHistory {
 			titles.clear();
 			//return CURL_READFUNC_ABORT; 
 		}
-	
+	    
 	    return size*nmemb;
 	}
 	
