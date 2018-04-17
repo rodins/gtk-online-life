@@ -503,7 +503,7 @@ class ResultsHistory {
 	    resultsThreadsLinks.clear(); 
 	    
 		// Update ivResults with history results
-		displayedResults.setModel(ivResults);
+		displayedResults.setModel();
 		// Scroll to saved position after updating model
 		string index = displayedResults.getIndex();
 		GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());

@@ -62,7 +62,7 @@ class Results {
 	    next_link = "";
 		
 		// TODO: should ivResults be part of results class
-		setModel(ivResults);
+		setModel();
 	}
 	
 	bool isRefresh() {
@@ -113,7 +113,7 @@ class Results {
 		return next_link;
 	}
 	
-	void setModel(GtkWidget *ivResults) {
+	void setModel() {
 		gtk_icon_view_set_model(
 		    GTK_ICON_VIEW(ivResults),
 		    GTK_TREE_MODEL(iconViewStore)
