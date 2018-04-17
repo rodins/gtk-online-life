@@ -182,7 +182,6 @@ class ResultsHistory {
 		displayedResults.init(resultsCount++,
 		                      title,
 				              url);
-	    appendId = displayedResults.getId();
 	    newThread();
 	}
 	
@@ -190,6 +189,7 @@ class ResultsHistory {
 		// New images for new indexes will be downloaded
 	    imageIndexes->clear();
 	    error = NONE_ERROR;
+	    appendId = displayedResults.getId();
 		g_thread_pool_push(resultsNewThreadPool,
 		                  (gpointer)1,
 		                   NULL);
@@ -609,6 +609,8 @@ class ResultsHistory {
 	}
 	
 	bool isNotValidModel() {
+		cout << "Results id: " << displayedResults.getId() << endl;
+		cout << "Append id: " << appendId << endl;
 		return displayedResults.getId() != appendId;
 	}
 	
@@ -640,10 +642,12 @@ class ResultsHistory {
 	                      ResultsHistory *resultsHistory)
 	{
 	    gdk_threads_enter();
-	    if(resultsHistory->isNotValidModel()) {
+	    bool is_not_valid = resultsHistory->isNotValidModel();
+	    gdk_threads_leave();
+	    if(is_not_valid) {
+			cout << "Not valid model" << endl;
 	        return CURL_READFUNC_ABORT; 
 	    }
-	    gdk_threads_leave();
 	    
 	    static int count = 0;    
 	    static set<string> titles;
