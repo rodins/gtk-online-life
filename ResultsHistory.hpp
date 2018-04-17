@@ -384,16 +384,9 @@ class ResultsHistory {
 	}
 	
 	void onPostExecuteNew(CURLcode res) {
-		if(!displayedResults.isEmpty()) {
-		    removeBackStackDuplicate();	
-		}
 		if(res == CURLE_OK) {
-			if(gtk_widget_get_visible(spCenter)) {
-				if(!displayedResults.isEmpty()) {
-					updateTitle();
-				}else {
-					updateTitle("");
-				}
+			if(displayedResults.isEmpty()) { // Nothing found but network is good
+				updateTitle();
 				switchToIconView();
 			    setSensitiveItemsResults();
 			    // Create dialog for nothing found
@@ -404,24 +397,22 @@ class ResultsHistory {
 			                                               "Nothing found.");
 			    gtk_dialog_run(GTK_DIALOG(dialog));
 			    gtk_widget_destroy(dialog);
-			}else {
-				//TODO: maybe I need to clear it while saving....
-				// clear forward results stack on fetching new results
-			    clearForwardResultsStack();
-				
+			}else { // On postExecute when items found
+			    if(!displayedResults.isRefresh()) {
+					removeBackStackDuplicate();	
+					//TODO: maybe I need to clear it while saving....
+					// clear forward results stack on fetching new results
+				    clearForwardResultsStack();
+				}
 			    // Clear results links set if not paging
 			    resultsThreadsLinks.clear();
-			    
-			    // Attempt to fix refresh on error problem
-				if(displayedResults.isRefresh()) {
-					displayedResults.setRefresh(FALSE);
-				}
 			}
 		}else { //error
 			updateTitle("Results error!");
 			showResultsRepeat(FALSE);
 			error = RESULTS_NEW_ERROR;
 		}
+		displayedResults.setRefresh(FALSE);
 	}
 	
 	void onPostExecuteAppend(CURLcode res) {
