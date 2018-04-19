@@ -36,27 +36,39 @@ class FileUtils {
 		g_remove(filename);
 	}
 	
-	static void listSavedFiles(GtkWidget *tvSavedItems, GtkToolItem *btnSavedItems) {
-		GtkListStore *storeSavedItems = GTK_LIST_STORE(gtk_tree_view_get_model(
+	static void listSavedFiles(GtkWidget *tvSavedItems, 
+	                           GtkToolItem *btnSavedItems) {
+		GtkListStore *storeSavedItems = GTK_LIST_STORE(
+		                                gtk_tree_view_get_model(
 		                                GTK_TREE_VIEW(tvSavedItems)));
-		int count = 0;
-		gtk_list_store_clear(storeSavedItems);
-		GdkPixbuf *icon = IconsFactory::getBookmarkIcon();
+		gboolean isActive = gtk_toggle_tool_button_get_active(
+		                    GTK_TOGGLE_TOOL_BUTTON(btnSavedItems));	
+		
+		GdkPixbuf *icon;
 		GtkTreeIter iter;
 		GDir *dir;
 		const gchar *filename;
 		
+		int count = 0;
+		// If not active just count items
+		if(isActive) {
+			gtk_list_store_clear(storeSavedItems);
+			icon = IconsFactory::getBookmarkIcon();
+		}
+		
 		dir = g_dir_open(homeAppSavesDir, 0, NULL);
 		if(dir != NULL) {
 			while ((filename = g_dir_read_name(dir))) {
-				gtk_list_store_append(storeSavedItems, &iter);
-			    gtk_list_store_set(storeSavedItems, 
-			                       &iter, 
-			                       IMAGE_COLUMN, 
-			                       icon,
-			                       TITLE_COLUMN, 
-			                       filename,
-			                       -1);  
+				if(isActive) {
+				    gtk_list_store_append(storeSavedItems, &iter);
+				    gtk_list_store_set(storeSavedItems, 
+				                       &iter, 
+				                       IMAGE_COLUMN, 
+				                       icon,
+				                       TITLE_COLUMN, 
+				                       filename,
+				                       -1);
+				}  
 			    count++;                                  
 			}
 			g_dir_close(dir);

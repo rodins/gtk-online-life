@@ -82,7 +82,8 @@ class CategoriesWidgets {
 		}
 	}
 	
-	void btnSavedItemsClicked() {
+	void btnSavedItemsClicked(GtkToolItem *btnSavedItems) {
+		FileUtils::listSavedFiles(tvSavedItems, btnSavedItems);
 		if(!gtk_widget_get_visible(vbLeft)) {
 			gtk_widget_set_visible(vbLeft, TRUE);
 			gtk_widget_set_visible(frSavedItems, TRUE);

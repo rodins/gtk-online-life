@@ -195,21 +195,18 @@ GtkWidget *createTreeView(void) {
 }
 
 static void btnCategoriesClicked(GtkWidget *widget,
-                                 gpointer data) {
-	CategoriesWidgets *categoriesWidgets = (CategoriesWidgets *)data;
+                                 CategoriesWidgets *categoriesWidgets) {
 	categoriesWidgets->btnCategoriesClicked();	
 }
 
-static void btnSavedItemsClicked(GtkWidget *widget,
-                                 gpointer data) {
-	CategoriesWidgets *categoriesWidgets = (CategoriesWidgets *)data;
-	categoriesWidgets->btnSavedItemsClicked();	
+static void btnSavedItemsClicked(GtkToolItem *widget,
+                                 CategoriesWidgets *categoriesWidgets) {
+	categoriesWidgets->btnSavedItemsClicked(widget);	
 }
 
 static void btnSavedItemsStateChanged(GtkWidget *widget,
                                       GtkStateType *state,
-                                      gpointer data) {
-    CategoriesWidgets *categoriesWidgets = (CategoriesWidgets *)data;
+                                      CategoriesWidgets *categoriesWidgets) {
     if(state == (int)GTK_STATE_NORMAL) {
 		categoriesWidgets->btnSavedItemsStateDisabled();
 	}								  
