@@ -12,10 +12,6 @@ class ResultsHistory {
     Playlists *playlists;
         
     vector<Results> backResultsStack, forwardResultsStack;
-    // TODO: is guess it could be indexes, set of ints
-    // ... or do not use this at all, use appendId != -1 before starting task
-    // ... and set it to -1 in onPostExecuteNew and in onPostExecuteAppend
-    set<string> resultsThreadsLinks;
     
     GtkWidget *ivResults;
     GtkWidget *window;
