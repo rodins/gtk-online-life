@@ -12,7 +12,7 @@ class Results {
 	
 	GtkListStore *iconViewStore;
 	GdkPixbuf *defaultPixbuf;
-	
+	// TODO: try to make imagesCache non pointer, use links
 	map<string, GdkPixbuf*> *imagesCache;
 	string index; // save position of iconView
 	

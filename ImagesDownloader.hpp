@@ -68,6 +68,8 @@ class ImagesDownloader {
 	        string link(imageLink);
 	        g_free(imageLink);
 	        
+	        if(link == "") return;
+	        
 	        gdk_threads_enter();
 	        int count = imagesDownloader->imagesCache->count(link);
 	        gdk_threads_leave();

@@ -36,7 +36,7 @@ class ActorsHistory {
     GtkWidget *swTree, *swIcon;
     GtkWidget *spCenter;
     GtkWidget *hbResultsError;
-    
+    // TODO: make resultsHistory not pointer
     ResultsHistory *resultsHistory;
     string player;
     
@@ -240,7 +240,7 @@ class ActorsHistory {
 			gtk_widget_set_visible(btnDelete, FALSE);
 		}
 		// Update file list
-		FileUtils::listSavedFiles(tvSavedItems, btnSavedItems);
+		FileUtils::listSavedFiles(resultsHistory->getIvResults(), btnSavedItems);
 	}
 	
 	// Info links frame functions

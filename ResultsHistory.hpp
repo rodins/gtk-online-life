@@ -160,6 +160,21 @@ class ResultsHistory {
 	    newThread();
 	}
 	
+	void btnSavedItemsClicked(GtkToolItem *btnSavedItems) {
+		gboolean isActive = gtk_toggle_tool_button_get_active(
+		                    GTK_TOGGLE_TOOL_BUTTON(btnSavedItems));
+		if(isActive) {
+			FileUtils::listSavedFiles(ivResults, btnSavedItems);
+			cout << "Show iconView with new model" << endl;
+		}else {
+			cout << "Set iconView model from displayed results" << endl;
+		}
+	}
+	
+	GtkWidget* getIvResults() {
+		return ivResults;
+	}
+	
 	void btnResultsRepeatClicked() {
 		switch(error) {
 			case RESULTS_NEW_ERROR:

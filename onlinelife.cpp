@@ -200,17 +200,17 @@ static void btnCategoriesClicked(GtkWidget *widget,
 }
 
 static void btnSavedItemsClicked(GtkToolItem *widget,
-                                 CategoriesWidgets *categoriesWidgets) {
-	categoriesWidgets->btnSavedItemsClicked(widget);	
+                                 ResultsHistory *resultsHistory) {
+	resultsHistory->btnSavedItemsClicked(widget);	
 }
 
-static void btnSavedItemsStateChanged(GtkWidget *widget,
+/*static void btnSavedItemsStateChanged(GtkWidget *widget,
                                       GtkStateType *state,
                                       CategoriesWidgets *categoriesWidgets) {
     if(state == (int)GTK_STATE_NORMAL) {
 		categoriesWidgets->btnSavedItemsStateDisabled();
 	}								  
-}
+}*/
 
 static void btnUpClicked( GtkWidget *widget,
                           gpointer data ) {
@@ -732,7 +732,7 @@ int main( int   argc,
 	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 	
 	// Disable listItems button only if there are saved items
-	FileUtils::listSavedFiles(tvSavedItems, btnSavedItems);
+	FileUtils::listSavedFiles(ivResults, btnSavedItems);
 	
     g_signal_connect(GTK_WIDGET(btnRefresh), 
 				     "clicked", 
@@ -878,12 +878,12 @@ int main( int   argc,
     g_signal_connect(GTK_WIDGET(btnSavedItems), 
 				     "clicked", 
 				     G_CALLBACK(btnSavedItemsClicked), 
-				     &categoriesWidgets);
+				     &resultsHistory);
 				     
-	g_signal_connect(GTK_WIDGET(btnSavedItems), 
+	/*g_signal_connect(GTK_WIDGET(btnSavedItems), 
 				     "state-changed", 
 				     G_CALLBACK(btnSavedItemsStateChanged), 
-				     &categoriesWidgets);
+				     &categoriesWidgets*/
         
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);

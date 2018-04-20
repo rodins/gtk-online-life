@@ -36,11 +36,30 @@ class FileUtils {
 		g_remove(filename);
 	}
 	
-	static void listSavedFiles(GtkWidget *tvSavedItems, 
+	/*static void countSavedFiles(GtkToolItem *btnSavedItems) {
+		GDir *dir;
+		int count = 0;
+		const gchar *filename;
+		dir = g_dir_open(homeAppSavesDir, 0, NULL);
+		if(dir != NULL) {
+			while ((filename = g_dir_read_name(dir))) {
+				count++;
+			}
+			g_dir_close(dir);
+		}
+		// Disable/enable show/hide list saved items button
+		if(count > 0) {
+			gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), TRUE);
+		}else {
+			gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), FALSE);
+		}
+	}*/
+	
+	static void listSavedFiles(GtkWidget *ivResults, 
 	                           GtkToolItem *btnSavedItems) {
 		GtkListStore *storeSavedItems = GTK_LIST_STORE(
-		                                gtk_tree_view_get_model(
-		                                GTK_TREE_VIEW(tvSavedItems)));
+		                                gtk_icon_view_get_model(
+		                                GTK_ICON_VIEW(ivResults)));
 		gboolean isActive = gtk_toggle_tool_button_get_active(
 		                    GTK_TOGGLE_TOOL_BUTTON(btnSavedItems));	
 		
@@ -53,7 +72,7 @@ class FileUtils {
 		// If not active just count items
 		if(isActive) {
 			gtk_list_store_clear(storeSavedItems);
-			icon = IconsFactory::getBookmarkIcon();
+			icon = IconsFactory::getBlankIcon();
 		}
 		
 		dir = g_dir_open(homeAppSavesDir, 0, NULL);
@@ -63,10 +82,14 @@ class FileUtils {
 				    gtk_list_store_append(storeSavedItems, &iter);
 				    gtk_list_store_set(storeSavedItems, 
 				                       &iter, 
-				                       IMAGE_COLUMN, 
+				                       ICON_IMAGE_COLUMN, 
 				                       icon,
-				                       TITLE_COLUMN, 
+				                       ICON_TITLE_COLUMN, 
 				                       filename,
+				                       ICON_HREF, 
+                                       "",
+                                       ICON_IMAGE_LINK, 
+                                       "",
 				                       -1);
 				}  
 			    count++;                                  

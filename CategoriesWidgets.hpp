@@ -82,7 +82,7 @@ class CategoriesWidgets {
 		}
 	}
 	
-	void btnSavedItemsClicked(GtkToolItem *btnSavedItems) {
+	/*void btnSavedItemsClicked(GtkToolItem *btnSavedItems) {
 		FileUtils::listSavedFiles(tvSavedItems, btnSavedItems);
 		if(!gtk_widget_get_visible(vbLeft)) {
 			gtk_widget_set_visible(vbLeft, TRUE);
@@ -93,7 +93,7 @@ class CategoriesWidgets {
 			    gtk_widget_set_visible(vbLeft, FALSE);
 			}
 		}
-	}
+	}*/
 	
 	void btnSavedItemsStateDisabled() {
 		gtk_widget_set_visible(frSavedItems, FALSE);
