@@ -44,6 +44,7 @@ class ResultsHistory {
     bool isFirstItem;
     
     GtkListStore *savedItemsStore;
+    gboolean isSavedItems;
     
     public:
     
@@ -124,6 +125,7 @@ class ResultsHistory {
 		     G_TYPE_STRING,   // Href
 		     G_TYPE_STRING    // Image link
 		);
+		isSavedItems = FALSE;
 	}
 	
 	~ResultsHistory(){
@@ -171,9 +173,9 @@ class ResultsHistory {
 	}
 	
 	void btnSavedItemsClicked(GtkToolItem *btnSavedItems) {
-		gboolean isActive = gtk_toggle_tool_button_get_active(
+		isSavedItems = gtk_toggle_tool_button_get_active(
 		                    GTK_TOGGLE_TOOL_BUTTON(btnSavedItems));
-		if(isActive) {
+		if(isSavedItems) {
 			gtk_icon_view_set_model(
 			    GTK_ICON_VIEW(ivResults),
 			    GTK_TREE_MODEL(savedItemsStore)
@@ -231,7 +233,7 @@ class ResultsHistory {
 	}
 	
 	void appendThread() {
-		if(!displayedResults.getNextLink().empty()) {
+		if(!displayedResults.getNextLink().empty() && !isSavedItems) {
 			// Search for the same link only once if it's not saved in set.
 			if(!isResultsThreadStarted){
 				isResultsThreadStarted = TRUE;
