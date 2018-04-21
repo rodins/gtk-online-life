@@ -43,6 +43,8 @@ class ResultsHistory {
     bool isResultsThreadStarted;
     bool isFirstItem;
     
+    GtkListStore *savedItemsStore;
+    
     public:
     
     ResultsHistory(GtkWidget *w,
@@ -114,6 +116,14 @@ class ResultsHistory {
         error = NONE_ERROR;
         isResultsThreadStarted = FALSE;
         isFirstItem = FALSE;
+        
+        savedItemsStore = gtk_list_store_new(
+		     ICON_NUM_COLS,   // Number of columns
+		     GDK_TYPE_PIXBUF, // Image poster
+		     G_TYPE_STRING,   // Title
+		     G_TYPE_STRING,   // Href
+		     G_TYPE_STRING    // Image link
+		);
 	}
 	
 	~ResultsHistory(){
@@ -164,10 +174,18 @@ class ResultsHistory {
 		gboolean isActive = gtk_toggle_tool_button_get_active(
 		                    GTK_TOGGLE_TOOL_BUTTON(btnSavedItems));
 		if(isActive) {
+			gtk_icon_view_set_model(
+			    GTK_ICON_VIEW(ivResults),
+			    GTK_TREE_MODEL(savedItemsStore)
+			);
 			FileUtils::listSavedFiles(ivResults, btnSavedItems);
-			cout << "Show iconView with new model" << endl;
+			updateTitle("Saved items");
+			setSavedItemsToolbar();
+			scrollToTopOfList();
+			switchToIconView();
 		}else {
-			cout << "Set iconView model from displayed results" << endl;
+			displayedResults.setModel();
+			showResults();
 		}
 	}
 	
@@ -384,6 +402,14 @@ class ResultsHistory {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnActors), FALSE);
+	}
+	
+	void setSavedItemsToolbar() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnActors), TRUE);
 	}
 	
 	void switchToIconView() {

@@ -57,12 +57,10 @@ class FileUtils {
 	
 	static void listSavedFiles(GtkWidget *ivResults, 
 	                           GtkToolItem *btnSavedItems) {
-		GtkListStore *storeSavedItems = GTK_LIST_STORE(
-		                                gtk_icon_view_get_model(
-		                                GTK_ICON_VIEW(ivResults)));
 		gboolean isActive = gtk_toggle_tool_button_get_active(
 		                    GTK_TOGGLE_TOOL_BUTTON(btnSavedItems));	
 		
+		GtkListStore *storeSavedItems;
 		GdkPixbuf *icon;
 		GtkTreeIter iter;
 		GDir *dir;
@@ -71,6 +69,8 @@ class FileUtils {
 		int count = 0;
 		// If not active just count items
 		if(isActive) {
+			storeSavedItems = GTK_LIST_STORE(gtk_icon_view_get_model(
+			                                 GTK_ICON_VIEW(ivResults)));
 			gtk_list_store_clear(storeSavedItems);
 			icon = IconsFactory::getBlankIcon();
 		}
@@ -81,16 +81,16 @@ class FileUtils {
 				if(isActive) {
 				    gtk_list_store_append(storeSavedItems, &iter);
 				    gtk_list_store_set(storeSavedItems, 
-				                       &iter, 
-				                       ICON_IMAGE_COLUMN, 
-				                       icon,
-				                       ICON_TITLE_COLUMN, 
-				                       filename,
-				                       ICON_HREF, 
-                                       "",
-                                       ICON_IMAGE_LINK, 
-                                       "",
-				                       -1);
+			                           &iter,
+			                           ICON_IMAGE_COLUMN, 
+			                           icon,
+			                           ICON_TITLE_COLUMN, 
+			                           filename,
+			                           ICON_HREF, 
+			                           "",
+			                           ICON_IMAGE_LINK, 
+			                           "", 
+			                           -1);
 				}  
 			    count++;                                  
 			}
