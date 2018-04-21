@@ -501,12 +501,14 @@ class ResultsHistory {
 	}
 	
 	void saveResultsPostion() {
-		GtkTreePath *path1, *path2;
-		if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
-			string index(gtk_tree_path_to_string(path1));
-	        displayedResults.setIndex(index);
-			gtk_tree_path_free(path1);
-		    gtk_tree_path_free(path2);
+		if(!displayedResults.isEmpty()) {
+			GtkTreePath *path1, *path2;
+			if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
+				string index(gtk_tree_path_to_string(path1));
+		        displayedResults.setIndex(index);
+				gtk_tree_path_free(path1);
+			    gtk_tree_path_free(path2);
+			}
 		}
 	}
 	
@@ -547,9 +549,11 @@ class ResultsHistory {
 	void restoreResultsPosition() {
 		// Scroll to saved position after updating model
 		string index = displayedResults.getIndex();
-		GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
-		gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), path1, FALSE, 0, 0);
-	    gtk_tree_path_free(path1);
+		if(index != "") {
+			GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
+			gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), path1, FALSE, 0, 0);
+		    gtk_tree_path_free(path1);
+		}
 	}
 	
 	void restoreFromBackStack() {
