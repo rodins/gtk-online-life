@@ -176,6 +176,7 @@ class ResultsHistory {
 		isSavedItems = gtk_toggle_tool_button_get_active(
 		                    GTK_TOGGLE_TOOL_BUTTON(btnSavedItems));
 		if(isSavedItems) {
+			saveResultsPostion();
 			gtk_icon_view_set_model(
 			    GTK_ICON_VIEW(ivResults),
 			    GTK_TREE_MODEL(savedItemsStore)
@@ -187,6 +188,7 @@ class ResultsHistory {
 			switchToIconView();
 		}else {
 			displayedResults.setModel();
+			restoreResultsPosition();
 			showResults();
 		}
 	}
@@ -539,6 +541,10 @@ class ResultsHistory {
 	void savedRecovery() {
 		// Update ivResults with history results
 		displayedResults.setModel();
+		restoreResultsPosition();
+	}
+	
+	void restoreResultsPosition() {
 		// Scroll to saved position after updating model
 		string index = displayedResults.getIndex();
 		GtkTreePath *path1 = gtk_tree_path_new_from_string(index.c_str());
