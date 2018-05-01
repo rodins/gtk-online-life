@@ -201,7 +201,7 @@ static void btnCategoriesClicked(GtkWidget *widget,
 
 static void btnSavedItemsClicked(GtkToolItem *widget,
                                  ResultsHistory *resultsHistory) {
-	resultsHistory->btnSavedItemsClicked(widget);	
+	resultsHistory->btnSavedItemsClicked();	
 }
 
 /*static void btnSavedItemsStateChanged(GtkWidget *widget,
@@ -723,7 +723,8 @@ int main( int   argc,
 								  imageIndexes,
 								  imagesCache,
 								  PROG_NAME,
-								  btnActors);
+								  btnActors,
+								  btnSavedItems);
     
     // Disable all items                                                
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);

@@ -38,6 +38,7 @@ class ResultsHistory {
     ErrorType error;
     
     GtkToolItem* btnActors;
+    GtkToolItem *btnSavedItems;
     
     ListEpisodesArgs listEpisodesArgs;
     bool isResultsThreadStarted;
@@ -63,7 +64,8 @@ class ResultsHistory {
                    set<int> *ii,
                    map<string, GdkPixbuf*> *cache,
                    string pn,
-                   GtkToolItem *btnActors) {
+                   GtkToolItem *btnActors,
+                   GtkToolItem *btnSavedItems) {
 		window = w;
 		ivResults = iv;
 		btnPrev = bp;
@@ -126,6 +128,7 @@ class ResultsHistory {
 		     G_TYPE_STRING    // Image link
 		);
 		isSavedItems = FALSE;
+		this->btnSavedItems = btnSavedItems;
 	}
 	
 	~ResultsHistory(){
@@ -172,7 +175,7 @@ class ResultsHistory {
 	    newThread();
 	}
 	
-	void btnSavedItemsClicked(GtkToolItem *btnSavedItems) {
+	void btnSavedItemsClicked() {
 		isSavedItems = gtk_toggle_tool_button_get_active(
 		                    GTK_TOGGLE_TOOL_BUTTON(btnSavedItems));
 		if(isSavedItems) {
@@ -224,6 +227,9 @@ class ResultsHistory {
 	
 	void newThread() {
 		// New images for new indexes will be downloaded
+		gtk_toggle_tool_button_set_active(
+		    GTK_TOGGLE_TOOL_BUTTON(btnSavedItems),
+		    FALSE);
 	    imageIndexes->clear();
 	    error = NONE_ERROR;
 	    appendId = displayedResults.getId();
