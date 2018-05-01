@@ -29,6 +29,8 @@ class Actors {
     
     bool networkOk;
     
+    GdkPixbuf *pixbuf;
+    
     public:
     
     Actors() {
@@ -98,6 +100,14 @@ class Actors {
 	
 	bool isNetworkOk() {
 		return networkOk;
+	}
+	
+	void setPixbuf(GdkPixbuf *pixbuf) {
+		this->pixbuf = pixbuf;
+	}
+	
+	GdkPixbuf *getPixbuf() {
+		return pixbuf;
 	}
     
     void parse(string &page) {

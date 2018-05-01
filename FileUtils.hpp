@@ -3,7 +3,17 @@
 #include <glib/gstdio.h>
 #include <fstream>
 
-gchar *homeAppSavesDir = g_build_filename(g_get_home_dir(), ".gtk_online_life", "saves", NULL);
+gchar *homeAppSavesDir = 
+    g_build_filename(g_get_home_dir(), 
+                     ".gtk_online_life", 
+                     "saves", 
+                     NULL);
+                     
+gchar *homeAppSavedImagesDir = 
+    g_build_filename(g_get_home_dir(),
+                     ".gtk_online_life",
+                     "saved_images",
+                     NULL);
 
 class FileUtils {
 	public:
@@ -17,6 +27,14 @@ class FileUtils {
 		return "";
 	}
 	
+	static GdkPixbuf* readImageFromFile(string title) {
+		gchar *filename =
+		    g_build_filename(homeAppSavedImagesDir,
+		                     title.c_str(),
+		                     NULL);
+		return gdk_pixbuf_new_from_file(filename, NULL);
+	}
+	
 	static void writeToFile(string title, string input) {
 		g_mkdir_with_parents(homeAppSavesDir, S_IRWXU); 
 		gchar *filename = g_build_filename(homeAppSavesDir, title.c_str(), NULL);
@@ -26,13 +44,41 @@ class FileUtils {
 		}
 	}
 	
+	static void writeImageToFile(string title, GdkPixbuf *pixbuf) {
+		g_mkdir_with_parents(homeAppSavedImagesDir, S_IRWXU);
+		gchar *filename = g_build_filename(homeAppSavedImagesDir,
+		                                   title.c_str(),
+		                                   NULL);
+		gdk_pixbuf_save(pixbuf,
+		                filename,
+		                "png",
+		                NULL,
+		                NULL);
+	}
+	
 	static bool isTitleSaved(string title) {
 		gchar *filename = g_build_filename(homeAppSavesDir, title.c_str(), NULL);
 		return g_file_test(filename, G_FILE_TEST_EXISTS);
 	}
 	
+	static bool isImageSaved(string title) {
+		gchar *filename =
+		    g_build_filename(homeAppSavedImagesDir,
+		                     title.c_str(),
+		                     NULL);
+		    return g_file_test(filename, G_FILE_TEST_EXISTS);
+	}
+	
 	static void removeFile(string title) {
 		gchar *filename = g_build_filename(homeAppSavesDir, title.c_str(), NULL);
+		g_remove(filename);
+	}
+	
+	static void removeImageFile(string title) {
+		gchar *filename =
+		    g_build_filename(homeAppSavedImagesDir,
+		                     title.c_str(),
+		                     NULL);
 		g_remove(filename);
 	}
 	
@@ -65,6 +111,7 @@ class FileUtils {
 		GtkTreeIter iter;
 		GDir *dir;
 		const gchar *filename;
+		string href;
 		
 		int count = 0;
 		// If not active just count items
@@ -72,13 +119,22 @@ class FileUtils {
 			storeSavedItems = GTK_LIST_STORE(gtk_icon_view_get_model(
 			                                 GTK_ICON_VIEW(ivResults)));
 			gtk_list_store_clear(storeSavedItems);
-			icon = IconsFactory::getBlankIcon();
 		}
 		
 		dir = g_dir_open(homeAppSavesDir, 0, NULL);
 		if(dir != NULL) {
 			while ((filename = g_dir_read_name(dir))) {
 				if(isActive) {
+					if(FileUtils::isImageSaved(filename)) {
+						icon = FileUtils::readImageFromFile(filename);
+					}else {
+						icon = IconsFactory::getBlankIcon();
+					}
+					if(FileUtils::isTitleSaved(filename)) {
+						href = FileUtils::readFromFile(filename);
+					}else {
+						href = "";
+					}
 				    gtk_list_store_append(storeSavedItems, &iter);
 				    gtk_list_store_set(storeSavedItems, 
 			                           &iter,
@@ -87,7 +143,7 @@ class FileUtils {
 			                           ICON_TITLE_COLUMN, 
 			                           filename,
 			                           ICON_HREF, 
-			                           "",
+			                           href.c_str(),
 			                           ICON_IMAGE_LINK, 
 			                           "", 
 			                           -1);

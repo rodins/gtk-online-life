@@ -148,15 +148,19 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 	// Get title and href value from iter
 	gchar *resultTitle = NULL;
 	gchar *href = NULL;
+	GdkPixbuf *pixbuf = NULL;
+
 	gtk_tree_model_get(model,
-	                   &iter, 
+	                   &iter,
+	                   ICON_IMAGE_COLUMN,
+	                   &pixbuf, 
 	                   ICON_TITLE_COLUMN,
 	                   &resultTitle,
 	                   ICON_HREF,
 	                   &href,
 	                   -1);
 	                   
-	actorsHistory->newThread(resultTitle, href);
+	actorsHistory->newThread(resultTitle, href, pixbuf);
 	
 	g_free(resultTitle);
 	g_free(href);
@@ -333,7 +337,7 @@ void tvSavedItemsClicked(GtkTreeView *treeView,
 	// Read file. Get link.
 	string link = FileUtils::readFromFile(filename);
 	
-	actorsHistory->newThread(filename, link);
+	actorsHistory->newThread(filename, link, NULL);
 	g_free(filename);                              
 }
 

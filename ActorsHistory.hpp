@@ -111,12 +111,13 @@ class ActorsHistory {
 		return window;
 	}
 	
-    void newThread(string title, string href) {
+    void newThread(string title, string href, GdkPixbuf *pixbuf) {
 		if(!actors.getTitle().empty() && actors.isNetworkOk()) {
 			prevActors = actors;
 		}
 		actors.setTitle(title);
 		actors.setUrl(href);
+		actors.setPixbuf(pixbuf);
 		actors.setNetworkOk(FALSE);
 		showSaveOrDeleteButton();
 		newThread();
@@ -199,11 +200,14 @@ class ActorsHistory {
 	
 	void btnSaveClicked() {
 		FileUtils::writeToFile(actors.getTitle(), actors.getUrl());
+		FileUtils::writeImageToFile(actors.getTitle(),
+		                            actors.getPixbuf());
 		showSaveOrDeleteButton();
 	}
 	
 	void btnDeleteClicked() {
 		FileUtils::removeFile(actors.getTitle());
+		FileUtils::removeImageFile(actors.getTitle());
 		showSaveOrDeleteButton();
 	}
 	
