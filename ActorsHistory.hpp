@@ -141,9 +141,10 @@ class ActorsHistory {
 		                                    &iter)) {
 			gtk_tree_model_get(model, &iter, TITLE_COLUMN, &value,  -1);
 			if(backActors.count(actors.getTitle()) == 0) {
-				backActors[actors.getTitle()] = actors; // save prev actors
 				backActorsListAdd(actors.getTitle());
 			}
+			
+			backActors[actors.getTitle()] = actors; // save prev actors
 			actors = backActors[string(value)]; // set new actors
 			updateActors();
 			g_free(value);
@@ -156,6 +157,8 @@ class ActorsHistory {
 			break;
 			case LINKS_MODE_SERIAL:
 			    showListEpisodesButton();
+			    resultsHistory->setListEpisodesArgs(
+			                    actors.getListEpisodesArgs());
 			break;
 			case LINKS_MODE_HIDE:
 			    hideAllLinksButtons();
