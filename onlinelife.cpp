@@ -208,14 +208,6 @@ static void btnSavedItemsClicked(GtkToolItem *widget,
 	resultsHistory->btnSavedItemsClicked();	
 }
 
-/*static void btnSavedItemsStateChanged(GtkWidget *widget,
-                                      GtkStateType *state,
-                                      CategoriesWidgets *categoriesWidgets) {
-    if(state == (int)GTK_STATE_NORMAL) {
-		categoriesWidgets->btnSavedItemsStateDisabled();
-	}								  
-}*/
-
 static void btnUpClicked( GtkWidget *widget,
                           gpointer data ) {
 	ResultsHistory *resultsHistory = (ResultsHistory *)data;
@@ -314,33 +306,6 @@ static void btnDeleteClicked(GtkWidget *widget, gpointer data) {
 	actorsHistory->btnDeleteClicked();
 }
 
-void tvSavedItemsClicked(GtkTreeView *treeView,
-                     GtkTreePath *path,
-                     GtkTreeViewColumn *column,
-                     gpointer data) {
-    ActorsHistory *actorsHistory = (ActorsHistory *)data;
-	// Get model from tree view
-	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
-	
-	// Get iter from path
-	GtkTreeIter iter;
-	gtk_tree_model_get_iter(model, &iter, path);
-	
-	// Get title and link
-	gchar *filename = NULL;
-	gtk_tree_model_get(model,
-	                   &iter, 
-	                   TITLE_COLUMN,
-	                   &filename,
-	                   -1);   
-
-	// Read file. Get link.
-	string link = FileUtils::readFromFile(filename);
-	
-	actorsHistory->newThread(filename, link, NULL);
-	g_free(filename);                              
-}
-
 int main( int   argc,
           char *argv[] )
 {   
@@ -352,8 +317,7 @@ int main( int   argc,
 	GtkWidget *lbInfo;
 	GtkWidget *frRightTop,
 	          *frInfo,
-	          *frActions, 
-	          *frSavedItems;
+	          *frActions;
 	          
 	GtkWidget *spActors, *spLinks;
     GtkWidget *hbActorsError;
@@ -366,13 +330,11 @@ int main( int   argc,
     GtkWidget *vbLeft, *vbRight;
     GtkWidget *tvCategories, 
               *tvActors, 
-              *tvBackActors,
-              *tvSavedItems;
+              *tvBackActors;
               
     GtkWidget *spCategories;
     GtkWidget *hbCategoriesError;
-    GtkWidget *swCategories,
-              *swSavedItems;
+    GtkWidget *swCategories;
 	
     GtkWidget *vbox;
     GtkWidget *toolbar; 
@@ -568,18 +530,9 @@ int main( int   argc,
     tvCategories = createTreeView();
     tvActors = createTreeView();
     
-    GtkListStore *savedItemsStore = gtk_list_store_new(NUM_COLS, 
-                                                       GDK_TYPE_PIXBUF,
-                                                       G_TYPE_STRING);  // Title                                                  
-    tvSavedItems = createTreeView();
-    gtk_tree_view_set_model(GTK_TREE_VIEW(tvSavedItems), 
-                            GTK_TREE_MODEL(savedItemsStore));
-    g_object_unref(savedItemsStore);
-    
     swCategories = gtk_scrolled_window_new(NULL, NULL);
     swRightTop = gtk_scrolled_window_new(NULL, NULL);
     swRightBottom = gtk_scrolled_window_new(NULL, NULL);
-    swSavedItems = gtk_scrolled_window_new(NULL, NULL);
     
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swCategories),
             GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
@@ -593,11 +546,6 @@ int main( int   argc,
             GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swRightBottom),
             GTK_SHADOW_ETCHED_IN);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swSavedItems),
-            GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swSavedItems),
-            GTK_SHADOW_ETCHED_IN);
-    
     
     vbLeft = gtk_vbox_new(FALSE, 1);
     vbRight = gtk_vbox_new(FALSE, 1);
@@ -611,7 +559,6 @@ int main( int   argc,
     gtk_container_add(GTK_CONTAINER(swCategories), tvCategories);
     gtk_container_add(GTK_CONTAINER(swRightTop), tvActors);
     gtk_container_add(GTK_CONTAINER(swRightBottom), tvBackActors);
-    gtk_container_add(GTK_CONTAINER(swSavedItems), tvSavedItems);
     
     // Frames
     frRightTop = gtk_frame_new("Actors");
@@ -622,15 +569,10 @@ int main( int   argc,
     spCategories = gtk_spinner_new();
     btnCategoriesError = gtk_button_new_with_label("Repeat");
     
-    // Saved items frame
-    frSavedItems = gtk_frame_new("Saved items");
-    gtk_container_add(GTK_CONTAINER(frSavedItems), swSavedItems);
-    
     gtk_box_pack_start(GTK_BOX(hbCategoriesError), btnCategoriesError, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(vbLeft), swCategories, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeft), spCategories, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbLeft), hbCategoriesError, TRUE, FALSE, 1);
-    gtk_box_pack_start(GTK_BOX(vbLeft), frSavedItems, TRUE, TRUE, 1);
     
     gtk_container_add(GTK_CONTAINER(frRightTop), swRightTop);
     gtk_container_add(GTK_CONTAINER(frRightBottom), swRightBottom);
@@ -807,7 +749,6 @@ int main( int   argc,
                                 btnListEpisodes,
                                 btnSave,
                                 btnDelete,
-                                tvSavedItems,
                                 btnSavedItems,
                                 btnActors,
                                 &resultsHistory);
@@ -852,11 +793,6 @@ int main( int   argc,
                      G_CALLBACK(btnDeleteClicked),
                      &actorsHistory);
                      
-    g_signal_connect(tvSavedItems,
-                     "row-activated", 
-                     G_CALLBACK(tvSavedItemsClicked), 
-                     &actorsHistory);
-                     
     g_signal_connect(ivResults, 
                      "item-activated", 
                      G_CALLBACK(resultActivated), 
@@ -866,9 +802,7 @@ int main( int   argc,
                                         swCategories,
                                         spCategories,
                                         hbCategoriesError,
-                                        tvCategories,
-                                        tvSavedItems,
-                                        frSavedItems);
+                                        tvCategories);
                                            
     g_signal_connect(btnCategoriesError, 
                      "clicked", 
@@ -884,11 +818,6 @@ int main( int   argc,
 				     "clicked", 
 				     G_CALLBACK(btnSavedItemsClicked), 
 				     &resultsHistory);
-				     
-	/*g_signal_connect(GTK_WIDGET(btnSavedItems), 
-				     "state-changed", 
-				     G_CALLBACK(btnSavedItemsStateChanged), 
-				     &categoriesWidgets*/
         
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);
@@ -911,7 +840,6 @@ int main( int   argc,
     
     gtk_widget_hide(vbLeft);
     gtk_widget_hide(swCategories);
-    gtk_widget_hide(frSavedItems);
     
     gtk_widget_hide(vbRight);
     

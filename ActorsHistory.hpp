@@ -29,7 +29,6 @@ class ActorsHistory {
     GtkWidget *btnListEpisodes;
     GtkWidget *btnSave;
     GtkWidget *btnDelete;
-    GtkWidget *tvSavedItems;
     GtkToolItem *btnSavedItems;
     GtkToolItem *btnActors;
     
@@ -59,7 +58,6 @@ class ActorsHistory {
 				  GtkWidget *btnListEpisodes,
 				  GtkWidget *btnSave,
 				  GtkWidget *btnDelete,
-				  GtkWidget *tvSavedItems,
 				  GtkToolItem *btnSavedItems,
 				  GtkToolItem *btnActors,
 				  ResultsHistory *resultsHistory) {
@@ -83,7 +81,6 @@ class ActorsHistory {
 		
 		this->btnSave = btnSave;
 		this->btnDelete = btnDelete;
-		this->tvSavedItems = tvSavedItems;
 		this->btnSavedItems = btnSavedItems;
 		this->btnActors = btnActors;
 		this->resultsHistory = resultsHistory;

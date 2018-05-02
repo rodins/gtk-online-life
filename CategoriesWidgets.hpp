@@ -4,13 +4,11 @@
 class CategoriesWidgets {  
     GtkWidget *vbLeft;
     GtkWidget *swCategories;
-    GtkWidget *frSavedItems;
     
     GtkWidget *spCategories;
     GtkWidget *hbCategoriesError;
     
     GtkWidget *tvCategories;
-    GtkWidget *tvSavedItems;
     
     GThreadPool *categoriesThreadPool;
     public:
@@ -19,16 +17,12 @@ class CategoriesWidgets {
                       GtkWidget *sw_left_top,
                       GtkWidget *sp_categories, 
                       GtkWidget *hb_categories_error,
-                      GtkWidget *tv_categories, 
-                      GtkWidget *tvSavedItems,
-                      GtkWidget *frSavedItems) {
+                      GtkWidget *tv_categories) {
 	    vbLeft = vb_left;
 	    swCategories = sw_left_top;
 	    spCategories = sp_categories;
 	    hbCategoriesError = hb_categories_error;
 	    tvCategories = tv_categories;
-	    this->tvSavedItems = tvSavedItems;	
-	    this->frSavedItems = frSavedItems;
 	    
 	    // GThreadPool for categories
 	    categoriesThreadPool = g_thread_pool_new(CategoriesWidgets::categoriesTask,
@@ -63,11 +57,7 @@ class CategoriesWidgets {
 	}
 	
 	void showHideSavedItems() {
-		if(!gtk_widget_get_visible(frSavedItems)) {
-		    gtk_widget_set_visible(frSavedItems, TRUE);
-		}else {
-			gtk_widget_set_visible(frSavedItems, FALSE);
-		}
+		
 	}
 	
 	void btnCategoriesClicked() {
@@ -76,31 +66,6 @@ class CategoriesWidgets {
 			showCategories();
 		}else {
 			showHideCategories();
-			if(!gtk_widget_get_visible(frSavedItems)) {  
-			    gtk_widget_set_visible(vbLeft, FALSE);
-			}
-		}
-	}
-	
-	/*void btnSavedItemsClicked(GtkToolItem *btnSavedItems) {
-		FileUtils::listSavedFiles(tvSavedItems, btnSavedItems);
-		if(!gtk_widget_get_visible(vbLeft)) {
-			gtk_widget_set_visible(vbLeft, TRUE);
-			gtk_widget_set_visible(frSavedItems, TRUE);
-		}else {
-			showHideSavedItems();
-			if(!gtk_widget_get_visible(swCategories)) {  
-			    gtk_widget_set_visible(vbLeft, FALSE);
-			}
-		}
-	}*/
-	
-	void btnSavedItemsStateDisabled() {
-		gtk_widget_set_visible(frSavedItems, FALSE);
-		if(gtk_widget_get_visible(vbLeft)) {
-			if(!gtk_widget_get_visible(swCategories)) {  
-			    gtk_widget_set_visible(vbLeft, FALSE);
-			}
 		}
 	}
     
