@@ -202,13 +202,13 @@ class ActorsHistory {
 		FileUtils::writeToFile(actors.getTitle(), actors.getUrl());
 		FileUtils::writeImageToFile(actors.getTitle(),
 		                            actors.getPixbuf());
-		showSaveOrDeleteButton();
+		showSaveOrDeleteButton(TRUE);
 	}
 	
 	void btnDeleteClicked() {
 		FileUtils::removeFile(actors.getTitle());
 		FileUtils::removeImageFile(actors.getTitle());
-		showSaveOrDeleteButton();
+		showSaveOrDeleteButton(TRUE);
 	}
 	
 	void hideAllLinksButtons() {
@@ -235,7 +235,7 @@ class ActorsHistory {
 		return "";
 	}
 	
-	void showSaveOrDeleteButton() {
+	void showSaveOrDeleteButton(bool isUpdate = FALSE) {
 		if(FileUtils::isTitleSaved(actors.getTitle())) {
 			gtk_widget_set_visible(btnSave, FALSE);
 			gtk_widget_set_visible(btnDelete, TRUE);
@@ -243,8 +243,12 @@ class ActorsHistory {
 			gtk_widget_set_visible(btnSave, TRUE);
 			gtk_widget_set_visible(btnDelete, FALSE);
 		}
-		// Update file list
-		FileUtils::listSavedFiles(resultsHistory->getIvResults(), btnSavedItems);
+		
+		if(isUpdate) {
+			// Update file list
+		    FileUtils::listSavedFiles(resultsHistory->getIvResults(),
+		                              btnSavedItems);
+		}	
 	}
 	
 	// Info links frame functions

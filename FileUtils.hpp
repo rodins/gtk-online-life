@@ -103,6 +103,7 @@ class FileUtils {
 	
 	static void listSavedFiles(GtkWidget *ivResults, 
 	                           GtkToolItem *btnSavedItems) {
+        cout << "List saved files" << endl;
 		gboolean isActive = gtk_toggle_tool_button_get_active(
 		                    GTK_TOGGLE_TOOL_BUTTON(btnSavedItems));	
 		

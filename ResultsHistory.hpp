@@ -140,10 +140,13 @@ class ResultsHistory {
 	}
 	
 	void btnUpClicked() {
-		updateTitle();
-		updatePrevNextButtons();
-		setSensitiveItemsResults();
-		switchToIconView();
+		if(isSavedItems) {
+			updateTitle("Saved items");
+			setSavedItemsToolbar();
+			switchToIconView();
+		}else {
+			showResults();
+		}
 	}
 	
 	void btnPrevClicked() {
@@ -185,9 +188,9 @@ class ResultsHistory {
 			    GTK_TREE_MODEL(savedItemsStore)
 			);
 			FileUtils::listSavedFiles(ivResults, btnSavedItems);
+			scrollToTopOfList();
 			updateTitle("Saved items");
 			setSavedItemsToolbar();
-			scrollToTopOfList();
 			switchToIconView();
 		}else {
 			displayedResults.setModel();
@@ -407,6 +410,7 @@ class ResultsHistory {
 	}
 	
 	void setSensitiveItemsLoading() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
@@ -415,6 +419,7 @@ class ResultsHistory {
 	}
 	
 	void setSavedItemsToolbar() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), TRUE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
@@ -637,8 +642,12 @@ class ResultsHistory {
 	}
 	
 	void setSensitiveItemsPlaylists() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), !displayedResults.isEmpty());
+		gtk_widget_set_sensitive(GTK_WIDGET(btnUp),
+		                        !displayedResults.isEmpty()
+		                        || gtk_toggle_tool_button_get_active(
+		                        GTK_TOGGLE_TOOL_BUTTON(btnSavedItems)));
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnActors), TRUE);
