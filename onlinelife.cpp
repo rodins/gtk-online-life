@@ -654,7 +654,7 @@ int main( int   argc,
     
     //btnGetLinks
     btnGetLinks = gtk_button_new();
-    GtkWidget *copyImage = gtk_image_new_from_stock(GTK_STOCK_COPY,
+    GtkWidget *copyImage = gtk_image_new_from_stock(GTK_STOCK_MEDIA_PLAY,
                                                     GTK_ICON_SIZE_BUTTON);
     gtk_button_set_image(GTK_BUTTON(btnGetLinks), copyImage);
     gtk_widget_set_tooltip_text(btnGetLinks, "Get links");
