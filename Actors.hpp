@@ -8,7 +8,8 @@ struct ListEpisodesArgs {
 enum LinksMode {
 	LINKS_MODE_SERIAL,
 	LINKS_MODE_MOVIE, 
-	LINKS_MODE_HIDE
+	LINKS_MODE_HIDE,
+	LINKS_MODE_REFRESH
 };
 
 class Actors {

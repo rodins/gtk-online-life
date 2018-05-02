@@ -160,6 +160,9 @@ class ActorsHistory {
 			case LINKS_MODE_HIDE:
 			    hideAllLinksButtons();
 			break;
+			case LINKS_MODE_REFRESH:
+			    showLinksErrorButton();
+			break;
 		}
 		
 		// Save or delete button change
@@ -324,6 +327,7 @@ class ActorsHistory {
 			}
 		}else {
 			actorsHistory->showLinksErrorButton();
+			actorsHistory->actors.setLinksMode(LINKS_MODE_REFRESH);
 		}
 		gdk_threads_leave();
 	}
