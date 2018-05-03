@@ -109,9 +109,14 @@ class ActorsHistory {
 	}
 	
     void newThread(string title, string href, GdkPixbuf *pixbuf) {
-		if(!actors.getTitle().empty() && actors.isNetworkOk()) {
-			prevActors = actors;
+		// Save current actors to back actors map before getting new actors
+		if(actors.isNetworkOk()) {
+			if(backActors.count(actors.getTitle()) == 0) {
+			    backActorsListAdd(actors.getTitle());	
+			}
+			backActors[actors.getTitle()] = actors;
 		}
+		
 		actors.setTitle(title);
 		actors.setUrl(href);
 		actors.setPixbuf(pixbuf);
@@ -445,13 +450,6 @@ class ActorsHistory {
 				}
 			}
 			
-			// Save to back actors map
-			if(backActors.count(prevActors.getTitle()) == 0 
-			        && prevActors.getCount() > 0
-			        && prevActors.getTitle() != actors.getTitle()) {
-			    backActors[prevActors.getTitle()] = prevActors;
-			    backActorsListAdd(prevActors.getTitle());	
-			}
 			updateActors();
 			showActors();
 		}else {
