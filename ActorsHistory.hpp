@@ -175,9 +175,13 @@ class ActorsHistory {
 	}
 	
 	void btnActorsClicked(GtkWidget *widget) {
-		//Toggle visibility of actors list (vbRight)
-		gtk_widget_set_visible(vbRight,
-		                       !gtk_widget_get_visible(vbRight));
+		gboolean isActive = gtk_toggle_tool_button_get_active(
+		                    GTK_TOGGLE_TOOL_BUTTON(btnActors));
+		if(isActive && actors.isNetworkOk()) {
+			gtk_widget_show(vbRight);
+		}else if(!isActive) {
+			gtk_widget_hide(vbRight);
+		} 
 	}
 	
 	ListEpisodesArgs getCurrentActorsListEpisodesArgs() {
@@ -428,6 +432,11 @@ class ActorsHistory {
 	}
 	
 	string onPreExecute() {
+		// If btnActors is active show tab
+		if(gtk_toggle_tool_button_get_active(
+		   GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
+		    gtk_widget_show(vbRight);	   
+		}
 		gtk_label_set_text(GTK_LABEL(lbInfo), actors.getTitle().c_str());
 	    showSpActors();
 	    hideAllLinksButtons();
