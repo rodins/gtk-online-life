@@ -139,6 +139,16 @@ class ResultsHistory {
 	
 	void setSavedItemsAvailable(gboolean isSavedItemsAvailable) {
 		this->isSavedItemsAvailable = isSavedItemsAvailable;
+		// No saved items, switch to results mode
+		if(!this->isSavedItemsAvailable && isSavedItems) {
+			gtk_toggle_tool_button_set_active(
+			                     GTK_TOGGLE_TOOL_BUTTON(btnSavedItems),
+			                     FALSE);
+			isSavedItems = FALSE;
+			displayedResults.setModel();
+			restoreResultsPosition();
+			showResults();
+		}
 	}
 	
 	void setListEpisodesArgs(ListEpisodesArgs listEpisodesArgs){
@@ -412,7 +422,8 @@ class ResultsHistory {
 	void setSensitiveItemsResults() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems),
 		                         isSavedItemsAvailable);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), 
+		                         !displayedResults.isEmpty());
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnActors), TRUE);
 	}
