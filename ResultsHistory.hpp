@@ -46,6 +46,7 @@ class ResultsHistory {
     
     GtkListStore *savedItemsStore;
     gboolean isSavedItems;
+    gboolean isSavedItemsAvailable;
     
     public:
     
@@ -128,11 +129,16 @@ class ResultsHistory {
 		     G_TYPE_STRING    // Image link
 		);
 		isSavedItems = FALSE;
+		isSavedItemsAvailable = FALSE;
 		this->btnSavedItems = btnSavedItems;
 	}
 	
 	~ResultsHistory(){
 		g_free(playlists);
+	}
+	
+	void setSavedItemsAvailable(gboolean isSavedItemsAvailable) {
+		this->isSavedItemsAvailable = isSavedItemsAvailable;
 	}
 	
 	void setListEpisodesArgs(ListEpisodesArgs listEpisodesArgs){
@@ -404,6 +410,8 @@ class ResultsHistory {
 	}
 	
 	void setSensitiveItemsResults() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems),
+		                         isSavedItemsAvailable);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), TRUE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnActors), TRUE);
@@ -419,7 +427,8 @@ class ResultsHistory {
 	}
 	
 	void setSavedItemsToolbar() {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems),
+		                         isSavedItemsAvailable);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
@@ -450,6 +459,7 @@ class ResultsHistory {
 				updateTitle();
 				switchToIconView();
 			    setSensitiveItemsResults();
+			    updatePrevNextButtons();
 			    // Create dialog for nothing found
 			    GtkWidget* dialog = gtk_message_dialog_new(GTK_WINDOW(window),
 			                                               GTK_DIALOG_MODAL,
@@ -469,6 +479,8 @@ class ResultsHistory {
 		}else { //error
 			updateTitle("Results error!");
 			showResultsRepeat(FALSE);
+			setSensitiveItemsResults();
+			updatePrevNextButtons();
 			error = RESULTS_NEW_ERROR;
 		}
 		displayedResults.setRefresh(FALSE);

@@ -680,6 +680,9 @@ int main( int   argc,
 	
 	// Disable listItems button only if there are saved items
 	FileUtils::listSavedFiles(ivResults, btnSavedItems);
+	gboolean isSavedItemsAvailable = gtk_widget_get_sensitive(
+	                                 GTK_WIDGET(btnSavedItems));
+	resultsHistory.setSavedItemsAvailable(isSavedItemsAvailable);
 	
     g_signal_connect(GTK_WIDGET(btnRefresh), 
 				     "clicked", 

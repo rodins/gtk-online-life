@@ -260,6 +260,9 @@ class ActorsHistory {
 			// Update file list
 		    FileUtils::listSavedFiles(resultsHistory->getIvResults(),
 		                              btnSavedItems);
+		    gboolean isSavedItemsAvailable = gtk_widget_get_sensitive(
+	                                         GTK_WIDGET(btnSavedItems));
+	        resultsHistory->setSavedItemsAvailable(isSavedItemsAvailable);
 		}	
 	}
 	
