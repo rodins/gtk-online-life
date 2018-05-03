@@ -351,12 +351,12 @@ class ActorsHistory {
 		    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
 			resultsHistory->showSpCenter(FALSE);
 		}else {
-			gtk_widget_hide(frInfo);
+			gtk_widget_show(frInfo);
 			gtk_widget_hide(frRightTop);
 			gtk_widget_hide(hbActorsError);
 			gtk_widget_show(spActors);
 			gtk_spinner_start(GTK_SPINNER(spActors));
-		    gtk_widget_hide(frActions);
+		    gtk_widget_show(frActions);
 		}
 	}
 	
@@ -376,12 +376,12 @@ class ActorsHistory {
 			resultsHistory->showResults();
 			runErrorDialog();
 		}else {
-			gtk_widget_hide(frInfo);
+			gtk_widget_show(frInfo);
 			gtk_widget_hide(frRightTop);
 			gtk_widget_show(hbActorsError);
 			gtk_widget_hide(spActors);
 			gtk_spinner_stop(GTK_SPINNER(spActors));
-			gtk_widget_hide(frActions);
+			gtk_widget_show(frActions);
 		}
 	}
 	
@@ -423,6 +423,7 @@ class ActorsHistory {
 	}
 	
 	string onPreExecute() {
+		gtk_label_set_text(GTK_LABEL(lbInfo), actors.getTitle().c_str());
 	    showSpActors();
 	    hideAllLinksButtons();
 	    return actors.getUrl();
