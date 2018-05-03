@@ -43,29 +43,15 @@ class CategoriesWidgets {
 		if(model == NULL) {
 			//Starting new thread to get categories from the net  
             newThread();
-		}else {
-			gtk_widget_set_visible(swCategories, TRUE);
-		}	
-	}
-	
-	void showHideCategories() {
-		if(!gtk_widget_get_visible(swCategories)) {
-			showCategories();
-		}else {
-			gtk_widget_set_visible(swCategories, FALSE);
 		}
-	}
-	
-	void showHideSavedItems() {
-		
 	}
 	
 	void btnCategoriesClicked() {
 		if(!gtk_widget_get_visible(vbLeft)) {
-			gtk_widget_set_visible(vbLeft, TRUE);
+			gtk_widget_show(vbLeft);
 			showCategories();
 		}else {
-			showHideCategories();
+			gtk_widget_hide(vbLeft);
 		}
 	}
     
