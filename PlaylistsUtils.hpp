@@ -3,6 +3,15 @@
 class PlaylistsUtils {
 	public:
 	
+	static string get_href_id(string href) {
+		size_t id_begin = href.rfind("/");
+		size_t id_end = href.find("-", id_begin);
+		if(id_begin != string::npos && id_end != string::npos) {
+			return href.substr(id_begin+1, id_end-id_begin-1);
+		}
+		return "";
+	}
+	
 	static string parsePlayerForUrl(string &player) {
 		size_t js_detect = player.find("js.php");
 		if(js_detect != string::npos) {

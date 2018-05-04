@@ -137,12 +137,12 @@ class ActorsHistory {
 			showSaveOrDeleteButton();
 			newThread();
 		}else { // Do not get actors, get only js based on constant links
-		    int id = -1;
-		    if(id != 0) { // 0 will cause error
-				g_thread_pool_push(constantsThreadPool,
-				                  (gpointer)(long)id,
-				                   NULL);
-			}	
+		    // id should not disappear after exit from function
+		    static string id;
+		    id = PlaylistsUtils::get_href_id(href);
+			g_thread_pool_push(constantsThreadPool,
+			                  (gpointer)id.c_str(),
+			                   NULL);
 		}
 	}
 	
@@ -209,8 +209,10 @@ class ActorsHistory {
 		return actors.getListEpisodesArgs();
 	}
 	
-	void runPlayItemDialog() {
-		string js = actors.getJs();
+	void runPlayItemDialog(string js = "") {
+		if(js == "") {
+			js = actors.getJs();
+		}
 		PlayItem playItem = PlaylistsUtils::parse_play_item(js, FALSE);
 		playItem.player = player;
 		if(!playItem.comment.empty()) { // PlayItem found
@@ -322,49 +324,31 @@ class ActorsHistory {
 	
 	static void constantsTask(gpointer arg, gpointer arg2) {
 		ActorsHistory *actorsHistory = (ActorsHistory *)arg2;
-		int id = (int)(long)arg;
-		cout << "Not yet implemented..." << endl;
-		cout << "Id: " << id << endl;
-		return;
+		string id((const char*)arg);
+		string url = "http://play.cidwo.com/js.php?id=" + id;
+		string referer = "http://play.cidwo.com/player.php?newsid=" + id;
 	    // On pre execute
 		gdk_threads_enter();
-		string href = actorsHistory->actors.getUrl();
 		// Show links spinner
-		actorsHistory->showSpLinks();
-		gdk_threads_leave();	
-		string referer = actorsHistory->actors.getPlayerUrl();
-		string player = HtmlString::getPage(referer);
-		string url = PlaylistsUtils::parsePlayerForUrl(player);
+		actorsHistory->resultsHistory->showSpCenter(FALSE);
+		gdk_threads_leave();
+		// Async part	
 		string js = HtmlString::getPage(url, referer);
-		
 		gdk_threads_enter();
 		if(!js.empty()) {
 			string playlist_link = PlaylistsUtils::get_txt_link(js);
 			if(!playlist_link.empty()) { // Playlists found
-				actorsHistory->showListEpisodesButton();
 				ListEpisodesArgs listEpisodesArgs;
 				listEpisodesArgs.title = actorsHistory->actors.getTitle();
 				listEpisodesArgs.playlist_link = playlist_link;
-				actorsHistory->actors.setListEpisodesArgs(listEpisodesArgs);
-				actorsHistory->actors.setLinksMode(LINKS_MODE_SERIAL);
 				actorsHistory->resultsHistory->setListEpisodesArgs(listEpisodesArgs);
-				/*if(!gtk_toggle_tool_button_get_active(
-				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
-					gtk_button_clicked(GTK_BUTTON(actorsHistory->btnListEpisodes));
-				}*/
+				actorsHistory->resultsHistory->btnListEpisodesClicked();
 			}else {
-				actorsHistory->showGetLinksButton();
-				actorsHistory->actors.setJs(js);
-				actorsHistory->actors.setLinksMode(LINKS_MODE_MOVIE);
-				/*if(!gtk_toggle_tool_button_get_active(
-				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
-					actorsHistory->resultsHistory->showResults();
-					actorsHistory->runPlayItemDialog();
-				}*/
+				actorsHistory->resultsHistory->showResults();
+				actorsHistory->runPlayItemDialog(js);
 			}
 		}else {
-			actorsHistory->showLinksErrorButton();
-			actorsHistory->actors.setLinksMode(LINKS_MODE_REFRESH);
+			cout << "TODO: show constants error dialog" << endl;
 		}
 		gdk_threads_leave();
 	}
@@ -393,19 +377,10 @@ class ActorsHistory {
 				actorsHistory->actors.setListEpisodesArgs(listEpisodesArgs);
 				actorsHistory->actors.setLinksMode(LINKS_MODE_SERIAL);
 				actorsHistory->resultsHistory->setListEpisodesArgs(listEpisodesArgs);
-				/*if(!gtk_toggle_tool_button_get_active(
-				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
-					gtk_button_clicked(GTK_BUTTON(actorsHistory->btnListEpisodes));
-				}*/
 			}else {
 				actorsHistory->showGetLinksButton();
 				actorsHistory->actors.setJs(js);
 				actorsHistory->actors.setLinksMode(LINKS_MODE_MOVIE);
-				/*if(!gtk_toggle_tool_button_get_active(
-				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
-					actorsHistory->resultsHistory->showResults();
-					actorsHistory->runPlayItemDialog();
-				}*/
 			}
 		}else {
 			actorsHistory->showLinksErrorButton();
