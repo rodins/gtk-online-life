@@ -22,6 +22,7 @@ class ActorsHistory {
     GThreadPool *actorsThreadPool;
     GThreadPool *linksSizeThreadPool;
     GThreadPool *detectThreadPool;
+    GThreadPool *constantsThreadPool;
     
     GtkWidget *spLinks;
     GtkWidget *btnLinksError;
@@ -101,6 +102,14 @@ class ActorsHistory {
 	                                   FALSE,
 	                                   NULL);
 	                                   
+	    // GThreadPool for constant links
+	    constantsThreadPool = g_thread_pool_new(
+	                                   ActorsHistory::constantsTask,
+	                                   this,
+	                                   1, // Run one thread at the time
+	                                   FALSE,
+	                                   NULL); 
+	                                   
 	    player = detectPlayer();
 	} 
 	
@@ -109,20 +118,32 @@ class ActorsHistory {
 	}
 	
     void newThread(string title, string href, GdkPixbuf *pixbuf) {
-		// Save current actors to back actors map before getting new actors
-		if(actors.isNetworkOk()) {
-			if(backActors.count(actors.getTitle()) == 0) {
-			    backActorsListAdd(actors.getTitle());	
+		// If btnActors is active show tab and find actors and links
+		if(gtk_toggle_tool_button_get_active(
+		   GTK_TOGGLE_TOOL_BUTTON(btnActors))) {	   
+		    
+		    // Save current actors to back actors map before getting new actors
+			if(actors.isNetworkOk()) {
+				if(backActors.count(actors.getTitle()) == 0) {
+				    backActorsListAdd(actors.getTitle());	
+				}
+				backActors[actors.getTitle()] = actors;
 			}
-			backActors[actors.getTitle()] = actors;
+			
+			actors.setTitle(title);
+			actors.setUrl(href);
+			actors.setPixbuf(pixbuf);
+			actors.setNetworkOk(FALSE);
+			showSaveOrDeleteButton();
+			newThread();
+		}else { // Do not get actors, get only js based on constant links
+		    int id = -1;
+		    if(id != 0) { // 0 will cause error
+				g_thread_pool_push(constantsThreadPool,
+				                  (gpointer)(long)id,
+				                   NULL);
+			}	
 		}
-		
-		actors.setTitle(title);
-		actors.setUrl(href);
-		actors.setPixbuf(pixbuf);
-		actors.setNetworkOk(FALSE);
-		showSaveOrDeleteButton();
-		newThread();
 	}
 	
 	void newThread() {
@@ -299,6 +320,55 @@ class ActorsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
+	static void constantsTask(gpointer arg, gpointer arg2) {
+		ActorsHistory *actorsHistory = (ActorsHistory *)arg2;
+		int id = (int)(long)arg;
+		cout << "Not yet implemented..." << endl;
+		cout << "Id: " << id << endl;
+		return;
+	    // On pre execute
+		gdk_threads_enter();
+		string href = actorsHistory->actors.getUrl();
+		// Show links spinner
+		actorsHistory->showSpLinks();
+		gdk_threads_leave();	
+		string referer = actorsHistory->actors.getPlayerUrl();
+		string player = HtmlString::getPage(referer);
+		string url = PlaylistsUtils::parsePlayerForUrl(player);
+		string js = HtmlString::getPage(url, referer);
+		
+		gdk_threads_enter();
+		if(!js.empty()) {
+			string playlist_link = PlaylistsUtils::get_txt_link(js);
+			if(!playlist_link.empty()) { // Playlists found
+				actorsHistory->showListEpisodesButton();
+				ListEpisodesArgs listEpisodesArgs;
+				listEpisodesArgs.title = actorsHistory->actors.getTitle();
+				listEpisodesArgs.playlist_link = playlist_link;
+				actorsHistory->actors.setListEpisodesArgs(listEpisodesArgs);
+				actorsHistory->actors.setLinksMode(LINKS_MODE_SERIAL);
+				actorsHistory->resultsHistory->setListEpisodesArgs(listEpisodesArgs);
+				/*if(!gtk_toggle_tool_button_get_active(
+				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
+					gtk_button_clicked(GTK_BUTTON(actorsHistory->btnListEpisodes));
+				}*/
+			}else {
+				actorsHistory->showGetLinksButton();
+				actorsHistory->actors.setJs(js);
+				actorsHistory->actors.setLinksMode(LINKS_MODE_MOVIE);
+				/*if(!gtk_toggle_tool_button_get_active(
+				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
+					actorsHistory->resultsHistory->showResults();
+					actorsHistory->runPlayItemDialog();
+				}*/
+			}
+		}else {
+			actorsHistory->showLinksErrorButton();
+			actorsHistory->actors.setLinksMode(LINKS_MODE_REFRESH);
+		}
+		gdk_threads_leave();
+	}
+	
 	static void detectTask(gpointer arg, gpointer arg2) {
 		ActorsHistory *actorsHistory = (ActorsHistory *)arg2;
 	    // On pre execute
@@ -323,19 +393,19 @@ class ActorsHistory {
 				actorsHistory->actors.setListEpisodesArgs(listEpisodesArgs);
 				actorsHistory->actors.setLinksMode(LINKS_MODE_SERIAL);
 				actorsHistory->resultsHistory->setListEpisodesArgs(listEpisodesArgs);
-				if(!gtk_toggle_tool_button_get_active(
+				/*if(!gtk_toggle_tool_button_get_active(
 				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
 					gtk_button_clicked(GTK_BUTTON(actorsHistory->btnListEpisodes));
-				}
+				}*/
 			}else {
 				actorsHistory->showGetLinksButton();
 				actorsHistory->actors.setJs(js);
 				actorsHistory->actors.setLinksMode(LINKS_MODE_MOVIE);
-				if(!gtk_toggle_tool_button_get_active(
+				/*if(!gtk_toggle_tool_button_get_active(
 				    GTK_TOGGLE_TOOL_BUTTON(actorsHistory->btnActors))) {
 					actorsHistory->resultsHistory->showResults();
 					actorsHistory->runPlayItemDialog();
-				}
+				}*/
 			}
 		}else {
 			actorsHistory->showLinksErrorButton();
@@ -359,7 +429,7 @@ class ActorsHistory {
 	
 	void showSpActors() {
 	    // If actors pane is not shown
-		if(!gtk_toggle_tool_button_get_active(
+		/*if(!gtk_toggle_tool_button_get_active(
 		    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
 			resultsHistory->showSpCenter(FALSE);
 		}else {
@@ -369,7 +439,13 @@ class ActorsHistory {
 			gtk_widget_show(spActors);
 			gtk_spinner_start(GTK_SPINNER(spActors));
 		    gtk_widget_show(frActions);
-		}
+		}*/
+		gtk_widget_show(frInfo);
+		gtk_widget_hide(frRightTop);
+		gtk_widget_hide(hbActorsError);
+		gtk_widget_show(spActors);
+		gtk_spinner_start(GTK_SPINNER(spActors));
+	    gtk_widget_show(frActions);
 	}
 	
 	void showActors() {
@@ -383,7 +459,7 @@ class ActorsHistory {
 	
 	void showActorsError() {
 		// If actors pane is not shown
-		if(!gtk_toggle_tool_button_get_active(
+		/*if(!gtk_toggle_tool_button_get_active(
 		    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
 			resultsHistory->showResults();
 			runErrorDialog();
@@ -394,7 +470,13 @@ class ActorsHistory {
 			gtk_widget_hide(spActors);
 			gtk_spinner_stop(GTK_SPINNER(spActors));
 			gtk_widget_show(frActions);
-		}
+		}*/
+		gtk_widget_show(frInfo);
+		gtk_widget_hide(frRightTop);
+		gtk_widget_show(hbActorsError);
+		gtk_widget_hide(spActors);
+		gtk_spinner_stop(GTK_SPINNER(spActors));
+		gtk_widget_show(frActions);
 	}
 	
 	void runErrorDialog() {
@@ -435,14 +517,10 @@ class ActorsHistory {
 	}
 	
 	string onPreExecute() {
-		// If btnActors is active show tab
-		if(gtk_toggle_tool_button_get_active(
-		   GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
-		    gtk_widget_show(vbRight);	   
-		}
 		gtk_label_set_text(GTK_LABEL(lbInfo), actors.getTitle().c_str());
 	    showSpActors();
 	    hideAllLinksButtons();
+	    gtk_widget_show(vbRight);
 	    return actors.getUrl();
 	}
 	
@@ -456,12 +534,11 @@ class ActorsHistory {
 			}else {
 				actors.setLinksMode(LINKS_MODE_HIDE);
 				// If actors pane is not shown
-				if(!gtk_toggle_tool_button_get_active(
+				/*if(!gtk_toggle_tool_button_get_active(
 				    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
 					resultsHistory->showResults();
-				}
+				}*/
 			}
-			
 			updateActors();
 			showActors();
 		}else {
