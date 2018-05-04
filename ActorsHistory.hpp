@@ -322,12 +322,15 @@ class ActorsHistory {
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
+	// Use constant links and id to get js
 	static void constantsTask(gpointer arg, gpointer arg2) {
 		ActorsHistory *actorsHistory = (ActorsHistory *)arg2;
 		string id((const char*)arg);
+		
 		string url = "http://play.cidwo.com/js.php?id=" + id;
 		string referer = "http://play.cidwo.com/player.php?newsid=" + id;
-	    // On pre execute
+		
+		// On pre execute
 		gdk_threads_enter();
 		// Show links spinner
 		actorsHistory->resultsHistory->showSpCenter(FALSE);
@@ -354,6 +357,7 @@ class ActorsHistory {
 		gdk_threads_leave();
 	}
 	
+	// Parse info page, get player link to get js
 	static void detectTask(gpointer arg, gpointer arg2) {
 		ActorsHistory *actorsHistory = (ActorsHistory *)arg2;
 	    // On pre execute
@@ -437,7 +441,7 @@ class ActorsHistory {
 		              GTK_DIALOG_DESTROY_WITH_PARENT,
 		              GTK_MESSAGE_ERROR,
 		              GTK_BUTTONS_OK,
-		              "Network problem");
+		              "Nothing found or network problem");
 		gtk_window_set_title(GTK_WINDOW(dialog), "Error");
 		gtk_dialog_run(GTK_DIALOG(dialog));
 		gtk_widget_destroy(dialog);
@@ -485,11 +489,6 @@ class ActorsHistory {
 				detectThread();
 			}else {
 				actors.setLinksMode(LINKS_MODE_HIDE);
-				// If actors pane is not shown
-				/*if(!gtk_toggle_tool_button_get_active(
-				    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
-					resultsHistory->showResults();
-				}*/
 			}
 			updateActors();
 			showActors();
