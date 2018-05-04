@@ -335,7 +335,7 @@ class ActorsHistory {
 		// Async part	
 		string js = HtmlString::getPage(url, referer);
 		gdk_threads_enter();
-		if(!js.empty()) {
+		if(js.length() > 1000) { // Serial
 			string playlist_link = PlaylistsUtils::get_txt_link(js);
 			if(!playlist_link.empty()) { // Playlists found
 				ListEpisodesArgs listEpisodesArgs;
@@ -343,12 +343,13 @@ class ActorsHistory {
 				listEpisodesArgs.playlist_link = playlist_link;
 				actorsHistory->resultsHistory->setListEpisodesArgs(listEpisodesArgs);
 				actorsHistory->resultsHistory->btnListEpisodesClicked();
-			}else {
-				actorsHistory->resultsHistory->showResults();
-				actorsHistory->runPlayItemDialog(js);
-			}
-		}else {
-			cout << "TODO: show constants error dialog" << endl;
+            }
+		}else if(js.length() > 500) { // Movie
+			actorsHistory->resultsHistory->showResults();
+		    actorsHistory->runPlayItemDialog(js);
+		}else{ // Error
+			actorsHistory->resultsHistory->showResults();
+			actorsHistory->runErrorDialog();
 		}
 		gdk_threads_leave();
 	}
@@ -367,7 +368,7 @@ class ActorsHistory {
 		string js = HtmlString::getPage(url, referer);
 		
 		gdk_threads_enter();
-		if(!js.empty()) {
+		if(js.length() > 1000) { // Serial
 			string playlist_link = PlaylistsUtils::get_txt_link(js);
 			if(!playlist_link.empty()) { // Playlists found
 				actorsHistory->showListEpisodesButton();
@@ -376,12 +377,13 @@ class ActorsHistory {
 				listEpisodesArgs.playlist_link = playlist_link;
 				actorsHistory->actors.setListEpisodesArgs(listEpisodesArgs);
 				actorsHistory->actors.setLinksMode(LINKS_MODE_SERIAL);
-				actorsHistory->resultsHistory->setListEpisodesArgs(listEpisodesArgs);
-			}else {
+				actorsHistory->resultsHistory->
+				               setListEpisodesArgs(listEpisodesArgs);
+			}
+		}else if(js.length() > 500) { // Movie
 				actorsHistory->showGetLinksButton();
 				actorsHistory->actors.setJs(js);
 				actorsHistory->actors.setLinksMode(LINKS_MODE_MOVIE);
-			}
 		}else {
 			actorsHistory->showLinksErrorButton();
 			actorsHistory->actors.setLinksMode(LINKS_MODE_REFRESH);
@@ -403,18 +405,6 @@ class ActorsHistory {
 	}
 	
 	void showSpActors() {
-	    // If actors pane is not shown
-		/*if(!gtk_toggle_tool_button_get_active(
-		    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
-			resultsHistory->showSpCenter(FALSE);
-		}else {
-			gtk_widget_show(frInfo);
-			gtk_widget_hide(frRightTop);
-			gtk_widget_hide(hbActorsError);
-			gtk_widget_show(spActors);
-			gtk_spinner_start(GTK_SPINNER(spActors));
-		    gtk_widget_show(frActions);
-		}*/
 		gtk_widget_show(frInfo);
 		gtk_widget_hide(frRightTop);
 		gtk_widget_hide(hbActorsError);
@@ -433,19 +423,6 @@ class ActorsHistory {
 	}
 	
 	void showActorsError() {
-		// If actors pane is not shown
-		/*if(!gtk_toggle_tool_button_get_active(
-		    GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
-			resultsHistory->showResults();
-			runErrorDialog();
-		}else {
-			gtk_widget_show(frInfo);
-			gtk_widget_hide(frRightTop);
-			gtk_widget_show(hbActorsError);
-			gtk_widget_hide(spActors);
-			gtk_spinner_stop(GTK_SPINNER(spActors));
-			gtk_widget_show(frActions);
-		}*/
 		gtk_widget_show(frInfo);
 		gtk_widget_hide(frRightTop);
 		gtk_widget_show(hbActorsError);
