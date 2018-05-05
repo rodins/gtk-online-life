@@ -682,6 +682,12 @@ int main( int   argc,
 	gboolean isSavedItemsAvailable = gtk_widget_get_sensitive(
 	                                 GTK_WIDGET(btnSavedItems));
 	resultsHistory.setSavedItemsAvailable(isSavedItemsAvailable);
+	// Show saved results on start if any
+	if(isSavedItemsAvailable) {
+		gtk_toggle_tool_button_set_active(
+		GTK_TOGGLE_TOOL_BUTTON(btnSavedItems), TRUE);
+		resultsHistory.btnSavedItemsClicked();
+	}
 	
     g_signal_connect(GTK_WIDGET(btnRefresh), 
 				     "clicked", 
