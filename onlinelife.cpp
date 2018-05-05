@@ -238,9 +238,9 @@ static void entryActivated( GtkWidget *widget,
 	}		  						  
 }
 
-static void btnActorsClicked(GtkWidget *widget, gpointer data) {
-	ActorsHistory *actorsHistory = (ActorsHistory*)data;
-	actorsHistory->btnActorsClicked(widget);
+static void btnActorsClicked(GtkWidget *widget,
+	                         ActorsHistory *actorsHistory){
+	actorsHistory->btnActorsClicked();
 }
 
 static void backActorsChanged(GtkTreeSelection *treeselection, gpointer data) {
@@ -254,9 +254,9 @@ static void btnCategoriesRepeatClicked(GtkWidget *widget, gpointer data) {
 	categoriesWidgets->newThread();
 }
 
-static void btnActorsRepeatClicked(GtkWidget *widget, gpointer data) {
-	ActorsHistory *actorsHistory = (ActorsHistory*) data;
-    actorsHistory->newThread();
+static void btnActorsRepeatClicked(GtkWidget *widget,
+                                   ActorsHistory *actorsHistory) {
+    actorsHistory->newActorsThread();
 }
 
 void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {

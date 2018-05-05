@@ -125,24 +125,24 @@ class ActorsHistory {
 	}
 	
     void newThread(string title, string href, GdkPixbuf *pixbuf) {
+		// Save current actors to back actors map before getting new actors
+		if(actors.isNetworkOk()) {
+			if(backActors.count(actors.getTitle()) == 0) {
+			    backActorsListAdd(actors.getTitle());	
+			}
+			backActors[actors.getTitle()] = actors;
+		}
+		
+		actors.setTitle(title);
+		actors.setUrl(href);
+		actors.setPixbuf(pixbuf);
+		actors.setNetworkOk(FALSE);
+		showSaveOrDeleteButton();
+		
 		// If btnActors is active show tab and find actors and links
 		if(gtk_toggle_tool_button_get_active(
 		   GTK_TOGGLE_TOOL_BUTTON(btnActors))) {	   
-		    
-		    // Save current actors to back actors map before getting new actors
-			if(actors.isNetworkOk()) {
-				if(backActors.count(actors.getTitle()) == 0) {
-				    backActorsListAdd(actors.getTitle());	
-				}
-				backActors[actors.getTitle()] = actors;
-			}
-			
-			actors.setTitle(title);
-			actors.setUrl(href);
-			actors.setPixbuf(pixbuf);
-			actors.setNetworkOk(FALSE);
-			showSaveOrDeleteButton();
-			newThread();
+			newActorsThread();
 		}else { // Do not get actors, get only js based on constant links
 		    // id should not disappear after exit from function
 		    static string id;
@@ -153,7 +153,7 @@ class ActorsHistory {
 		}
 	}
 	
-	void newThread() {
+	void newActorsThread() {
 		g_thread_pool_push(actorsThreadPool, (gpointer)1, NULL);
 	}
 	
@@ -202,12 +202,16 @@ class ActorsHistory {
 		showSaveOrDeleteButton();
 	}
 	
-	void btnActorsClicked(GtkWidget *widget) {
+	void btnActorsClicked() {
 		gboolean isActive = gtk_toggle_tool_button_get_active(
 		                    GTK_TOGGLE_TOOL_BUTTON(btnActors));
-		if(isActive && actors.isNetworkOk()) {
-			gtk_widget_show(vbRight);
-		}else if(!isActive) {
+		if(isActive) {
+			if(actors.isNetworkOk()) {
+				gtk_widget_show(vbRight);
+			}else if(!actors.getUrl().empty()) {
+				newActorsThread();
+			}
+		}else {
 			gtk_widget_hide(vbRight);
 		} 
 	}
