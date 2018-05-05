@@ -471,12 +471,18 @@ class ActorsHistory {
 	}
 	
 	void runErrorDialog() {
+		string message("No links found. ");
+		if(!gtk_toggle_tool_button_get_active(
+		   GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
+			   message += 
+			   "Try to press info button on the toolbar and try again."; 
+		}
 		GtkWidget *dialog = gtk_message_dialog_new(
 		              GTK_WINDOW(window),
 		              GTK_DIALOG_DESTROY_WITH_PARENT,
-		              GTK_MESSAGE_ERROR,
+		              GTK_MESSAGE_INFO,
 		              GTK_BUTTONS_OK,
-		              "No links found");
+		              "%s", message.c_str());
 		gtk_window_set_title(GTK_WINDOW(dialog), "Error");
 		gtk_dialog_run(GTK_DIALOG(dialog));
 		gtk_widget_destroy(dialog);
