@@ -137,6 +137,10 @@ class ResultsHistory {
 		g_free(playlists);
 	}
 	
+	GtkToolItem* getBtnUp() {
+		return btnUp;
+	}
+	
 	void setSavedItemsAvailable(gboolean isSavedItemsAvailable) {
 		this->isSavedItemsAvailable = isSavedItemsAvailable;
 		// No saved items, switch to results mode

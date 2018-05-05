@@ -477,7 +477,9 @@ class ActorsHistory {
 	void runErrorDialog() {
 		string message("No links found. ");
 		if(!gtk_toggle_tool_button_get_active(
-		   GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
+		   GTK_TOGGLE_TOOL_BUTTON(btnActors)) &&
+		   !gtk_widget_get_sensitive(GTK_WIDGET(
+		   resultsHistory->getBtnUp()))) {
 			   message += 
 			   "Try to press info button on the toolbar and try again."; 
 		}
