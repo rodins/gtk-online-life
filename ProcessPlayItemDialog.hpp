@@ -29,39 +29,49 @@ class ProcessPlayItemDialog {
 	public:
 	
 	ProcessPlayItemDialog(GtkWidget* window,
-	                      PlayItem playItem) {
+	                      PlayItem playItem,
+	                      string sizeFile, 
+	                      string sizeDownload) {
 		this->window = window;
-		this->playItem = playItem;
-		// GThreadPool for links sizes
-	    linksSizeThreadPool = g_thread_pool_new(ProcessPlayItemDialog::linksSizeTask,
-	                                   NULL,
-	                                   2, // Run two threads at the time
-	                                   FALSE,
-	                                   NULL);              
-	    createDialog();
+		this->playItem = playItem;            
+	    createDialog(sizeFile, sizeDownload);
 	}
 	
 	private:
 	
-	void createDialog() {
-		// Create dialog, add buttons to it, get size information and display it
+	void createDialog(string sizeFile, string sizeDownload) {
+		// Create dialog, add buttons to it
 		GtkWidget *dialog,  
 		          *content_area;
 		
-		dialog = gtk_dialog_new_with_buttons ("Play and copy links",
+		dialog = gtk_dialog_new_with_buttons ("Links dialog",
                                               GTK_WINDOW(window),
                                               (GtkDialogFlags)(GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT),
                                               NULL);
                                               
         btnFlv = gtk_dialog_add_button(GTK_DIALOG(dialog),
-		                      "FLV",
-                              LINK_RESPONSE_PLAY);                   
+		                               "FLV",
+                                       LINK_RESPONSE_PLAY);                   
         gtk_widget_set_sensitive(btnFlv, FALSE);
+        if(!sizeFile.empty()) {
+			string buttonText = string(
+			gtk_button_get_label(GTK_BUTTON(btnFlv))); 
+			string sizeTitle = buttonText + " (" + sizeFile + ")";
+			gtk_button_set_label(GTK_BUTTON(btnFlv), sizeTitle.c_str());
+			gtk_widget_set_sensitive(btnFlv, TRUE);
+		}
         
         btnMp4 = gtk_dialog_add_button(GTK_DIALOG(dialog),
 		                      "MP4",
                               LINK_RESPONSE_DOWNLOAD);
         gtk_widget_set_sensitive(btnMp4, FALSE);
+        if(!sizeDownload.empty()) {
+			string buttonText = string(
+			gtk_button_get_label(GTK_BUTTON(btnMp4))); 
+			string sizeTitle = buttonText + " (" + sizeDownload + ")";
+			gtk_button_set_label(GTK_BUTTON(btnMp4), sizeTitle.c_str());
+			gtk_widget_set_sensitive(btnMp4, TRUE);
+		}
         
         gtk_dialog_add_button(GTK_DIALOG(dialog),
 		                      "Cancel",
@@ -97,17 +107,8 @@ class ProcessPlayItemDialog {
 						 "response",
 					     G_CALLBACK (ProcessPlayItemDialog::dialogResponse),
 					     rargs);
-		
-		LinkSizeTaskArgs *args = new LinkSizeTaskArgs();
-		args->linkFile = playItem.file;
-		args->linkDownload = playItem.download;
-		args->btnFlv = btnFlv;
-		args->btnMp4 = btnMp4;
-		args->dialog = dialog;
-		
-		g_thread_pool_push(linksSizeThreadPool, 
-		                   (gpointer)args, 
-		                   NULL);
+		                   
+		gtk_dialog_run(GTK_DIALOG(dialog));
 	}
 	
 	static void playLink(string player, string link) {

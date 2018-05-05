@@ -110,6 +110,13 @@ class ActorsHistory {
 	                                   FALSE,
 	                                   NULL); 
 	                                   
+	    // GThreadPool for links sizes
+	    linksSizeThreadPool = g_thread_pool_new(ActorsHistory::linksSizeTask,
+	                                   this,
+	                                   2, // Run two threads at the time
+	                                   FALSE,
+	                                   NULL);
+	                                   
 	    player = detectPlayer();
 	} 
 	
@@ -213,7 +220,15 @@ class ActorsHistory {
 		if(js == "") {
 			js = actors.getJs();
 		}
-		PlayItem playItem = PlaylistsUtils::parse_play_item(js, FALSE);
+		runPlayItemDialog(
+		   PlaylistsUtils::parse_play_item(js, FALSE));
+	}
+	
+	void runPlayItemDialog(PlayItem pi) {
+		// playItem address transfered to async task,
+		// it shouldn't disappear when function ends
+		static PlayItem playItem;
+		playItem = pi;
 		playItem.player = player;
 		if(!playItem.comment.empty()) { // PlayItem found
 			// Set title for trailers
@@ -221,7 +236,10 @@ class ActorsHistory {
 				playItem.comment = actors.getTitle();
 			}
 			
-		    ProcessPlayItemDialog ppid(window, playItem);
+			//get sizes first
+			g_thread_pool_push(linksSizeThreadPool, 
+		                       (gpointer)&playItem, 
+		                       NULL);
 		}
 	}
 	
@@ -320,6 +338,23 @@ class ActorsHistory {
 		gtk_widget_show(btnLinksError);
 		gtk_widget_hide(spLinks);
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
+	}
+	
+	static void linksSizeTask(gpointer arg1, gpointer arg2) {
+		ActorsHistory *actorsHistory = (ActorsHistory *)arg2;
+		PlayItem *playItem = (PlayItem*)arg1;
+		string sizeFile = HtmlString::getSizeOfLink(playItem->file);
+		string sizeDownload = HtmlString::getSizeOfLink(playItem->download);
+		gdk_threads_enter();
+		if(sizeFile.empty() && sizeDownload.empty()) {
+			actorsHistory->runErrorDialog();
+		}else {
+		    ProcessPlayItemDialog ppid(actorsHistory->window, 
+		                               *playItem, 
+		                               sizeFile,
+		                               sizeDownload);
+		}
+		gdk_threads_leave();
 	}
 	
 	// Use constant links and id to get js
@@ -441,7 +476,7 @@ class ActorsHistory {
 		              GTK_DIALOG_DESTROY_WITH_PARENT,
 		              GTK_MESSAGE_ERROR,
 		              GTK_BUTTONS_OK,
-		              "Nothing found or network problem");
+		              "No links found");
 		gtk_window_set_title(GTK_WINDOW(dialog), "Error");
 		gtk_dialog_run(GTK_DIALOG(dialog));
 		gtk_widget_destroy(dialog);
