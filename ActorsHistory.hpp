@@ -351,7 +351,7 @@ class ActorsHistory {
 		string sizeDownload = HtmlString::getSizeOfLink(playItem->download);
 		gdk_threads_enter();
 		if(sizeFile.empty() && sizeDownload.empty()) {
-			actorsHistory->runErrorDialog();
+			actorsHistory->runLinksErrorDialog();
 		}else {
 		    ProcessPlayItemDialog ppid(actorsHistory->window, 
 		                               *playItem, 
@@ -389,9 +389,12 @@ class ActorsHistory {
 		}else if(js.length() > 500) { // Movie
 			actorsHistory->resultsHistory->showResults();
 		    actorsHistory->runPlayItemDialog(js);
-		}else{ // Error
+		}else if(js.length() > 0){ //  Links error
 			actorsHistory->resultsHistory->showResults();
-			actorsHistory->runErrorDialog();
+			actorsHistory->runLinksErrorDialog();
+		}else{
+			actorsHistory->resultsHistory->showResults();
+			actorsHistory->runNetErrorDialog();
 		}
 		gdk_threads_leave();
 	}
@@ -474,12 +477,24 @@ class ActorsHistory {
 		gtk_widget_show(frActions);
 	}
 	
-	void runErrorDialog() {
+	void runNetErrorDialog() {
+		GtkWidget *dialog = gtk_message_dialog_new(
+		              GTK_WINDOW(window),
+		              GTK_DIALOG_DESTROY_WITH_PARENT,
+		              GTK_MESSAGE_ERROR,
+		              GTK_BUTTONS_OK,
+		              "Network problem");
+		gtk_window_set_title(GTK_WINDOW(dialog), "Error");
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+	}
+	
+	void runLinksErrorDialog() {
 		string message("No links found. ");
 		if(!gtk_toggle_tool_button_get_active(
 		   GTK_TOGGLE_TOOL_BUTTON(btnActors)) &&
-		   !gtk_widget_get_sensitive(GTK_WIDGET(
-		   resultsHistory->getBtnUp()))) {
+		   !gtk_widget_get_visible(GTK_WIDGET(
+		   resultsHistory->getSwTree()))) {
 			   message += 
 			   "Try to press info button on the toolbar and try again."; 
 		}

@@ -137,8 +137,8 @@ class ResultsHistory {
 		g_free(playlists);
 	}
 	
-	GtkToolItem* getBtnUp() {
-		return btnUp;
+	GtkWidget* getSwTree() {
+		return swTree;
 	}
 	
 	void setSavedItemsAvailable(gboolean isSavedItemsAvailable) {
