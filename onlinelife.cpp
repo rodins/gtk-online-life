@@ -290,8 +290,8 @@ static void btnGetLinksClicked(GtkWidget *widget, gpointer data) {
 	actorsHistory->btnGetLinksClicked();
 }
 
-static void btnListEpisodesClicked(GtkWidget *widget, gpointer data) {
-	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+static void btnListEpisodesClicked(GtkWidget *widget,
+	                               ResultsHistory *resultsHistory) {
 	resultsHistory->btnListEpisodesClicked();
 }
 

@@ -47,6 +47,7 @@ class ResultsHistory {
     GtkListStore *savedItemsStore;
     gboolean isSavedItems;
     gboolean isSavedItemsAvailable;
+    gboolean isPlaylistMode;
     
     public:
     
@@ -131,6 +132,7 @@ class ResultsHistory {
 		isSavedItems = FALSE;
 		isSavedItemsAvailable = FALSE;
 		this->btnSavedItems = btnSavedItems;
+		isPlaylistMode = FALSE;
 	}
 	
 	~ResultsHistory(){
@@ -258,6 +260,7 @@ class ResultsHistory {
 	    appendId = displayedResults.getId();
 	    isResultsThreadStarted = TRUE;
 	    isFirstItem = TRUE;
+	    isPlaylistMode = FALSE;
 		g_thread_pool_push(resultsNewThreadPool,
 		                  (gpointer)1,
 		                   NULL);
@@ -278,6 +281,7 @@ class ResultsHistory {
 	}
 	
 	void btnListEpisodesClicked() {
+		isPlaylistMode = TRUE;
 	    g_thread_pool_push(listEpisodesThreadPool, 
 		                   &listEpisodesArgs, 
 		                   NULL);
@@ -321,7 +325,9 @@ class ResultsHistory {
 		if(isFirstItem) {
 			isFirstItem = FALSE;
 			// On append and on all cases follow
-			switchToIconView();
+			if(!isPlaylistMode) {
+				switchToIconView();
+			}
             // On new results
 			if(displayedResults.isEmpty()) {
 				setSensitiveItemsResults();
