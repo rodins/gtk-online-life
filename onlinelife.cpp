@@ -27,9 +27,7 @@ using namespace std;
 void categoriesClicked(GtkTreeView *treeView,
                        GtkTreePath *path,
                        GtkTreeViewColumn *column,
-                       gpointer data) {
-	ResultsHistory *resultsHistory = (ResultsHistory*)data;
-	
+                       ResultsHistory *resultsHistory) {
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -69,8 +67,7 @@ void categoriesClicked(GtkTreeView *treeView,
 void actorsClicked(GtkTreeView *treeView,
                    GtkTreePath *path,
                    GtkTreeViewColumn *column,
-                   gpointer data) {
-	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+                   ResultsHistory *resultsHistory) {
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -98,8 +95,7 @@ void actorsClicked(GtkTreeView *treeView,
 void playlistClicked(GtkTreeView *treeView,
                      GtkTreePath *path,
                      GtkTreeViewColumn *column,
-                     gpointer data) {
-    ActorsHistory *actorsHistory = (ActorsHistory *)data;
+                     ActorsHistory *actorsHistory) {
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -135,8 +131,10 @@ void playlistClicked(GtkTreeView *treeView,
 	g_free(download);                   
 }
 
-void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
-	ActorsHistory *actorsHistory = (ActorsHistory*) data;
+void resultFunc(GtkIconView *icon_view, 
+                GtkTreePath *path, 
+                gpointer data) {
+	ActorsHistory *actorsHistory = (ActorsHistory*)data;
 	// Get model from ivResults
 	GtkTreeModel *model = gtk_icon_view_get_model(icon_view);
 	
@@ -168,7 +166,9 @@ void resultFunc(GtkIconView *icon_view, GtkTreePath *path, gpointer data) {
 void resultActivated(GtkWidget *widget,
                      GtkTreePath *path,
                      gpointer data) {
-	gtk_icon_view_selected_foreach(GTK_ICON_VIEW(widget), resultFunc, data);
+	gtk_icon_view_selected_foreach(GTK_ICON_VIEW(widget),
+	                               resultFunc,
+	                               data);
 }
 
 GtkWidget *createTreeView(void) {
@@ -208,26 +208,22 @@ static void btnSavedItemsClicked(GtkToolItem *widget,
 }
 
 static void btnUpClicked( GtkWidget *widget,
-                          gpointer data ) {
-	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+                          ResultsHistory *resultsHistory ) {
 	resultsHistory->btnUpClicked();
 }
 
 static void btnPrevClicked( GtkToolButton *widget,
-                            gpointer data ) {   
-	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+                            ResultsHistory *resultsHistory ) {   
 	resultsHistory->btnPrevClicked();  
 }
 
 static void btnNextClicked( GtkToolButton *widget,
-                            gpointer data) {   
-	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+                            ResultsHistory *resultsHistory) {   
 	resultsHistory->btnNextClicked();
 }
 
 static void entryActivated( GtkWidget *widget, 
-                            gpointer data) {
-    ResultsHistory *resultsHistory = (ResultsHistory *)data;
+                            ResultsHistory *resultsHistory) {
     string query(gtk_entry_get_text(GTK_ENTRY(widget)));
     if(!query.empty()) {
 	    string title = "Search: " + query;
@@ -243,8 +239,8 @@ static void btnActorsClicked(GtkWidget *widget,
 	actorsHistory->btnActorsClicked();
 }
 
-static void backActorsChanged(GtkTreeSelection *treeselection, gpointer data) {
-	ActorsHistory *actorsHistory = (ActorsHistory *)data;
+static void backActorsChanged(GtkTreeSelection *treeselection,
+	                          ActorsHistory *actorsHistory) {
 	actorsHistory->changed(treeselection);
 }
 
@@ -259,8 +255,8 @@ static void btnActorsRepeatClicked(GtkWidget *widget,
     actorsHistory->newActorsThread();
 }
 
-void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
-	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+void swIconVScrollChanged(GtkAdjustment* adj,
+	                      ResultsHistory *resultsHistory) {
 	gdouble value = gtk_adjustment_get_value(adj);
 	gdouble upper = gtk_adjustment_get_upper(adj);
 	gdouble page_size = gtk_adjustment_get_page_size(adj);
@@ -270,23 +266,23 @@ void swIconVScrollChanged(GtkAdjustment* adj, gpointer data) {
 	}
 }
 
-static void btnRefreshClicked(GtkWidget *widget, gpointer data) {
-	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+static void btnRefreshClicked(GtkWidget *widget,
+	                          ResultsHistory *resultsHistory) {
 	resultsHistory->btnRefreshClicked();
 }
 
-static void btnResultsRepeatClicked(GtkWidget *widget, gpointer data) {
-	ResultsHistory *resultsHistory = (ResultsHistory *)data;
+static void btnResultsRepeatClicked(GtkWidget *widget,
+	                                ResultsHistory *resultsHistory) {
 	resultsHistory->btnResultsRepeatClicked();
 }
 
-static void btnLinksErrorClicked(GtkWidget *widget, gpointer data) {
-	ActorsHistory *actorsHistory = (ActorsHistory *)data;
+static void btnLinksErrorClicked(GtkWidget *widget,
+	                             ActorsHistory *actorsHistory) {
 	actorsHistory->btnLinksErrorClicked();
 }
 
-static void btnGetLinksClicked(GtkWidget *widget, gpointer data) {
-	ActorsHistory *actorsHistory = (ActorsHistory *)data;
+static void btnGetLinksClicked(GtkWidget *widget,
+	                           ActorsHistory *actorsHistory) {
 	actorsHistory->btnGetLinksClicked();
 }
 
@@ -295,13 +291,13 @@ static void btnListEpisodesClicked(GtkWidget *widget,
 	resultsHistory->btnListEpisodesClicked();
 }
 
-static void btnSaveClicked(GtkWidget *widget, gpointer data) {
-	ActorsHistory *actorsHistory = (ActorsHistory *)data;
+static void btnSaveClicked(GtkWidget *widget,
+	                       ActorsHistory *actorsHistory) {
 	actorsHistory->btnSaveClicked();
 }
 
-static void btnDeleteClicked(GtkWidget *widget, gpointer data) {
-	ActorsHistory *actorsHistory = (ActorsHistory *)data;
+static void btnDeleteClicked(GtkWidget *widget,
+	                         ActorsHistory *actorsHistory) {
 	actorsHistory->btnDeleteClicked();
 }
 
