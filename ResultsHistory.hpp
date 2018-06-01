@@ -755,7 +755,7 @@ class ResultsHistory {
 	    static set<string> titles;
 	    
 	    string strData(data);
-	
+	    
 	    // Find end
 	    string strEnd("</table>");
 	    size_t end = strData.find(strEnd);
@@ -766,10 +766,9 @@ class ResultsHistory {
 	    
 	    size_t starting_point = strData.find("tom-pos");
 	    // If starting point is not found, don't parse divs
-	    if(starting_point == string::npos && isFirst) {
+	    if(starting_point == string::npos && isFirst && !divBeginFound) {
 			return size*nmemb;
 		}
-	    
 	    size_t div_end_first = strData.find("</div>");
 	    size_t div_begin = strData.find("<div");
 	    size_t div_end = strData.find("</div>", div_begin+3);
