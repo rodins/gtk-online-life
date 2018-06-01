@@ -157,6 +157,7 @@ class Results {
 							image.erase(pos, 2);
 							pos = image.find("\r\n", pos+1);
 						}
+						
 					    appendToStore(to_utf8(title),
 					                  href,
 					                  image + "&w=165&h=236&zc=1");
@@ -239,7 +240,7 @@ class Results {
                            image.c_str(), 
                            -1);
         count++;
-        //cout << count << ": " << title << endl;
+        cout << count << ": " << title << endl;
 	}
 	
 	void parse_anchor(string anchor) {
