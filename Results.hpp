@@ -240,7 +240,7 @@ class Results {
                            image.c_str(), 
                            -1);
         count++;
-        cout << count << ": " << title << endl;
+        //cout << count << ": " << title << endl;
 	}
 	
 	void parse_anchor(string anchor) {
