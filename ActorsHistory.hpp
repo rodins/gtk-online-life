@@ -289,6 +289,9 @@ class ActorsHistory {
 		if(system("which mplayer") == 0) {
 			return "mplayer -cache 2048 ";
 		}
+		if(system("which omxplayer") == 0) { // Raspberry Pi option
+			return "omxplayer -b "
+		}
 		return "";
 	}
 	
