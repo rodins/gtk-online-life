@@ -151,18 +151,23 @@ class HtmlString {
 		return getPage(link, "", ACTORS);
 	}
 	
-	static string getSizeOfLink(string link) {
+	static CURL *get_size_curl_handle() {
 		CURL *curl;
-		CURLcode res;
-		double filesize = 0.0;
-		
 		curl = curl_easy_init();
 		if(curl) {
-			curl_easy_setopt(curl, CURLOPT_URL, link.c_str());
 			/* No download if the file */ 
 			curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
 			curl_easy_setopt(curl, CURLOPT_HEADER, 0L);
-			
+		}
+		return curl;
+	}
+	
+	static string getSizeOfLink(CURL *curl, string link) {
+		CURLcode res;
+		double filesize = 0.0;
+		
+		if(curl) {
+			curl_easy_setopt(curl, CURLOPT_URL, link.c_str());
 			res = curl_easy_perform(curl);
 			
 			if(CURLE_OK == res) {
@@ -174,9 +179,6 @@ class HtmlString {
 					return string(g_format_size(nSize));
 				}
 			}
-			
-			/* always cleanup */ 
-			curl_easy_cleanup(curl);
 		}
 		
 		return "";

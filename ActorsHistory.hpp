@@ -40,6 +40,8 @@ class ActorsHistory {
     ResultsHistory *resultsHistory;
     string player;
     
+    CURL *size_curl_handle;
+    
     public:
     
     ActorsHistory(GtkWidget *window,
@@ -118,7 +120,13 @@ class ActorsHistory {
 	                                   NULL);
 	                                   
 	    player = detectPlayer();
+	    
+	    size_curl_handle = HtmlString::get_size_curl_handle();
 	} 
+	
+	~ActorsHistory() {
+	    curl_easy_cleanup(size_curl_handle);
+	}
 	
 	GtkWidget* getWindow() {
 		return window;
@@ -350,8 +358,12 @@ class ActorsHistory {
 	static void linksSizeTask(gpointer arg1, gpointer arg2) {
 		ActorsHistory *actorsHistory = (ActorsHistory *)arg2;
 		PlayItem *playItem = (PlayItem*)arg1;
-		string sizeFile = HtmlString::getSizeOfLink(playItem->file);
-		string sizeDownload = HtmlString::getSizeOfLink(playItem->download);
+		string sizeFile = HtmlString::getSizeOfLink(
+		                                actorsHistory->size_curl_handle, 
+		                                playItem->file);
+		string sizeDownload = HtmlString::getSizeOfLink(
+		                                actorsHistory->size_curl_handle, 
+		                                playItem->download);
 		gdk_threads_enter();
 		if(sizeFile.empty() && sizeDownload.empty()) {
 			actorsHistory->runLinksErrorDialog();

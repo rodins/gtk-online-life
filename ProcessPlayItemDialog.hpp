@@ -153,28 +153,4 @@ class ProcessPlayItemDialog {
 		g_free(args);
 	}
 	
-	static void linksSizeTask(gpointer args1, gpointer args2) {
-		LinkSizeTaskArgs *args = (LinkSizeTaskArgs*)args1;
-		string sizeFile = HtmlString::getSizeOfLink(args->linkFile);
-		string sizeDownload = HtmlString::getSizeOfLink(args->linkDownload);
-		gdk_threads_enter();
-		
-		if(!sizeFile.empty()) {
-			string buttonText = string(gtk_button_get_label(GTK_BUTTON(args->btnFlv))); 
-			string sizeTitle = buttonText + " (" + sizeFile + ")";
-			gtk_button_set_label(GTK_BUTTON(args->btnFlv), sizeTitle.c_str());
-			gtk_widget_set_sensitive(args->btnFlv, TRUE);
-		}
-		
-		if(!sizeDownload.empty()) {
-			string buttonText = string(gtk_button_get_label(GTK_BUTTON(args->btnMp4))); 
-			string sizeTitle = buttonText + " (" + sizeDownload + ")";
-			gtk_button_set_label(GTK_BUTTON(args->btnMp4), sizeTitle.c_str());
-			gtk_widget_set_sensitive(args->btnMp4, TRUE);
-		}
-		
-		gtk_dialog_run(GTK_DIALOG(args->dialog));
-		gdk_threads_leave();
-	    g_free(args);
-	}
 };
