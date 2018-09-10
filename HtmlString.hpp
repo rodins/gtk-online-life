@@ -156,16 +156,12 @@ class HtmlString {
 		CURLcode res;
 		double filesize = 0.0;
 		
-		curl_global_init(CURL_GLOBAL_DEFAULT);
-		
 		curl = curl_easy_init();
 		if(curl) {
 			curl_easy_setopt(curl, CURLOPT_URL, link.c_str());
 			/* No download if the file */ 
 			curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
 			curl_easy_setopt(curl, CURLOPT_HEADER, 0L);
-			/* Switch on full protocol/debug output */ 
-			/*curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);*/
 			
 			res = curl_easy_perform(curl);
 			

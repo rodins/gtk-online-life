@@ -290,7 +290,7 @@ class ActorsHistory {
 			return "mplayer -cache 2048 ";
 		}
 		if(system("which omxplayer") == 0) { // Raspberry Pi option
-			return "omxplayer -b "
+			return "lxterminal -e omxplayer -b ";
 		}
 		return "";
 	}
