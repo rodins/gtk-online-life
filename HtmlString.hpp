@@ -97,21 +97,32 @@ class HtmlString {
 	
 	public:
 	
+	static CURL *get_curl_handle() {
+		static CURL *curl_handle;
+		if(curl_handle == NULL) {
+			/* init the curl session */
+			curl_handle = curl_easy_init();
+			if(curl_handle) {
+				/* remove crash bug */
+				curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1);
+				curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
+			}
+		}
+		return curl_handle;
+	}
+	
+	static void cleanup() {
+		curl_easy_cleanup(get_curl_handle());
+	}
+	
 	// Получение html странице в виде строки
 	static string getPage(string url, 
 	                      string referer_link = "", 
 	                      DisplayMode mode = NONE)
 	{
-		CURL *curl_handle;
+		CURL *curl_handle = get_curl_handle();
 		string buffer;
-		
-		/* init the curl session */
-		curl_handle = curl_easy_init();
-		
 		if(curl_handle) {
-			/* remove crash bug */
-			curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1);
-		    
 		    /* set url to get here */
 			curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
 			
@@ -125,20 +136,17 @@ class HtmlString {
 			}else {
 				curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, HtmlString::writer);
 			}
-
-			curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
 			
 			if(referer_link != "") {
 				curl_easy_setopt(curl_handle, CURLOPT_REFERER, referer_link.c_str());
+			}else {
+				curl_easy_setopt(curl_handle, CURLOPT_REFERER, NULL);
 			}
 			
 			curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &buffer);
 			
 			/* get it */
 			curl_easy_perform(curl_handle);
-			
-			/* cleanup curl stuff */
-			curl_easy_cleanup(curl_handle);
 		}
 		return buffer;
 	}

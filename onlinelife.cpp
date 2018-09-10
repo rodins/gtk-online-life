@@ -865,7 +865,8 @@ int main( int   argc,
                                    
     gtk_main();
     gdk_threads_leave ();
-
+    
+    HtmlString::cleanup();
     /* we're done with libcurl, so clean it up */ 
 	curl_global_cleanup();
 
