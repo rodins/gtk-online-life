@@ -3,14 +3,8 @@
 enum LinkResponse {
 	LINK_RESPONSE_PLAY,
 	LINK_RESPONSE_DOWNLOAD,
+	LINK_RESPONSE_INFO,
 	LINK_RESPONSE_CANCEL
-};
-
-struct LinkSizeTaskArgs {
-	string linkFile, linkDownload;
-	GtkWidget *btnFlv;
-	GtkWidget *btnMp4;
-	GtkWidget *dialog;
 };
 
 struct DialogResponseArgs {
@@ -18,11 +12,12 @@ struct DialogResponseArgs {
 };
 
 class ProcessPlayItemDialog {
+	const string FLV = "FLV", MP4 = "MP4", PLAY = "Play", INFO = "Info";
 	GtkWidget* window;
 	PlayItem playItem;
 	GThreadPool *linksSizeThreadPool;
 	
-	GtkWidget *btnFlv,
+	GtkWidget *btnFlv	,
 	          *btnMp4,
 	          *label;
 	
@@ -48,29 +43,36 @@ class ProcessPlayItemDialog {
                                               GTK_WINDOW(window),
                                               (GtkDialogFlags)(GTK_DIALOG_MODAL|GTK_DIALOG_DESTROY_WITH_PARENT),
                                               NULL);
-                                              
-        btnFlv = gtk_dialog_add_button(GTK_DIALOG(dialog),
-		                               "FLV",
-                                       LINK_RESPONSE_PLAY);                   
-        gtk_widget_set_sensitive(btnFlv, FALSE);
+        string msg;
+		if(!playItem.player.empty()) {
+			msg = "Play in " + playItem.player + ". Copy to clipboard";
+		}else {
+			msg = "Mplayer or mpv not detected. Copy to clipboard";
+		}
+		
+		                                      
+                           
         if(!sizeFile.empty()) {
-			string buttonText = string(
-			gtk_button_get_label(GTK_BUTTON(btnFlv))); 
-			string sizeTitle = buttonText + " (" + sizeFile + ")";
-			gtk_button_set_label(GTK_BUTTON(btnFlv), sizeTitle.c_str());
-			gtk_widget_set_sensitive(btnFlv, TRUE);
+			string sizeTitle = FLV + " (" + sizeFile + ")";
+			btnFlv = gtk_dialog_add_button(GTK_DIALOG(dialog),
+		                               sizeTitle.c_str(),
+                                       LINK_RESPONSE_PLAY);
+            gtk_widget_set_tooltip_text(btnFlv, msg.c_str());
 		}
         
-        btnMp4 = gtk_dialog_add_button(GTK_DIALOG(dialog),
-		                      "MP4",
-                              LINK_RESPONSE_DOWNLOAD);
-        gtk_widget_set_sensitive(btnMp4, FALSE);
         if(!sizeDownload.empty()) {
-			string buttonText = string(
-			gtk_button_get_label(GTK_BUTTON(btnMp4))); 
-			string sizeTitle = buttonText + " (" + sizeDownload + ")";
-			gtk_button_set_label(GTK_BUTTON(btnMp4), sizeTitle.c_str());
-			gtk_widget_set_sensitive(btnMp4, TRUE);
+			// If btnFlv is not available, change button title to "Play"
+			string title;
+			if(sizeFile.empty()) {
+			    title = PLAY;	
+			}else {
+				title = MP4;
+			}
+		    string sizeTitle = title + " (" + sizeDownload + ")";
+			btnMp4 = gtk_dialog_add_button(GTK_DIALOG(dialog),
+		                      sizeTitle.c_str(),
+                              LINK_RESPONSE_DOWNLOAD);
+            gtk_widget_set_tooltip_text(btnMp4, msg.c_str());
 		}
         
         gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -87,15 +89,6 @@ class ProcessPlayItemDialog {
 	    /* Add the label, and show everything we've added to the dialog. */
 	    gtk_box_pack_start(GTK_BOX(content_area), label, TRUE, FALSE, 5);
 	    gtk_widget_show_all(content_area);
-        
-		string msg;
-		if(!playItem.player.empty()) {
-			msg = "Play in " + playItem.player + ". Copy to clipboard";
-		}else {
-			msg = "Mplayer or mpv not detected. Copy to clipboard";
-		}
-		gtk_widget_set_tooltip_text(btnFlv, msg.c_str());
-		gtk_widget_set_tooltip_text(btnMp4, msg.c_str());
 		
 		DialogResponseArgs *rargs = new DialogResponseArgs();
         rargs->linkFile = playItem.file;
