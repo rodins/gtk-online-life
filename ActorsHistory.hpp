@@ -358,12 +358,20 @@ class ActorsHistory {
 	static void linksSizeTask(gpointer arg1, gpointer arg2) {
 		ActorsHistory *actorsHistory = (ActorsHistory *)arg2;
 		PlayItem *playItem = (PlayItem*)arg1;
-		string sizeFile = HtmlString::getSizeOfLink(
-		                                actorsHistory->size_curl_handle, 
-		                                playItem->file);
-		string sizeDownload = HtmlString::getSizeOfLink(
+		string sizeFile, sizeDownload;
+		if(playItem->file == playItem->download) {
+			sizeDownload = HtmlString::getSizeOfLink(
 		                                actorsHistory->size_curl_handle, 
 		                                playItem->download);
+		}else {
+			sizeFile = HtmlString::getSizeOfLink(
+		                                actorsHistory->size_curl_handle, 
+		                                playItem->file);
+		    sizeDownload = HtmlString::getSizeOfLink(
+		                                actorsHistory->size_curl_handle, 
+		                                playItem->download);
+		}
+		
 		gdk_threads_enter();
 		if(sizeFile.empty() && sizeDownload.empty()) {
 			actorsHistory->runLinksErrorDialog();
