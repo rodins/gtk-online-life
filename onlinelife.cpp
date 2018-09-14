@@ -18,7 +18,9 @@
 #include "ColumnsEnum.hpp"
 #include "Results.hpp"
 #include "ActorsHistory.hpp"
-#include "CategoriesWidgets.hpp"
+#include "CategoriesView.hpp"
+#include "CategoriesModel.hpp"
+#include "CategoriesRepository.hpp"
 
 #include "ImagesDownloader.hpp"
 
@@ -198,8 +200,8 @@ GtkWidget *createTreeView(void) {
 }
 
 static void btnCategoriesClicked(GtkWidget *widget,
-                                 CategoriesWidgets *categoriesWidgets) {
-	categoriesWidgets->btnCategoriesClicked();	
+                                 CategoriesRepository *categoriesRepo) {
+	categoriesRepo->btnCategoriesClicked();	
 }
 
 static void btnSavedItemsClicked(GtkToolItem *widget,
@@ -244,10 +246,9 @@ static void backActorsChanged(GtkTreeSelection *treeselection,
 	actorsHistory->changed(treeselection);
 }
 
-static void btnCategoriesRepeatClicked(GtkWidget *widget, gpointer data) {
-	CategoriesWidgets *categoriesWidgets = (CategoriesWidgets *)data;
-	//Starting new thread to get categories from the net
-	categoriesWidgets->newThread();
+static void btnCategoriesRepeatClicked(GtkWidget *widget,
+                CategoriesRepository *categoriesRepository) {
+	categoriesRepository->btnCategoriesClicked();
 }
 
 static void btnActorsRepeatClicked(GtkWidget *widget,
@@ -800,23 +801,24 @@ int main( int   argc,
     g_signal_connect(ivResults, 
                      "item-activated", 
                      G_CALLBACK(resultActivated), 
-                     &actorsHistory);                
-    
-    CategoriesWidgets categoriesWidgets(vbLeft,
-                                        swCategories,
-                                        spCategories,
-                                        hbCategoriesError,
-                                        tvCategories);
+                     &actorsHistory);
+                     
+    CategoriesView categoriesView(vbLeft,
+                                  spCategories, 
+                                  swCategories, 
+                                  hbCategoriesError);
+    CategoriesModel categoriesModel(tvCategories);
+    CategoriesRepository categoriesRepository(&categoriesView, &categoriesModel);                
                                            
     g_signal_connect(btnCategoriesError, 
                      "clicked", 
                      G_CALLBACK(btnCategoriesRepeatClicked), 
-                     &categoriesWidgets);
+                     &categoriesRepository);
                      
     g_signal_connect(GTK_WIDGET(btnCategories),
                      "clicked", 
                      G_CALLBACK(btnCategoriesClicked),
-                     &categoriesWidgets);
+                     &categoriesRepository);
                      
     g_signal_connect(GTK_WIDGET(btnSavedItems), 
 				     "clicked", 
