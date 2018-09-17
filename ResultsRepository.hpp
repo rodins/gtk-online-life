@@ -12,10 +12,12 @@ class ResultsRepository {
     int modelCount;
     string link;
     bool isThreadStarted;
+    set<int> *imageIndices;
     
     public:
     ResultsRepository(CenterView *view, 
-                      map<string, GdkPixbuf*> *imagesCache) {
+                      map<string, GdkPixbuf*> *imagesCache,
+                      set<int> *imageIndices) {
 		this->view = view;
 		parser = new ResultsParser(view, &model);
 	    net = new ResultsNet(parser);
@@ -23,6 +25,7 @@ class ResultsRepository {
 	    isThreadStarted = FALSE;
 	    modelCount = 0;
 	    model.setImagesCache(imagesCache);
+	    this->imageIndices = imageIndices;
 		threadPool = g_thread_pool_new(ResultsRepository::resultsTask,
 	                                   this,
 	                                   1, // Run one thread at the time
@@ -41,6 +44,7 @@ class ResultsRepository {
 		isPage = FALSE;
 		model.init(modelCount++, title, link);
 		view->setResultsModel(model);
+		imageIndices->clear();
 		getLinkData();
 	}
 	

@@ -366,7 +366,7 @@ int main( int   argc,
 	GtkTreeSelection *selection; 
 	
 	const string PROG_NAME("Online life");
-	set<int> *imageIndexes = new set<int>();
+	set<int> *imageIndices = new set<int>();
 	map<string, GdkPixbuf*> *imagesCache = new map<string, GdkPixbuf*>();
 	
 	 /* Must initialize libcurl before any threads are started */ 
@@ -665,7 +665,7 @@ int main( int   argc,
 								  hbResultsError,
 								  btnUp,
 								  btnRefresh,
-								  imageIndexes,
+								  imageIndices,
 								  imagesCache,
 								  PROG_NAME,
 								  btnActors,
@@ -675,7 +675,9 @@ int main( int   argc,
 	                      swTree, hbResultsError, btnSavedItems, btnRefresh,
 	                      btnUp, btnPrev, btnNext);
 	                      
-	ResultsRepository resultsRepository(&centerView, imagesCache);
+	ResultsRepository resultsRepository(&centerView, 
+	                                    imagesCache,
+	                                    imageIndices);
     
     // Disable all items                                                
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
@@ -846,7 +848,7 @@ int main( int   argc,
     
     gtk_box_pack_start(GTK_BOX(vbox), hbCenter, TRUE, TRUE, 1);
     
-    ImagesDownloader imagesDownloader(ivResults, imageIndexes, imagesCache);    
+    ImagesDownloader imagesDownloader(ivResults, imageIndices, imagesCache);    
     
     gtk_container_add(GTK_CONTAINER(window), vbox);
     
