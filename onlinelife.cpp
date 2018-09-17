@@ -16,8 +16,11 @@
 #include "HtmlString.hpp"
 #include "IconsFactory.hpp"
 #include "ColumnsEnum.hpp"
-#include "Results.hpp"
-#include "ActorsHistory.hpp"
+#include "ResultsModel.hpp"
+#include "CenterView.hpp"
+#include "ResultsRepository.hpp"
+#include "FileUtils.hpp"
+//#include "ActorsHistory.hpp"
 #include "CategoriesView.hpp"
 #include "CategoriesModel.hpp"
 #include "CategoriesRepository.hpp"
@@ -29,7 +32,7 @@ using namespace std;
 void categoriesClicked(GtkTreeView *treeView,
                        GtkTreePath *path,
                        GtkTreeViewColumn *column,
-                       ResultsHistory *resultsHistory) {
+                       ResultsRepository *repo) {
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -56,17 +59,17 @@ void categoriesClicked(GtkTreeView *treeView,
 		                   TREE_TITLE_COLUMN,
 		                   &parentTitle,
 		                   -1);
-	    resultsHistory->newThread(string(parentTitle) + " - " + title, link);
+	    repo->getData(string(parentTitle) + " - " + title, link);
 		g_free(parentTitle);
 	}else {
-		resultsHistory->newThread(title, link);
+		repo->getData(title, link);
 	}
 	
 	g_free(title);
 	g_free(link);
 }
 
-void actorsClicked(GtkTreeView *treeView,
+/*void actorsClicked(GtkTreeView *treeView,
                    GtkTreePath *path,
                    GtkTreeViewColumn *column,
                    ResultsHistory *resultsHistory) {
@@ -163,15 +166,15 @@ void resultFunc(GtkIconView *icon_view,
 	
 	g_free(resultTitle);
 	g_free(href);
-}
+}*/
 
-void resultActivated(GtkWidget *widget,
+/*void resultActivated(GtkWidget *widget,
                      GtkTreePath *path,
                      gpointer data) {
 	gtk_icon_view_selected_foreach(GTK_ICON_VIEW(widget),
 	                               resultFunc,
 	                               data);
-}
+}*/
 
 GtkWidget *createTreeView(void) {
 	GtkTreeViewColumn *col;
@@ -204,7 +207,7 @@ static void btnCategoriesClicked(GtkWidget *widget,
 	categoriesRepo->btnCategoriesClicked();	
 }
 
-static void btnSavedItemsClicked(GtkToolItem *widget,
+/*static void btnSavedItemsClicked(GtkToolItem *widget,
                                  ResultsHistory *resultsHistory) {
 	resultsHistory->btnSavedItemsClicked();	
 }
@@ -222,21 +225,21 @@ static void btnPrevClicked( GtkToolButton *widget,
 static void btnNextClicked( GtkToolButton *widget,
                             ResultsHistory *resultsHistory) {   
 	resultsHistory->btnNextClicked();
-}
+}*/
 
 static void entryActivated( GtkWidget *widget, 
-                            ResultsHistory *resultsHistory) {
+                            ResultsRepository *repo) {
     string query(gtk_entry_get_text(GTK_ENTRY(widget)));
     if(!query.empty()) {
 	    string title = "Search: " + query;
 	    string base_url = DomainFactory::getDomain() + 
 	         "/?do=search&subaction=search&mode=simple&story=" + 
 	         to_cp1251(query);
-		resultsHistory->newThread(title, base_url);
+		repo->getData(title, base_url);
 	}		  						  
 }
 
-static void btnActorsClicked(GtkWidget *widget,
+/*static void btnActorsClicked(GtkWidget *widget,
 	                         ActorsHistory *actorsHistory){
 	actorsHistory->btnActorsClicked();
 }
@@ -244,30 +247,30 @@ static void btnActorsClicked(GtkWidget *widget,
 static void backActorsChanged(GtkTreeSelection *treeselection,
 	                          ActorsHistory *actorsHistory) {
 	actorsHistory->changed(treeselection);
-}
+}*/
 
 static void btnCategoriesRepeatClicked(GtkWidget *widget,
                 CategoriesRepository *categoriesRepository) {
-	categoriesRepository->btnCategoriesClicked();
+	categoriesRepository->btnCategoriesRepeatClicked();
 }
 
-static void btnActorsRepeatClicked(GtkWidget *widget,
+/*static void btnActorsRepeatClicked(GtkWidget *widget,
                                    ActorsHistory *actorsHistory) {
     actorsHistory->newActorsThread();
-}
+}*/
 
 void swIconVScrollChanged(GtkAdjustment* adj,
-	                      ResultsHistory *resultsHistory) {
+	                      ResultsRepository *repo) {
 	gdouble value = gtk_adjustment_get_value(adj);
 	gdouble upper = gtk_adjustment_get_upper(adj);
 	gdouble page_size = gtk_adjustment_get_page_size(adj);
 	gdouble max_value = upper - page_size - page_size;
 	if (value > max_value) {
-		resultsHistory->appendThread();
+		repo->getData();
 	}
 }
 
-static void btnRefreshClicked(GtkWidget *widget,
+/*static void btnRefreshClicked(GtkWidget *widget,
 	                          ResultsHistory *resultsHistory) {
 	resultsHistory->btnRefreshClicked();
 }
@@ -300,7 +303,7 @@ static void btnSaveClicked(GtkWidget *widget,
 static void btnDeleteClicked(GtkWidget *widget,
 	                         ActorsHistory *actorsHistory) {
 	actorsHistory->btnDeleteClicked();
-}
+}*/
 
 int main( int   argc,
           char *argv[] )
@@ -650,7 +653,7 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbCenter), spCenter, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbCenter), hbResultsError, TRUE, FALSE, 1);
     
-    ResultsHistory resultsHistory(window,
+    /*ResultsHistory resultsHistory(window,
 								  ivResults,
 								  tvPlaylists,
 								  btnPrev,
@@ -666,7 +669,13 @@ int main( int   argc,
 								  imagesCache,
 								  PROG_NAME,
 								  btnActors,
-								  btnSavedItems);
+								  btnSavedItems);*/
+								 
+	CenterView centerView(window, ivResults, vbCenter, spCenter, swIcon,
+	                      swTree, hbResultsError, btnSavedItems, btnRefresh,
+	                      btnUp, btnPrev, btnNext);
+	                      
+	ResultsRepository resultsRepository(&centerView, imagesCache);
     
     // Disable all items                                                
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
@@ -678,23 +687,23 @@ int main( int   argc,
 	FileUtils::listSavedFiles(ivResults, btnSavedItems);
 	gboolean isSavedItemsAvailable = gtk_widget_get_sensitive(
 	                                 GTK_WIDGET(btnSavedItems));
-	resultsHistory.setSavedItemsAvailable(isSavedItemsAvailable);
+	//resultsHistory.setSavedItemsAvailable(isSavedItemsAvailable);
 	// Show saved results on start if any
 	if(isSavedItemsAvailable) {
 		gtk_toggle_tool_button_set_active(
 		GTK_TOGGLE_TOOL_BUTTON(btnSavedItems), TRUE);
-		resultsHistory.btnSavedItemsClicked();
+		//resultsHistory.btnSavedItemsClicked();
 	}
 	
-    g_signal_connect(GTK_WIDGET(btnRefresh), 
+    /*g_signal_connect(GTK_WIDGET(btnRefresh), 
 				     "clicked", 
 				     G_CALLBACK(btnRefreshClicked), 
-				     &resultsHistory);
+				     &resultsRepository);
 				 
     g_signal_connect(GTK_WIDGET(btnUp),
                      "clicked", 
                      G_CALLBACK(btnUpClicked), 
-                     &resultsHistory);
+                     &centerView);
     
     g_signal_connect(btnPrev,
                      "clicked", 
@@ -709,35 +718,37 @@ int main( int   argc,
     g_signal_connect(btnResultsError,
                      "clicked",
                      G_CALLBACK(btnResultsRepeatClicked),
-                     &resultsHistory);
+                     &resultsHistory);*/
 				     
     g_signal_connect(tvCategories,
                      "row-activated",
                      G_CALLBACK(categoriesClicked), 
-                     &resultsHistory);
+                     &resultsRepository);
         
-    g_signal_connect(tvActors, 
+    /*g_signal_connect(tvActors, 
                      "row-activated",
                      G_CALLBACK(actorsClicked), 
-                     &resultsHistory);
+                     &resultsHistory);*/
     
     g_signal_connect(entry,
                      "activate", 
                      G_CALLBACK(entryActivated), 
-                     &resultsHistory);
+                     &resultsRepository);
                                       
-    g_signal_connect(btnListEpisodes,
+    /*g_signal_connect(btnListEpisodes,
                      "clicked",
                      G_CALLBACK(btnListEpisodesClicked),
-                     &resultsHistory);
+                     &resultsHistory);*/
                      
     // IconView scroll to the bottom detection code
     GtkAdjustment *vadjustment;
     vadjustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(swIcon));
-    g_signal_connect(vadjustment, "value-changed",
-        G_CALLBACK(swIconVScrollChanged), &resultsHistory); 
+    g_signal_connect(vadjustment, 
+                     "value-changed",
+                     G_CALLBACK(swIconVScrollChanged), 
+                     &resultsRepository); 
     
-    ActorsHistory actorsHistory(window,
+    /*ActorsHistory actorsHistory(window,
                                 tvActors,
                                 tvBackActors,
                                 frRightBottom,
@@ -801,7 +812,7 @@ int main( int   argc,
     g_signal_connect(ivResults, 
                      "item-activated", 
                      G_CALLBACK(resultActivated), 
-                     &actorsHistory);
+                     &actorsHistory);*/
                      
     CategoriesView categoriesView(vbLeft,
                                   spCategories, 
@@ -820,10 +831,10 @@ int main( int   argc,
                      G_CALLBACK(btnCategoriesClicked),
                      &categoriesRepository);
                      
-    g_signal_connect(GTK_WIDGET(btnSavedItems), 
+    /*g_signal_connect(GTK_WIDGET(btnSavedItems), 
 				     "clicked", 
 				     G_CALLBACK(btnSavedItemsClicked), 
-				     &resultsHistory);
+				     &resultsHistory);*/
         
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);

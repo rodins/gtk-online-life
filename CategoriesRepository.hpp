@@ -25,6 +25,10 @@ class CategoriesRepository {
 		}
 	}
 	
+	void btnCategoriesRepeatClicked() {
+		getData();
+	}
+	
 	private:
 	
 	void getData() {

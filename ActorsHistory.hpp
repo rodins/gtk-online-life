@@ -1,7 +1,6 @@
 //ActorsHistory.hpp
 #include "Actors.hpp"
-#include "FileUtils.hpp"
-#include "ResultsHistory.hpp"
+//#include "ResultsHistory.hpp"
 
 class ActorsHistory {
     Actors actors, prevActors;
