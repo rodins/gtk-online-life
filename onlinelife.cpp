@@ -270,12 +270,12 @@ void swIconVScrollChanged(GtkAdjustment* adj,
 	}
 }
 
-/*static void btnRefreshClicked(GtkWidget *widget,
-	                          ResultsHistory *resultsHistory) {
-	resultsHistory->btnRefreshClicked();
+static void btnRefreshClicked(GtkWidget *widget,
+	                          ResultsRepository *repo) {
+	repo->refresh();
 }
 
-static void btnResultsRepeatClicked(GtkWidget *widget,
+/*static void btnResultsRepeatClicked(GtkWidget *widget,
 	                                ResultsHistory *resultsHistory) {
 	resultsHistory->btnResultsRepeatClicked();
 }
@@ -697,12 +697,12 @@ int main( int   argc,
 		//resultsHistory.btnSavedItemsClicked();
 	}
 	
-    /*g_signal_connect(GTK_WIDGET(btnRefresh), 
+    g_signal_connect(GTK_WIDGET(btnRefresh), 
 				     "clicked", 
 				     G_CALLBACK(btnRefreshClicked), 
 				     &resultsRepository);
 				 
-    g_signal_connect(GTK_WIDGET(btnUp),
+    /*g_signal_connect(GTK_WIDGET(btnUp),
                      "clicked", 
                      G_CALLBACK(btnUpClicked), 
                      &centerView);

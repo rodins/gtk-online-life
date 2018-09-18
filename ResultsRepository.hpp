@@ -49,6 +49,13 @@ class ResultsRepository {
 		getLinkData();
 	}
 	
+	void refresh() {
+		isPage = FALSE;
+		model.clearModel();
+		link = model.getUrl();
+		getLinkData();
+	}
+	
 	// Append results, use model next link
 	void getData() {
 		isPage = TRUE;
@@ -77,6 +84,9 @@ class ResultsRepository {
 		if(res == CURLE_OK) {
 			if(model.isEmpty()) {
 				//view->showEmpty();
+			}else {
+				view->setSensitiveReferesh();
+				//history->updatePrevNextButtons();
 			}
 		}else {
 			view->showError(isPage);
