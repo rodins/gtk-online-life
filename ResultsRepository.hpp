@@ -42,6 +42,7 @@ class ResultsRepository {
 	void getData(string title, string link) {
 		this->link = link;
 		isPage = FALSE;
+		//history.saveModel(model);
 		model.init(modelCount++, title, link);
 		view->setResultsModel(model);
 		imageIndices->clear();

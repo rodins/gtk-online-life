@@ -671,9 +671,9 @@ int main( int   argc,
 								  btnActors,
 								  btnSavedItems);*/
 								 
-	CenterView centerView(window, ivResults, vbCenter, spCenter, swIcon,
-	                      swTree, hbResultsError, btnSavedItems, btnRefresh,
-	                      btnUp, btnPrev, btnNext);
+	CenterView centerView(window, PROG_NAME, ivResults, vbCenter, spCenter, 
+	                      swIcon, swTree, hbResultsError, btnSavedItems, 
+	                      btnRefresh, btnUp, btnPrev, btnNext);
 	                      
 	ResultsRepository resultsRepository(&centerView, 
 	                                    imagesCache,
