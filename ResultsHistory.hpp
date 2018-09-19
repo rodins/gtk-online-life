@@ -36,7 +36,7 @@ class ResultsHistory {
 		if(!backStack.empty()) {
 			view->setTooltipPrev(backStack.back().getTitle());
 		}else {
-		    view->setTooltipNext("Move back in history");
+		    view->setTooltipPrev("Move back in history");
 		    view->setSensitivePrev(FALSE);	
 	    }
 	    return model;
@@ -46,7 +46,7 @@ class ResultsHistory {
 		ResultsModel model = forwardStack.back();
 		forwardStack.pop_back();
 		if(!forwardStack.empty()) {
-			view->setTooltipPrev(forwardStack.back().getTitle());
+			view->setTooltipNext(forwardStack.back().getTitle());
 		}else {
 		    view->setTooltipNext("Move forward in history");
 		    view->setSensitiveNext(FALSE);	
