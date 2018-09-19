@@ -215,17 +215,17 @@ static void btnCategoriesClicked(GtkWidget *widget,
 static void btnUpClicked( GtkWidget *widget,
                           ResultsHistory *resultsHistory ) {
 	resultsHistory->btnUpClicked();
-}
+}*/
 
 static void btnPrevClicked( GtkToolButton *widget,
-                            ResultsHistory *resultsHistory ) {   
-	resultsHistory->btnPrevClicked();  
+                            ResultsRepository *repo ) {   
+	repo->btnPrevClicked();  
 }
 
 static void btnNextClicked( GtkToolButton *widget,
-                            ResultsHistory *resultsHistory) {   
-	resultsHistory->btnNextClicked();
-}*/
+                            ResultsRepository *repo) {   
+	repo->btnNextClicked();
+}
 
 static void entryActivated( GtkWidget *widget, 
                             ResultsRepository *repo) {
@@ -275,12 +275,12 @@ static void btnRefreshClicked(GtkWidget *widget,
 	repo->refresh();
 }
 
-/*static void btnResultsRepeatClicked(GtkWidget *widget,
-	                                ResultsHistory *resultsHistory) {
-	resultsHistory->btnResultsRepeatClicked();
+static void btnResultsRepeatClicked(GtkWidget *widget,
+	                                ResultsRepository *repo) {
+	repo->refresh();
 }
 
-static void btnLinksErrorClicked(GtkWidget *widget,
+/*static void btnLinksErrorClicked(GtkWidget *widget,
 	                             ActorsHistory *actorsHistory) {
 	actorsHistory->btnLinksErrorClicked();
 }
@@ -705,22 +705,22 @@ int main( int   argc,
     /*g_signal_connect(GTK_WIDGET(btnUp),
                      "clicked", 
                      G_CALLBACK(btnUpClicked), 
-                     &centerView);
+                     &centerView);*/
     
     g_signal_connect(btnPrev,
                      "clicked", 
                      G_CALLBACK(btnPrevClicked),
-                     &resultsHistory);
+                     &resultsRepository);
                      
 	g_signal_connect(btnNext,
 				     "clicked", 
 				     G_CALLBACK(btnNextClicked),
-				     &resultsHistory);
+				     &resultsRepository);
 				     
     g_signal_connect(btnResultsError,
                      "clicked",
                      G_CALLBACK(btnResultsRepeatClicked),
-                     &resultsHistory);*/
+                     &resultsRepository);
 				     
     g_signal_connect(tvCategories,
                      "row-activated",

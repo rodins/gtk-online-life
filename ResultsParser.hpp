@@ -20,6 +20,10 @@ class ResultsParser {
 		this->model = model;
 	}
 	
+	void setModel(ResultsModel *model) {
+		this->model = model;
+	}
+	
 	void resetFirstItem() {
 		isFirstItem = TRUE;
 	}

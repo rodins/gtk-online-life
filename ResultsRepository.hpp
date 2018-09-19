@@ -1,6 +1,7 @@
 // ResultsRepository.hpp
 #include "ResultsParser.hpp"
 #include "ResultsNet.hpp" 
+#include "ResultsHistory.hpp"
 
 class ResultsRepository {
     CenterView *view;
@@ -13,14 +14,16 @@ class ResultsRepository {
     string link;
     bool isThreadStarted;
     set<int> *imageIndices;
+    ResultsHistory *history;
     
     public:
-    ResultsRepository(CenterView *view, 
+    ResultsRepository(CenterView *view,
                       map<string, GdkPixbuf*> *imagesCache,
                       set<int> *imageIndices) {
 		this->view = view;
 		parser = new ResultsParser(view, &model);
 	    net = new ResultsNet(parser);
+	    history = new ResultsHistory(view);
 	    isPage = FALSE;
 	    isThreadStarted = FALSE;
 	    modelCount = 0;
@@ -34,15 +37,31 @@ class ResultsRepository {
 	}
 	
 	~ResultsRepository() {
+		free(history);
 		free(net);
 		free(parser);
+	}
+	
+	void btnPrevClicked() {
+		history->saveToForwardStack(model);
+		model = history->restoreFromBackStack();
+		view->setResultsModel(model);
+		parser->setModel(&model);
+	}
+	
+	void btnNextClicked() {
+		history->saveToBackStack(model);
+		model = history->restoreFromForwardStack();
+		view->setResultsModel(model);
+		parser->setModel(&model);
 	}
 	
 	// New result: give link and title
 	void getData(string title, string link) {
 		this->link = link;
 		isPage = FALSE;
-		//history.saveModel(model);
+		history->saveToBackStack(model);
+		history->clearForwardStack();
 		model.init(modelCount++, title, link);
 		view->setResultsModel(model);
 		imageIndices->clear();
@@ -84,9 +103,10 @@ class ResultsRepository {
 		if(res == CURLE_OK) {
 			if(model.isEmpty()) {
 				//view->showEmpty();
+				view->showResultsData();
 			}else {
 				view->setSensitiveReferesh();
-				//history->updatePrevNextButtons();
+				history->updatePrevNextButtons();
 			}
 		}else {
 			view->showError(isPage);

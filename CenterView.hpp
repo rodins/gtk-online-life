@@ -74,6 +74,14 @@ class CenterView {
 	void setSensitiveNext(bool state=TRUE) {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), state);
 	}
+	
+	void setTooltipPrev(string text) {
+		gtk_tool_item_set_tooltip_text(btnPrev, text.c_str());
+	}
+    
+    void setTooltipNext(string text) {
+		gtk_tool_item_set_tooltip_text(btnNext, text.c_str());
+	}
     
     void showLoadingIndicator(bool isPage) {
 		if(!isPage) {
