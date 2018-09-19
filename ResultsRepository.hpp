@@ -10,7 +10,6 @@ class ResultsRepository {
     ResultsParser *parser;
     ResultsNet *net;
     bool isPage;
-    int modelCount;
     string link;
     bool isThreadStarted;
     set<int> *imageIndices;
@@ -26,7 +25,6 @@ class ResultsRepository {
 	    history = new ResultsHistory(view);
 	    isPage = FALSE;
 	    isThreadStarted = FALSE;
-	    modelCount = 0;
 	    model.setImagesCache(imagesCache);
 	    this->imageIndices = imageIndices;
 		threadPool = g_thread_pool_new(ResultsRepository::resultsTask,
@@ -60,7 +58,7 @@ class ResultsRepository {
 		isPage = FALSE;
 		history->saveToBackStack(model);
 		history->clearForwardStack();
-		model.init(modelCount++, title, link);
+		model.init(title, link);
 		setModel();
 		getLinkData();
 	}

@@ -1,12 +1,10 @@
 // ResultsModel.hpp
 
 class ResultsModel {
-	int id;
     string next_link;
 	string base_url;
 	string title;
 	string url;
-	bool refresh;
 	
 	GtkListStore *iconViewStore;
 	GdkPixbuf *defaultPixbuf;
@@ -19,29 +17,20 @@ class ResultsModel {
 	
 	ResultsModel() {
 		count = 0;
-		id = -1;
 		// Initialize default pixbuf for ivResults here
         defaultPixbuf = IconsFactory::getBlankIcon();
-        refresh = FALSE;
         iconViewStore = NULL;
-	}
-	
-	int getId() {
-		return id;
 	}
 	
 	void setImagesCache(map<string, GdkPixbuf*> *imagesCache) {
 		this->imagesCache = imagesCache;
 	}
 	
-	void init(int id,
-	          string title, 
+	void init(string title, 
 	          string url) {
-		this->id = id;
 		this->title = title;
 		this->url = url;
 		this->base_url = url;
-		refresh = FALSE;
         count = 0;
         
         iconViewStore = gtk_list_store_new(
@@ -53,14 +42,6 @@ class ResultsModel {
 		);
 		
 	    next_link = "";
-	}
-	
-	bool isRefresh() {
-		return refresh;
-	}
-	
-	void setRefresh(bool r) {
-		refresh = r;
 	}
 	
 	string getPosition() {
