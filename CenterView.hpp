@@ -34,6 +34,17 @@ class CenterView {
 		this->btnNext = btnNext;	   
     }
     
+    string getPosition() {
+		GtkTreePath *path1, *path2;
+		if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
+			string index(gtk_tree_path_to_string(path2));
+			gtk_tree_path_free(path1);
+		    gtk_tree_path_free(path2);
+		    return index;
+		}
+		return "";
+	}
+    
     void setTitle(string title) {
 		string winTitle = progName + " - " + title;
 		gtk_window_set_title(GTK_WINDOW(window), winTitle.c_str());
@@ -44,6 +55,7 @@ class CenterView {
 		setTitle(modelTitle);
 		gtk_icon_view_set_model(GTK_ICON_VIEW(ivResults),
 		                        model.getTreeModel());
+		setPosition(model.getPosition());
 	}
 	
 	void scrollToTopOfList() {
@@ -54,6 +66,18 @@ class CenterView {
 	                                 FALSE, 
 	                                 0, 
 	                                 0);
+	}
+	
+	void setPosition(string index) {
+		if(!index.empty()) {
+			GtkTreePath *path = gtk_tree_path_new_from_string(index.c_str());
+			gtk_icon_view_scroll_to_path(GTK_ICON_VIEW(ivResults), 
+			                             path, 
+			                             FALSE, 
+			                             0, 
+			                             0);
+		    gtk_tree_path_free(path);
+		}
 	}
 	
 	void setSensitiveSavedItems(bool state=TRUE) {

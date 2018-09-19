@@ -10,7 +10,7 @@ class ResultsHistory {
 	
 	void saveToBackStack(ResultsModel &model) {
 		if(!model.isEmpty()) {
-			// TODO: save position
+			model.setPosition(view->getPosition());
 			backStack.push_back(model);
 			view->setSensitivePrev();
 			view->setTooltipPrev(model.getTitle());
@@ -19,6 +19,7 @@ class ResultsHistory {
 	
 	void saveToForwardStack(ResultsModel &model) {
 		if(!model.isEmpty()) {
+			model.setPosition(view->getPosition());
 			forwardStack.push_back(model);
 			view->setSensitiveNext();
 			view->setTooltipNext(model.getTitle());

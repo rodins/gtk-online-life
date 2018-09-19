@@ -63,11 +63,11 @@ class ResultsModel {
 		refresh = r;
 	}
 	
-	string getIndex() {
+	string getPosition() {
 		return index;
 	}
 	
-	void setIndex(string i) {
+	void setPosition(string i) {
 		index = i;
 	}
 	
