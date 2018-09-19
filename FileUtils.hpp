@@ -82,49 +82,17 @@ class FileUtils {
 		g_remove(filename);
 	}
 	
-	/*static void countSavedFiles(GtkToolItem *btnSavedItems) {
-		GDir *dir;
-		int count = 0;
-		const gchar *filename;
-		dir = g_dir_open(homeAppSavesDir, 0, NULL);
-		if(dir != NULL) {
-			while ((filename = g_dir_read_name(dir))) {
-				count++;
-			}
-			g_dir_close(dir);
-		}
-		// Disable/enable show/hide list saved items button
-		if(count > 0) {
-			gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), TRUE);
-		}else {
-			gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), FALSE);
-		}
-	}*/
-	
-	static void listSavedFiles(GtkWidget *ivResults, 
-	                           GtkToolItem *btnSavedItems) {
-		gboolean isActive = gtk_toggle_tool_button_get_active(
-		                    GTK_TOGGLE_TOOL_BUTTON(btnSavedItems));	
-		
-		GtkListStore *storeSavedItems;
+	static void listSavedFiles(SavedItemsModel &model) {	
 		GdkPixbuf *icon;
-		GtkTreeIter iter;
 		GDir *dir;
 		const gchar *filename;
 		string href;
 		
-		int count = 0;
-		// If not active just count items
-		if(isActive) {
-			storeSavedItems = GTK_LIST_STORE(gtk_icon_view_get_model(
-			                                 GTK_ICON_VIEW(ivResults)));
-			gtk_list_store_clear(storeSavedItems);
-		}
+		model.clear();
 		
 		dir = g_dir_open(homeAppSavesDir, 0, NULL);
 		if(dir != NULL) {
 			while ((filename = g_dir_read_name(dir))) {
-				if(isActive) {
 					if(FileUtils::isImageSaved(filename)) {
 						icon = FileUtils::readImageFromFile(filename);
 					}else {
@@ -135,28 +103,9 @@ class FileUtils {
 					}else {
 						href = "";
 					}
-				    gtk_list_store_append(storeSavedItems, &iter);
-				    gtk_list_store_set(storeSavedItems, 
-			                           &iter,
-			                           ICON_IMAGE_COLUMN, 
-			                           icon,
-			                           ICON_TITLE_COLUMN, 
-			                           filename,
-			                           ICON_HREF, 
-			                           href.c_str(),
-			                           ICON_IMAGE_LINK, 
-			                           "", 
-			                           -1);
-				}  
-			    count++;                                  
+			        model.add(filename, icon, href);                                
 			}
 			g_dir_close(dir);
-		}
-		// Disable/enable show/hide list saved items button
-		if(count > 0) {
-			gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), TRUE);
-		}else {
-			gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), FALSE);
 		}
 	}
 };

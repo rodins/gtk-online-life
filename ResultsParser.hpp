@@ -15,7 +15,6 @@ class ResultsParser {
 		isFirst = TRUE;
 		divBeginFound = FALSE;
 		isFirstItem = TRUE;
-		
 		this->view = view;
 	}
 	

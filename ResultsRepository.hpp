@@ -14,12 +14,15 @@ class ResultsRepository {
     bool isThreadStarted;
     set<int> *imageIndices;
     ResultsHistory *history;
+    SavedItemsModel *savedItemsModel;
     
     public:
     ResultsRepository(CenterView *view,
+                      SavedItemsModel *savedItemsModel,
                       map<string, GdkPixbuf*> *imagesCache,
                       set<int> *imageIndices) {
 		this->view = view;
+		this->savedItemsModel = savedItemsModel;
 		parser = new ResultsParser(view);
 	    net = new ResultsNet(parser);
 	    history = new ResultsHistory(view);
@@ -38,6 +41,18 @@ class ResultsRepository {
 		free(history);
 		free(net);
 		free(parser);
+	}
+	
+	void btnSavedItemsClicked() {
+		if(view->isSavedItemsPressed()) {
+			view->setSavedItemsModel(savedItemsModel);
+		}else {
+			view->setResultsModel(model);
+			history->updatePrevNextButtons();
+			if(!model.isEmpty()) {
+			    view->setSensitiveReferesh();
+			}
+		}
 	}
 	
 	void btnPrevClicked() {
@@ -112,6 +127,7 @@ class ResultsRepository {
 			}else {
 				view->setSensitiveReferesh();
 				history->removeBackStackDuplicate(model.getTitle());
+				view->setSensitiveSavedItems(!savedItemsModel->isEmpty());
 			}
 		}else {
 			view->showError(isPage);

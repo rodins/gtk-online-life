@@ -17,9 +17,10 @@
 #include "IconsFactory.hpp"
 #include "ColumnsEnum.hpp"
 #include "ResultsModel.hpp"
+#include "SavedItemsModel.hpp"
+#include "FileUtils.hpp"
 #include "CenterView.hpp"
 #include "ResultsRepository.hpp"
-#include "FileUtils.hpp"
 //#include "ActorsHistory.hpp"
 #include "CategoriesView.hpp"
 #include "CategoriesModel.hpp"
@@ -207,12 +208,12 @@ static void btnCategoriesClicked(GtkWidget *widget,
 	categoriesRepo->btnCategoriesClicked();	
 }
 
-/*static void btnSavedItemsClicked(GtkToolItem *widget,
-                                 ResultsHistory *resultsHistory) {
-	resultsHistory->btnSavedItemsClicked();	
+static void btnSavedItemsClicked(GtkToolItem *widget,
+                                 ResultsRepository *repo) {
+	repo->btnSavedItemsClicked();	
 }
 
-static void btnUpClicked( GtkWidget *widget,
+/*static void btnUpClicked( GtkWidget *widget,
                           ResultsHistory *resultsHistory ) {
 	resultsHistory->btnUpClicked();
 }*/
@@ -670,12 +671,15 @@ int main( int   argc,
 								  PROG_NAME,
 								  btnActors,
 								  btnSavedItems);*/
+								  
+	SavedItemsModel savedItemsModel;
 								 
 	CenterView centerView(window, PROG_NAME, ivResults, vbCenter, spCenter, 
 	                      swIcon, swTree, hbResultsError, btnSavedItems, 
 	                      btnRefresh, btnUp, btnPrev, btnNext);
 	                      
-	ResultsRepository resultsRepository(&centerView, 
+	ResultsRepository resultsRepository(&centerView,
+	                                    &savedItemsModel, 
 	                                    imagesCache,
 	                                    imageIndices);
     
@@ -685,16 +689,14 @@ int main( int   argc,
 	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 	
-	// Disable listItems button only if there are saved items
-	FileUtils::listSavedFiles(ivResults, btnSavedItems);
-	gboolean isSavedItemsAvailable = gtk_widget_get_sensitive(
-	                                 GTK_WIDGET(btnSavedItems));
-	//resultsHistory.setSavedItemsAvailable(isSavedItemsAvailable);
+	// Disable listItems button only if there are no saved items
+	FileUtils::listSavedFiles(savedItemsModel);
+	centerView.setSensitiveSavedItems(!savedItemsModel.isEmpty());
 	// Show saved results on start if any
-	if(isSavedItemsAvailable) {
+	if(!savedItemsModel.isEmpty()) {
 		gtk_toggle_tool_button_set_active(
 		GTK_TOGGLE_TOOL_BUTTON(btnSavedItems), TRUE);
-		//resultsHistory.btnSavedItemsClicked();
+		resultsRepository.btnSavedItemsClicked();
 	}
 	
     g_signal_connect(GTK_WIDGET(btnRefresh), 
@@ -833,10 +835,10 @@ int main( int   argc,
                      G_CALLBACK(btnCategoriesClicked),
                      &categoriesRepository);
                      
-    /*g_signal_connect(GTK_WIDGET(btnSavedItems), 
+    g_signal_connect(GTK_WIDGET(btnSavedItems), 
 				     "clicked", 
 				     G_CALLBACK(btnSavedItemsClicked), 
-				     &resultsHistory);*/
+				     &resultsRepository);
         
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);

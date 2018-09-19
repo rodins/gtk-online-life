@@ -69,6 +69,11 @@ class ResultsHistory {
 		updatePrevNextButtons();
 	}
 	
+	void updatePrevNextButtons() {
+		view->setSensitivePrev(!backStack.empty());
+		view->setSensitiveNext(!forwardStack.empty());
+	}
+	
 	private:
 	
 	void setPrevTooltip() {
@@ -78,10 +83,5 @@ class ResultsHistory {
 		    view->setTooltipPrev("Move back in history");
 		    view->setSensitivePrev(FALSE);	
 	    }
-	}
-	
-	void updatePrevNextButtons() {
-		view->setSensitivePrev(!backStack.empty());
-		view->setSensitiveNext(!forwardStack.empty());
 	}
 };

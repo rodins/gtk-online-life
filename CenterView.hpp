@@ -34,6 +34,20 @@ class CenterView {
 		this->btnNext = btnNext;	   
     }
     
+    bool isSavedItemsPressed() {
+		return gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(btnSavedItems));
+	}
+	
+	void setSavedItemsModel(SavedItemsModel *model) {
+		if(!model->isEmpty()) {
+			gtk_icon_view_set_model(GTK_ICON_VIEW(ivResults),
+		                                 model->getTreeModel());
+		    scrollToTopOfList();
+	        showToolbarSavedItems();
+	        setTitle("Saved items");
+		}
+	}
+    
     string getPosition() {
 		GtkTreePath *path1, *path2;
 		if(gtk_icon_view_get_visible_range(GTK_ICON_VIEW(ivResults), &path1, &path2)) {
@@ -46,7 +60,12 @@ class CenterView {
 	}
     
     void setTitle(string title) {
-		string winTitle = progName + " - " + title;
+		string winTitle;
+		if(title.empty()) {
+			winTitle = progName;
+		}else {
+			winTitle = progName + " - " + title;
+		}
 		gtk_window_set_title(GTK_WINDOW(window), winTitle.c_str());
 	}
 	
@@ -167,6 +186,13 @@ class CenterView {
 	}
 	
 	private:
+	
+	void showToolbarSavedItems() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
+	}
 	
 	void showToolbarLoadingIndicator() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), FALSE);
