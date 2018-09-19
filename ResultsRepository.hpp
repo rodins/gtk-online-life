@@ -109,7 +109,7 @@ class ResultsRepository {
 				view->showResultsData();
 			}else {
 				view->setSensitiveReferesh();
-				history->updatePrevNextButtons();
+				history->removeBackStackDuplicate(model.getTitle());
 			}
 		}else {
 			view->showError(isPage);

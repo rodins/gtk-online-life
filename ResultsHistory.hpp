@@ -34,12 +34,7 @@ class ResultsHistory {
 	ResultsModel restoreFromBackStack() {
 		ResultsModel model = backStack.back();
 		backStack.pop_back();
-		if(!backStack.empty()) {
-			view->setTooltipPrev(backStack.back().getTitle());
-		}else {
-		    view->setTooltipPrev("Move back in history");
-		    view->setSensitivePrev(FALSE);	
-	    }
+		setPrevTooltip();
 	    return model;
 	}
 	
@@ -55,6 +50,35 @@ class ResultsHistory {
 	    return model;
 	}
 	
+	void removeBackStackDuplicate(string title) {
+		// Linear search for title
+		int eraseIndex = -1;
+		// If back stack has title, remove results with it.
+		for(unsigned i = 0; i < backStack.size(); i++) {
+			if(backStack[i].getTitle() == title) {
+				eraseIndex = i;
+				break;
+			}
+		}
+		
+		if(eraseIndex != -1) {
+			backStack.erase(backStack.begin() + eraseIndex);
+			setPrevTooltip();
+		}
+		
+		updatePrevNextButtons();
+	}
+	
+	private:
+	
+	void setPrevTooltip() {
+		if(!backStack.empty()) {
+			view->setTooltipPrev(backStack.back().getTitle());
+		}else {
+		    view->setTooltipPrev("Move back in history");
+		    view->setSensitivePrev(FALSE);	
+	    }
+	}
 	
 	void updatePrevNextButtons() {
 		view->setSensitivePrev(!backStack.empty());
