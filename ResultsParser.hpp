@@ -11,13 +11,12 @@ class ResultsParser {
 	ResultsModel *model;
     
     public:
-    ResultsParser(CenterView *view, ResultsModel *model) {
+    ResultsParser(CenterView *view) {
 		isFirst = TRUE;
 		divBeginFound = FALSE;
 		isFirstItem = TRUE;
 		
 		this->view = view;
-		this->model = model;
 	}
 	
 	void setModel(ResultsModel *model) {

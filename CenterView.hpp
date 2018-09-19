@@ -41,6 +41,7 @@ class CenterView {
 	
 	void setResultsModel(ResultsModel &model) {
 		modelTitle = model.getTitle();
+		setTitle(modelTitle);
 		gtk_icon_view_set_model(GTK_ICON_VIEW(ivResults),
 		                        model.getTreeModel());
 	}

@@ -21,7 +21,7 @@ class ResultsRepository {
                       map<string, GdkPixbuf*> *imagesCache,
                       set<int> *imageIndices) {
 		this->view = view;
-		parser = new ResultsParser(view, &model);
+		parser = new ResultsParser(view);
 	    net = new ResultsNet(parser);
 	    history = new ResultsHistory(view);
 	    isPage = FALSE;
@@ -45,15 +45,13 @@ class ResultsRepository {
 	void btnPrevClicked() {
 		history->saveToForwardStack(model);
 		model = history->restoreFromBackStack();
-		view->setResultsModel(model);
-		parser->setModel(&model);
+		setModel();
 	}
 	
 	void btnNextClicked() {
 		history->saveToBackStack(model);
 		model = history->restoreFromForwardStack();
-		view->setResultsModel(model);
-		parser->setModel(&model);
+		setModel();
 	}
 	
 	// New result: give link and title
@@ -63,8 +61,7 @@ class ResultsRepository {
 		history->saveToBackStack(model);
 		history->clearForwardStack();
 		model.init(modelCount++, title, link);
-		view->setResultsModel(model);
-		imageIndices->clear();
+		setModel();
 		getLinkData();
 	}
 	
@@ -83,6 +80,12 @@ class ResultsRepository {
 	}
 	
 	private:
+	
+	void setModel() {
+		view->setResultsModel(model);
+		parser->setModel(&model);
+		imageIndices->clear();
+	}
 	
 	void getLinkData() {
 		if(link.empty()) {
