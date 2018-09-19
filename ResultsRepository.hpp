@@ -70,6 +70,10 @@ class ResultsRepository {
 		getLinkData();
 	}
 	
+	void repeat() {
+		getLinkData();
+	}
+	
 	// Append results, use model next link
 	void getData() {
 		isPage = TRUE;

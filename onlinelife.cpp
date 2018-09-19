@@ -277,7 +277,7 @@ static void btnRefreshClicked(GtkWidget *widget,
 
 static void btnResultsRepeatClicked(GtkWidget *widget,
 	                                ResultsRepository *repo) {
-	repo->refresh();
+	repo->repeat();
 }
 
 /*static void btnLinksErrorClicked(GtkWidget *widget,
