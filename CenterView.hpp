@@ -38,6 +38,11 @@ class CenterView {
 		return gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(btnSavedItems));
 	}
 	
+	void setSavedItemsActive(bool state) {
+		gtk_toggle_tool_button_set_active(
+		                  GTK_TOGGLE_TOOL_BUTTON(btnSavedItems), state);
+	}
+	
 	void setSavedItemsModel(SavedItemsModel *model) {
 		if(!model->isEmpty()) {
 			gtk_icon_view_set_model(GTK_ICON_VIEW(ivResults),

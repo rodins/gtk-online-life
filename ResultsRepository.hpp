@@ -73,6 +73,7 @@ class ResultsRepository {
 		isPage = FALSE;
 		history->saveToBackStack(model);
 		history->clearForwardStack();
+		view->setSavedItemsActive(FALSE);
 		model.init(title, link);
 		setModel();
 		getLinkData();
@@ -126,12 +127,12 @@ class ResultsRepository {
 				view->showResultsData();
 			}else {
 				view->setSensitiveReferesh();
-				history->removeBackStackDuplicate(model.getTitle());
-				view->setSensitiveSavedItems(!savedItemsModel->isEmpty());
 			}
 		}else {
 			view->showError(isPage);
 		}
+		history->removeBackStackDuplicate(model);
+		view->setSensitiveSavedItems(!savedItemsModel->isEmpty());
 	}
 	
 	static void resultsTask(gpointer arg, gpointer arg1) {

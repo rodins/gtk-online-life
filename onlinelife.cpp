@@ -694,8 +694,7 @@ int main( int   argc,
 	centerView.setSensitiveSavedItems(!savedItemsModel.isEmpty());
 	// Show saved results on start if any
 	if(!savedItemsModel.isEmpty()) {
-		gtk_toggle_tool_button_set_active(
-		GTK_TOGGLE_TOOL_BUTTON(btnSavedItems), TRUE);
+		centerView.setSavedItemsActive(TRUE);
 		resultsRepository.btnSavedItemsClicked();
 	}
 	
