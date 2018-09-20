@@ -23,8 +23,10 @@
 #include "ResultsRepository.hpp"
 //#include "ActorsHistory.hpp"
 #include "CategoriesModel.hpp"
+#include "CategoriesParser.hpp"
 #include "CategoriesView.hpp"
-#include "CategoriesRepository.hpp"
+#include "CategoriesTask.hpp"
+#include "CategoriesController.hpp"
 #include "ImagesDownloader.hpp"
 #include "PlayItem.hpp"
 #include "PlaylistsUtils.hpp"
@@ -211,8 +213,8 @@ GtkWidget *createTreeView(void) {
 }
 
 static void btnCategoriesClicked(GtkWidget *widget,
-                                 CategoriesRepository *categoriesRepo) {
-	categoriesRepo->btnCategoriesClicked();	
+                                 CategoriesController *controller) {
+    controller->click();	
 }
 
 static void btnSavedItemsClicked(GtkToolItem *widget,
@@ -258,8 +260,8 @@ static void backActorsChanged(GtkTreeSelection *treeselection,
 }*/
 
 static void btnCategoriesRepeatClicked(GtkWidget *widget,
-                CategoriesRepository *categoriesRepository) {
-	categoriesRepository->btnCategoriesRepeatClicked();
+                CategoriesController *controller) {
+	controller->repeat();
 }
 
 /*static void btnActorsRepeatClicked(GtkWidget *widget,
@@ -818,22 +820,26 @@ int main( int   argc,
                      G_CALLBACK(resultActivated), 
                      &processResultRepository);
                      
-    CategoriesView categoriesView(tvCategories,
-                                  vbLeft,
+    CategoriesModel categoriesModel;
+    CategoriesParser categoriesParser(&categoriesModel);                 
+    gtk_tree_view_set_model(GTK_TREE_VIEW(tvCategories), 
+	                           categoriesModel.getTreeModel());                
+    CategoriesView categoriesView(vbLeft,
                                   spCategories, 
                                   swCategories, 
                                   hbCategoriesError);
-    CategoriesRepository categoriesRepository(&categoriesView);                
+    CategoriesTask categoriesTask(&categoriesView, &categoriesParser);
+    CategoriesController categoriesController(&categoriesTask);              
                                            
     g_signal_connect(btnCategoriesError, 
                      "clicked", 
                      G_CALLBACK(btnCategoriesRepeatClicked), 
-                     &categoriesRepository);
+                     &categoriesController);
                      
     g_signal_connect(GTK_WIDGET(btnCategories),
                      "clicked", 
                      G_CALLBACK(btnCategoriesClicked),
-                     &categoriesRepository);
+                     &categoriesController);
                      
     g_signal_connect(GTK_WIDGET(btnSavedItems), 
 				     "clicked", 

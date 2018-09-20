@@ -8,6 +8,10 @@ class CategoriesParser {
 		this->model = model;
 	}
 	
+	gboolean isModelEmpty() {
+		return model->isEmpty();
+	}
+	
 	void parse(string page) {
 		size_t nav_begin = page.find("<div class=\"nav\">");
 		size_t nav_end = page.find("</div>", nav_begin+1);
