@@ -665,10 +665,9 @@ int main( int   argc,
 								 
 	CenterView centerView(window, PROG_NAME, ivResults, vbCenter, spCenter, 
 	                      swIcon, swTree, hbResultsError, btnSavedItems, 
-	                      btnRefresh, btnUp, btnPrev, btnNext);
+	                      btnRefresh, btnUp, btnPrev, btnNext, &savedItemsModel);
 	                      
-	ResultsRepository resultsRepository(&centerView,
-	                                    &savedItemsModel, 
+	ResultsRepository resultsRepository(&centerView, 
 	                                    imagesCache,
 	                                    imageIndices);
 	
@@ -676,8 +675,7 @@ int main( int   argc,
 	PlayItemRepository playItemRepository;
 	ErrorDialogs errorDialogs(window);                                    
 	ActorsRepository actorsRepository;
-	ConstantLinksRepository constantLinksRepository(&centerView,
-	                                                &savedItemsModel, 
+	ConstantLinksRepository constantLinksRepository(&centerView, 
 	                                                &playlistsRepository,
 	                                                &playItemRepository,
 	                                                &errorDialogs);
@@ -694,7 +692,7 @@ int main( int   argc,
 	
 	// Disable listItems button only if there are no saved items
 	FileUtils::listSavedFiles(savedItemsModel);
-	centerView.setSensitiveSavedItems(!savedItemsModel.isEmpty());
+	centerView.setSensitiveSavedItems();
 	// Show saved results on start if any
 	if(!savedItemsModel.isEmpty()) {
 		centerView.setSavedItemsActive(TRUE);

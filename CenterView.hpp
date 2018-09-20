@@ -10,6 +10,7 @@ class CenterView {
 	
 	GtkToolItem *btnSavedItems, *btnRefresh, *btnUp, *btnPrev, *btnNext;
 	string progName, modelTitle;
+	SavedItemsModel *savedItemsModel;
 	public:
 	CenterView(GtkWidget *window, string progName, GtkWidget *ivResults,
 	           GtkWidget *vbCenter, GtkWidget *spCenter, 
@@ -17,7 +18,7 @@ class CenterView {
 	           GtkWidget *hbResultsError,
 	           GtkToolItem *btnSavedItems, GtkToolItem *btnRefresh,
 	           GtkToolItem *btnUp, GtkToolItem *btnPrev, 
-	           GtkToolItem *btnNext) {
+	           GtkToolItem *btnNext, SavedItemsModel *savedItemsModel) {
 		this->window = window;
 		this->progName = progName;
 		this->ivResults = ivResults;
@@ -31,7 +32,9 @@ class CenterView {
 		this->btnRefresh = btnRefresh;
 		this->btnUp = btnUp;
 		this->btnPrev = btnPrev;
-		this->btnNext = btnNext;	   
+		this->btnNext = btnNext;
+		
+		this->savedItemsModel = savedItemsModel;	   
     }
     
     bool isSavedItemsPressed() {
@@ -43,10 +46,10 @@ class CenterView {
 		                  GTK_TOGGLE_TOOL_BUTTON(btnSavedItems), state);
 	}
 	
-	void setSavedItemsModel(SavedItemsModel *model) {
-		if(!model->isEmpty()) {
+	void showSavedItems() {
+		if(!savedItemsModel->isEmpty()) {
 			gtk_icon_view_set_model(GTK_ICON_VIEW(ivResults),
-		                                 model->getTreeModel());
+		                                 savedItemsModel->getTreeModel());
 		    scrollToTopOfList();
 	        showToolbarSavedItems();
 	        setTitle("Saved items");
@@ -104,8 +107,9 @@ class CenterView {
 		}
 	}
 	
-	void setSensitiveSavedItems(bool state=TRUE) {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), state);
+	void setSensitiveSavedItems() {
+		gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems),
+		                         !savedItemsModel->isEmpty());
 	}
 	
 	void setSensitiveReferesh(bool state=TRUE) {
@@ -154,6 +158,7 @@ class CenterView {
 	
 	void showResultsData() {
 		setTitle(modelTitle);
+		setSensitiveSavedItems();
 		gtk_widget_hide(swTree);
 		gtk_widget_show(swIcon);
 		gtk_widget_hide(spCenter);
