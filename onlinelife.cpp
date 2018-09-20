@@ -26,6 +26,14 @@
 #include "CategoriesView.hpp"
 #include "CategoriesRepository.hpp"
 #include "ImagesDownloader.hpp"
+#include "PlayItem.hpp"
+#include "PlaylistsUtils.hpp"
+#include "PlayItemRepository.hpp"
+#include "PlaylistsRepository.hpp"
+#include "ErrorDialogs.hpp"
+#include "ActorsRepository.hpp"
+#include "ConstantLinksRepository.hpp"
+#include "ProcessResultRepository.hpp"
 
 using namespace std;
 
@@ -69,10 +77,10 @@ void categoriesClicked(GtkTreeView *treeView,
 	g_free(link);
 }
 
-/*void actorsClicked(GtkTreeView *treeView,
+void actorsClicked(GtkTreeView *treeView,
                    GtkTreePath *path,
                    GtkTreeViewColumn *column,
-                   ResultsHistory *resultsHistory) {
+                   ResultsRepository *repo) {
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -91,13 +99,13 @@ void categoriesClicked(GtkTreeView *treeView,
 	                   &link, 
 	                   -1);
 	                   
-	resultsHistory->newThread(title, link);
+	repo->getData(title, link);
 	                   
 	g_free(title);
 	g_free(link);
 }
 
-void playlistClicked(GtkTreeView *treeView,
+/*void playlistClicked(GtkTreeView *treeView,
                      GtkTreePath *path,
                      GtkTreeViewColumn *column,
                      ActorsHistory *actorsHistory) {
@@ -134,12 +142,12 @@ void playlistClicked(GtkTreeView *treeView,
 	g_free(comment);
 	g_free(file);
 	g_free(download);                   
-}
+}*/
 
 void resultFunc(GtkIconView *icon_view, 
                 GtkTreePath *path, 
                 gpointer data) {
-	ActorsHistory *actorsHistory = (ActorsHistory*)data;
+	ProcessResultRepository *repo = (ProcessResultRepository*)data;
 	// Get model from ivResults
 	GtkTreeModel *model = gtk_icon_view_get_model(icon_view);
 	
@@ -162,19 +170,19 @@ void resultFunc(GtkIconView *icon_view,
 	                   &href,
 	                   -1);
 	                   
-	actorsHistory->newThread(resultTitle, href, pixbuf);
+	repo->getData(resultTitle, href, pixbuf);
 	
 	g_free(resultTitle);
 	g_free(href);
-}*/
+}
 
-/*void resultActivated(GtkWidget *widget,
+void resultActivated(GtkWidget *widget,
                      GtkTreePath *path,
                      gpointer data) {
 	gtk_icon_view_selected_foreach(GTK_ICON_VIEW(widget),
 	                               resultFunc,
 	                               data);
-}*/
+}
 
 GtkWidget *createTreeView(void) {
 	GtkTreeViewColumn *col;
@@ -652,24 +660,6 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(vbCenter), swIcon, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbCenter), spCenter, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbCenter), hbResultsError, TRUE, FALSE, 1);
-    
-    /*ResultsHistory resultsHistory(window,
-								  ivResults,
-								  tvPlaylists,
-								  btnPrev,
-								  btnNext,
-								  swTree,
-								  swIcon,
-								  spCenter,
-								  vbCenter,
-								  hbResultsError,
-								  btnUp,
-								  btnRefresh,
-								  imageIndices,
-								  imagesCache,
-								  PROG_NAME,
-								  btnActors,
-								  btnSavedItems);*/
 								  
 	SavedItemsModel savedItemsModel;
 								 
@@ -681,6 +671,19 @@ int main( int   argc,
 	                                    &savedItemsModel, 
 	                                    imagesCache,
 	                                    imageIndices);
+	
+	PlaylistsRepository playlistsRepository(&centerView);
+	PlayItemRepository playItemRepository;
+	ErrorDialogs errorDialogs(window);                                    
+	ActorsRepository actorsRepository;
+	ConstantLinksRepository constantLinksRepository(&centerView, 
+	                                                &playlistsRepository,
+	                                                &playItemRepository,
+	                                                &errorDialogs);
+	                                    
+	ProcessResultRepository processResultRepository(btnActors,
+	                                                &actorsRepository,
+	                                                &constantLinksRepository);
     
     // Disable all items                                                
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
@@ -727,10 +730,10 @@ int main( int   argc,
                      G_CALLBACK(categoriesClicked), 
                      &resultsRepository);
         
-    /*g_signal_connect(tvActors, 
+    g_signal_connect(tvActors, 
                      "row-activated",
                      G_CALLBACK(actorsClicked), 
-                     &resultsHistory);*/
+                     &resultsRepository);
     
     g_signal_connect(entry,
                      "activate", 
@@ -809,12 +812,12 @@ int main( int   argc,
     g_signal_connect(btnDelete,
                      "clicked",
                      G_CALLBACK(btnDeleteClicked),
-                     &actorsHistory);
+                     &actorsHistory);*/
                      
     g_signal_connect(ivResults, 
                      "item-activated", 
                      G_CALLBACK(resultActivated), 
-                     &actorsHistory);*/
+                     &processResultRepository);
                      
     CategoriesView categoriesView(tvCategories,
                                   vbLeft,

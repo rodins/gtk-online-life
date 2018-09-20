@@ -159,6 +159,12 @@ class HtmlString {
 		return getPage(link, "", ACTORS);
 	}
 	
+	static string getConstantsPage(string id) {
+		string url = "http://play.cidwo.com/js.php?id=" + id;
+		string referer = "http://play.cidwo.com/player.php?newsid=" + id;
+		return getPage(url, referer);
+	}
+	
 	static CURL *get_size_curl_handle() {
 		CURL *curl;
 		curl = curl_easy_init();
