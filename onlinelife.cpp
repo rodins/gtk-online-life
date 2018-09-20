@@ -22,10 +22,9 @@
 #include "CenterView.hpp"
 #include "ResultsRepository.hpp"
 //#include "ActorsHistory.hpp"
-#include "CategoriesView.hpp"
 #include "CategoriesModel.hpp"
+#include "CategoriesView.hpp"
 #include "CategoriesRepository.hpp"
-
 #include "ImagesDownloader.hpp"
 
 using namespace std;
@@ -817,12 +816,12 @@ int main( int   argc,
                      G_CALLBACK(resultActivated), 
                      &actorsHistory);*/
                      
-    CategoriesView categoriesView(vbLeft,
+    CategoriesView categoriesView(tvCategories,
+                                  vbLeft,
                                   spCategories, 
                                   swCategories, 
                                   hbCategoriesError);
-    CategoriesModel categoriesModel(tvCategories);
-    CategoriesRepository categoriesRepository(&categoriesView, &categoriesModel);                
+    CategoriesRepository categoriesRepository(&categoriesView);                
                                            
     g_signal_connect(btnCategoriesError, 
                      "clicked", 

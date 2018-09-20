@@ -1,33 +1,14 @@
 //Categories.hpp
 
 class CategoriesParser {
-	GdkPixbuf *categoryIcon;
-	GdkPixbuf *itemIcon;
-	
-	GtkTreeStore *treestore;
-	GtkTreeIter topLevel, child;
-	
+	CategoriesModel *model;
 	public:
 	
-	CategoriesParser(string page) {
-		
-		categoryIcon = IconsFactory::getFolderIcon();
-	    itemIcon = IconsFactory::getLinkIcon();
-	    
-	    treestore = gtk_tree_store_new(TREE_NUM_COLS, 
-		                               GDK_TYPE_PIXBUF,
-					                   G_TYPE_STRING, 
-					                   G_TYPE_STRING);
-	    parse_categories(page);
+	CategoriesParser(CategoriesModel *model) {
+		this->model = model;
 	}
 	
-	GtkTreeModel *getModel() {
-		return GTK_TREE_MODEL(treestore);		
-	}
-	
-	private:
-	
-	void parse_categories(string page) {
+	void parse(string page) {
 		size_t nav_begin = page.find("<div class=\"nav\">");
 		size_t nav_end = page.find("</div>", nav_begin+1);
 		if(nav_begin != string::npos && nav_end != string::npos) {
@@ -35,7 +16,7 @@ class CategoriesParser {
 			string nav = page.substr(nav_begin, nav_length);
 			
 			// Add to top level
-			addToTopLevel("Главная", DomainFactory::getWwwDomain());
+			model->addToTopLevel("Главная", DomainFactory::getWwwDomain());
 			
 			// Find nodrop items
 			// Find new, popular, best
@@ -89,12 +70,12 @@ class CategoriesParser {
 							string title = anchor.substr(title_begin+1);
 							if(first) {
 								// Add to top level
-				                addToTopLevel(to_utf8(title), addDomainTo(link));
+				                model->addToTopLevel(to_utf8(title), addDomainTo(link));
 				
 								first = false;
 							}else {
 								// Add to child
-								addToChild(to_utf8(title), addDomainTo(link));
+								model->addToChild(to_utf8(title), addDomainTo(link));
 							}
 						}
 					}
@@ -109,31 +90,9 @@ class CategoriesParser {
 		}
 	}
 	
-	void addToChild(string title, string link) {
-		gtk_tree_store_append(treestore, &child, &topLevel);
-		gtk_tree_store_set(treestore,
-		                   &child,
-		                   TREE_IMAGE_COLUMN, 
-		                   itemIcon, 
-		                   TREE_TITLE_COLUMN, 
-		                   title.c_str(),
-		                   TREE_HREF_COLUMN,
-		                   link.c_str(),
-		                   -1);
-	}
 	
-	void addToTopLevel(string title, string link) {
-		gtk_tree_store_append(treestore, &topLevel, NULL);
-		gtk_tree_store_set(treestore,
-		                   &topLevel,
-		                   TREE_IMAGE_COLUMN,
-		                   categoryIcon,
-		                   TREE_TITLE_COLUMN,
-		                   title.c_str(),
-		                   TREE_HREF_COLUMN,
-		                   link.c_str(),
-		                    -1);
-	}
+	
+	private:
 	
 	void parseAnchorToChild(string anchor) {
 		// Parse link
@@ -148,7 +107,7 @@ class CategoriesParser {
 			if(title_end != string::npos) {
 				size_t title_length = title_end - title_begin;
 				string title = anchor.substr(title_begin+1, title_length-1);
-				addToChild(to_utf8(title), addDomainTo(link));
+				model->addToChild(to_utf8(title), addDomainTo(link));
 			}
 		}
 	}

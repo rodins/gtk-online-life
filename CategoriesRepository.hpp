@@ -1,15 +1,15 @@
 // CategoriesRepository.hpp
+#include "CategoriesParser.hpp"
 
 class CategoriesRepository {
     GThreadPool *categoriesThreadPool;
     CategoriesView *view;
-    CategoriesModel *model;
-    gboolean isEmpty;
+    CategoriesModel model;
+    CategoriesParser *parser;
     public:
-    CategoriesRepository(CategoriesView *view, CategoriesModel *model) {
+    CategoriesRepository(CategoriesView *view) {
 		this->view = view;
-		this->model = model;
-		isEmpty = TRUE;
+		parser = new CategoriesParser(&model);
 		// GThreadPool for categories
 	    categoriesThreadPool = g_thread_pool_new(CategoriesRepository::categoriesTask,
 	                                             this,
@@ -18,9 +18,13 @@ class CategoriesRepository {
 	                                             NULL);
 	}
 	
+	~CategoriesRepository() {
+		g_free(parser);
+	}
+	
 	void btnCategoriesClicked() {
 		view->btnCategoriesClicked();
-		if(isEmpty) {
+		if(model.isEmpty()) {
 			getData();
 		}
 	}
@@ -41,9 +45,13 @@ class CategoriesRepository {
 		string page = HtmlString::getCategoriesPage();
 		gdk_threads_enter();
 		if(!page.empty()) {
-			repo->model->setData(page);
-			repo->view->showData();
-			repo->isEmpty = FALSE;
+			repo->parser->parse(page);
+			if(!repo->model.isEmpty()) {
+				repo->view->setModel(repo->model);
+			    repo->view->showData();
+			}else {
+				repo->view->showError();
+			}
 		}else {
 			repo->view->showError();
 		}
