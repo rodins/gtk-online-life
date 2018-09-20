@@ -676,7 +676,8 @@ int main( int   argc,
 	PlayItemRepository playItemRepository;
 	ErrorDialogs errorDialogs(window);                                    
 	ActorsRepository actorsRepository;
-	ConstantLinksRepository constantLinksRepository(&centerView, 
+	ConstantLinksRepository constantLinksRepository(&centerView,
+	                                                &savedItemsModel, 
 	                                                &playlistsRepository,
 	                                                &playItemRepository,
 	                                                &errorDialogs);
