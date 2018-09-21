@@ -90,6 +90,7 @@ class ResultsController {
 	private:
 	
 	void setModel() {
+		view->showResultsData(); // Needed when switching history from error
 		view->setResultsModel(model);
 		parser->setModel(&model);
 		imageIndices->clear();
