@@ -2,8 +2,11 @@
 
 class ResultsNet {
 	CURL *curl_handle;
+	ResultsParser *parser;
+	string url;
 	public:
 	ResultsNet(ResultsParser *parser) {
+		this->parser = parser;
 		/* init the curl session */
 		curl_handle = curl_easy_init();	
 		if(curl_handle) {
@@ -26,7 +29,23 @@ class ResultsNet {
 	    curl_easy_cleanup(curl_handle);
 	}
 	
-	CURLcode getResultsFromNet(string url) {
+	void resetFirstItem() {
+		parser->resetFirstItem();
+	}
+	
+	gboolean isEmpty() {
+		return parser->isEmpty();
+	}
+	
+	void setMode(gboolean isPage) {
+		if(isPage) {
+			url = parser->getNextLink();
+		}else {
+			url = parser->getLink();
+		}
+	}
+	
+	CURLcode getResultsFromNet() {
 		CURLcode res;		
 		if(curl_handle) {		    
 		    /* set url to get here */

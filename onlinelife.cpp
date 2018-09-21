@@ -20,7 +20,7 @@
 #include "SavedItemsModel.hpp"
 #include "FileUtils.hpp"
 #include "CenterView.hpp"
-#include "ResultsRepository.hpp"
+#include "ResultsController.hpp"
 //#include "ActorsHistory.hpp"
 #include "CategoriesModel.hpp"
 #include "CategoriesParser.hpp"
@@ -43,7 +43,7 @@ using namespace std;
 void categoriesClicked(GtkTreeView *treeView,
                        GtkTreePath *path,
                        GtkTreeViewColumn *column,
-                       ResultsRepository *repo) {
+                       ResultsController *controller) {
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -70,10 +70,10 @@ void categoriesClicked(GtkTreeView *treeView,
 		                   TREE_TITLE_COLUMN,
 		                   &parentTitle,
 		                   -1);
-	    repo->getData(string(parentTitle) + " - " + title, link);
+	    controller->newResults(string(parentTitle) + " - " + title, link);
 		g_free(parentTitle);
 	}else {
-		repo->getData(title, link);
+		controller->newResults(title, link);
 	}
 	
 	g_free(title);
@@ -83,7 +83,7 @@ void categoriesClicked(GtkTreeView *treeView,
 void actorsClicked(GtkTreeView *treeView,
                    GtkTreePath *path,
                    GtkTreeViewColumn *column,
-                   ResultsRepository *repo) {
+                   ResultsController *controller) {
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -102,7 +102,7 @@ void actorsClicked(GtkTreeView *treeView,
 	                   &link, 
 	                   -1);
 	                   
-	repo->getData(title, link);
+	controller->newResults(title, link);
 	                   
 	g_free(title);
 	g_free(link);
@@ -219,8 +219,8 @@ static void btnCategoriesClicked(GtkWidget *widget,
 }
 
 static void btnSavedItemsClicked(GtkToolItem *widget,
-                                 ResultsRepository *repo) {
-	repo->btnSavedItemsClicked();	
+                                 ResultsController *controller) {
+	controller->btnSavedItemsClicked();	
 }
 
 /*static void btnUpClicked( GtkWidget *widget,
@@ -229,24 +229,24 @@ static void btnSavedItemsClicked(GtkToolItem *widget,
 }*/
 
 static void btnPrevClicked( GtkToolButton *widget,
-                            ResultsRepository *repo ) {   
-	repo->btnPrevClicked();  
+                            ResultsController *controller) {   
+	controller->btnPrevClicked();  
 }
 
 static void btnNextClicked( GtkToolButton *widget,
-                            ResultsRepository *repo) {   
-	repo->btnNextClicked();
+                            ResultsController *controller) {   
+	controller->btnNextClicked();
 }
 
 static void entryActivated( GtkWidget *widget, 
-                            ResultsRepository *repo) {
+                            ResultsController *controller) {
     string query(gtk_entry_get_text(GTK_ENTRY(widget)));
     if(!query.empty()) {
 	    string title = "Search: " + query;
 	    string base_url = DomainFactory::getDomain() + 
 	         "/?do=search&subaction=search&mode=simple&story=" + 
 	         to_cp1251(query);
-		repo->getData(title, base_url);
+		controller->newResults(title, base_url);
 	}		  						  
 }
 
@@ -271,24 +271,24 @@ static void btnCategoriesRepeatClicked(GtkWidget *widget,
 }*/
 
 void swIconVScrollChanged(GtkAdjustment* adj,
-	                      ResultsRepository *repo) {
+	                      ResultsController *controller) {
 	gdouble value = gtk_adjustment_get_value(adj);
 	gdouble upper = gtk_adjustment_get_upper(adj);
 	gdouble page_size = gtk_adjustment_get_page_size(adj);
 	gdouble max_value = upper - page_size - page_size;
 	if (value > max_value) {
-		repo->getData();
+		controller->append();
 	}
 }
 
 static void btnRefreshClicked(GtkWidget *widget,
-	                          ResultsRepository *repo) {
-	repo->refresh();
+	                          ResultsController *controller) {
+	controller->refresh();
 }
 
 static void btnResultsRepeatClicked(GtkWidget *widget,
-	                                ResultsRepository *repo) {
-	repo->repeat();
+	                                ResultsController *controller) {
+	controller->repeat();
 }
 
 /*static void btnLinksErrorClicked(GtkWidget *widget,
@@ -670,7 +670,7 @@ int main( int   argc,
 	                      swIcon, swTree, hbResultsError, btnSavedItems, 
 	                      btnRefresh, btnUp, btnPrev, btnNext, &savedItemsModel);
 	                      
-	ResultsRepository resultsRepository(&centerView, 
+	ResultsController resultsController(&centerView, 
 	                                    imagesCache,
 	                                    imageIndices);
 	
@@ -699,13 +699,13 @@ int main( int   argc,
 	// Show saved results on start if any
 	if(!savedItemsModel.isEmpty()) {
 		centerView.setSavedItemsActive(TRUE);
-		resultsRepository.btnSavedItemsClicked();
+		resultsController.btnSavedItemsClicked();
 	}
 	
     g_signal_connect(GTK_WIDGET(btnRefresh), 
 				     "clicked", 
 				     G_CALLBACK(btnRefreshClicked), 
-				     &resultsRepository);
+				     &resultsController);
 				 
     /*g_signal_connect(GTK_WIDGET(btnUp),
                      "clicked", 
@@ -715,32 +715,32 @@ int main( int   argc,
     g_signal_connect(btnPrev,
                      "clicked", 
                      G_CALLBACK(btnPrevClicked),
-                     &resultsRepository);
+                     &resultsController);
                      
 	g_signal_connect(btnNext,
 				     "clicked", 
 				     G_CALLBACK(btnNextClicked),
-				     &resultsRepository);
+				     &resultsController);
 				     
     g_signal_connect(btnResultsError,
                      "clicked",
                      G_CALLBACK(btnResultsRepeatClicked),
-                     &resultsRepository);
+                     &resultsController);
 				     
     g_signal_connect(tvCategories,
                      "row-activated",
                      G_CALLBACK(categoriesClicked), 
-                     &resultsRepository);
+                     &resultsController);
         
     g_signal_connect(tvActors, 
                      "row-activated",
                      G_CALLBACK(actorsClicked), 
-                     &resultsRepository);
+                     &resultsController);
     
     g_signal_connect(entry,
                      "activate", 
                      G_CALLBACK(entryActivated), 
-                     &resultsRepository);
+                     &resultsController);
                                       
     /*g_signal_connect(btnListEpisodes,
                      "clicked",
@@ -753,7 +753,7 @@ int main( int   argc,
     g_signal_connect(vadjustment, 
                      "value-changed",
                      G_CALLBACK(swIconVScrollChanged), 
-                     &resultsRepository); 
+                     &resultsController); 
     
     /*ActorsHistory actorsHistory(window,
                                 tvActors,
@@ -846,7 +846,7 @@ int main( int   argc,
     g_signal_connect(GTK_WIDGET(btnSavedItems), 
 				     "clicked", 
 				     G_CALLBACK(btnSavedItemsClicked), 
-				     &resultsRepository);
+				     &resultsController);
         
     //vbRight
     gtk_box_pack_start(GTK_BOX(vbRight), frRightBottom, TRUE, TRUE, 1);

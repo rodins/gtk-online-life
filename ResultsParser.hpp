@@ -22,6 +22,18 @@ class ResultsParser {
 		this->model = model;
 	}
 	
+	gboolean isEmpty() {
+		return model->isEmpty();
+	}
+	
+	string getLink() {
+		return model->getUrl();
+	}
+	
+	string getNextLink() {
+		return model->getNextLink();
+	}
+	
 	void resetFirstItem() {
 		isFirstItem = TRUE;
 	}

@@ -50,25 +50,21 @@ class ResultsHistory {
 	    return model;
 	}
 	
-	void removeBackStackDuplicate(ResultsModel &model) {
-		if(!model.isEmpty()) {
-			// Linear search for title
-			int eraseIndex = -1;
-			// If back stack has title, remove results with it.
-			for(unsigned i = 0; i < backStack.size(); i++) {
-				if(backStack[i].getTitle() == model.getTitle()) {
-					eraseIndex = i;
-					break;
-				}
-			}
-			
-			if(eraseIndex != -1) {
-				backStack.erase(backStack.begin() + eraseIndex);
-				setPrevTooltip();
+	void removeBackStackDuplicate(string title) {
+		// Linear search for title
+		int eraseIndex = -1;
+		// If back stack has title, remove results with it.
+		for(unsigned i = 0; i < backStack.size(); i++) {
+			if(backStack[i].getTitle() == title) {
+				eraseIndex = i;
+				break;
 			}
 		}
 		
-		updatePrevNextButtons();
+		if(eraseIndex != -1) {
+			backStack.erase(backStack.begin() + eraseIndex);
+			setPrevTooltip();
+		}
 	}
 	
 	void updatePrevNextButtons() {
