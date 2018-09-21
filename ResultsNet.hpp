@@ -45,6 +45,10 @@ class ResultsNet {
 	static int results_writer(char *data, size_t size, size_t nmemb,
 	                      ResultsParser *parser)
 	{   
+		if(parser == NULL) {
+			return 0;
+		}
+		
 	    parser->divs_parser(data);
 	    return size*nmemb;
 	}

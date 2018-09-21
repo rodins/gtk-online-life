@@ -2,6 +2,7 @@
 
 class CategoriesParser {
 	CategoriesModel *model;
+	string page;
 	public:
 	
 	CategoriesParser(CategoriesModel *model) {
@@ -12,7 +13,35 @@ class CategoriesParser {
 		return model->isEmpty();
 	}
 	
-	void parse(string page) {
+	gboolean parseData(string strData) {
+		// Find begining
+	    size_t begin = strData.find("<div class=\"nav\">");
+	    // Find end
+	    size_t end = strData.find("</div>");
+	    
+	    // Append begining
+	    if(begin != string::npos && page.empty()) {
+			string data_begin = strData.substr(begin);
+			page.append(data_begin);
+			return FALSE;
+		}
+		
+		// Append middle
+		if(end == string::npos && !page.empty()) {
+			page.append(strData);
+			return FALSE;
+		}
+		
+		// Append end
+		if(end != string::npos && !page.empty()) {
+			string data_end = strData.substr(0, end + 6);
+			page.append(data_end);
+			return TRUE; 
+		}
+		return FALSE;
+	}
+	
+	void parsePage() {
 		size_t nav_begin = page.find("<div class=\"nav\">");
 		size_t nav_end = page.find("</div>", nav_begin+1);
 		if(nav_begin != string::npos && nav_end != string::npos) {
@@ -93,8 +122,6 @@ class CategoriesParser {
 			}
 		}
 	}
-	
-	
 	
 	private:
 	

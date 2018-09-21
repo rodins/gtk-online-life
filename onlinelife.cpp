@@ -24,6 +24,7 @@
 //#include "ActorsHistory.hpp"
 #include "CategoriesModel.hpp"
 #include "CategoriesParser.hpp"
+#include "CategoriesNet.hpp"
 #include "CategoriesView.hpp"
 #include "CategoriesTask.hpp"
 #include "CategoriesController.hpp"
@@ -828,7 +829,8 @@ int main( int   argc,
                                   spCategories, 
                                   swCategories, 
                                   hbCategoriesError);
-    CategoriesTask categoriesTask(&categoriesView, &categoriesParser);
+    CategoriesNet categoriesNet(&categoriesParser);
+    CategoriesTask categoriesTask(&categoriesView, &categoriesNet);
     CategoriesController categoriesController(&categoriesTask);              
                                            
     g_signal_connect(btnCategoriesError, 
