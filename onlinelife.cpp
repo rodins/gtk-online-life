@@ -31,12 +31,12 @@
 #include "ImagesDownloader.hpp"
 #include "PlayItem.hpp"
 #include "PlaylistsUtils.hpp"
-#include "PlayItemRepository.hpp"
-#include "PlaylistsRepository.hpp"
+#include "PlayItemTask.hpp"
+#include "PlaylistsTask.hpp"
 #include "ErrorDialogs.hpp"
-#include "ActorsRepository.hpp"
-#include "ConstantLinksRepository.hpp"
-#include "ProcessResultRepository.hpp"
+#include "ActorsTask.hpp"
+#include "ConstantLinksTask.hpp"
+#include "ProcessResultController.hpp"
 
 using namespace std;
 
@@ -150,7 +150,7 @@ void actorsClicked(GtkTreeView *treeView,
 void resultFunc(GtkIconView *icon_view, 
                 GtkTreePath *path, 
                 gpointer data) {
-	ProcessResultRepository *repo = (ProcessResultRepository*)data;
+	ProcessResultController *controller = (ProcessResultController*)data;
 	// Get model from ivResults
 	GtkTreeModel *model = gtk_icon_view_get_model(icon_view);
 	
@@ -173,7 +173,7 @@ void resultFunc(GtkIconView *icon_view,
 	                   &href,
 	                   -1);
 	                   
-	repo->getData(resultTitle, href, pixbuf);
+	controller->onClick(resultTitle, href, pixbuf);
 	
 	g_free(resultTitle);
 	g_free(href);
@@ -674,18 +674,18 @@ int main( int   argc,
 	                                    imagesCache,
 	                                    imageIndices);
 	
-	PlaylistsRepository playlistsRepository(&centerView);
-	PlayItemRepository playItemRepository;
+	PlaylistsTask playlistsTask(&centerView);
+	PlayItemTask playItemTask;
 	ErrorDialogs errorDialogs(window);                                    
-	ActorsRepository actorsRepository;
-	ConstantLinksRepository constantLinksRepository(&centerView, 
-	                                                &playlistsRepository,
-	                                                &playItemRepository,
-	                                                &errorDialogs);
+	ActorsTask actorsTask;
+	ConstantLinksTask constantLinksTask(&centerView, 
+	                                    &playlistsTask,
+	                                    &playItemTask,
+	                                    &errorDialogs);
 	                                    
-	ProcessResultRepository processResultRepository(btnActors,
-	                                                &actorsRepository,
-	                                                &constantLinksRepository);
+	ProcessResultController processResultController(btnActors,
+	                                                &actorsTask,
+	                                                &constantLinksTask);
     
     // Disable all items                                                
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
@@ -819,7 +819,7 @@ int main( int   argc,
     g_signal_connect(ivResults, 
                      "item-activated", 
                      G_CALLBACK(resultActivated), 
-                     &processResultRepository);
+                     &processResultController);
                      
     CategoriesModel categoriesModel;
     CategoriesParser categoriesParser(&categoriesModel);                 
