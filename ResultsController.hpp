@@ -71,7 +71,7 @@ class ResultsController {
 	}
 	
 	void append() {
-		if(!task->isStarted()) {
+		if(!task->isStarted() && !view->isSavedItemsPressed()) {
 			task->appendMode();
 		    task->start();
 		}
