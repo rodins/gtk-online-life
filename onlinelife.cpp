@@ -224,9 +224,8 @@ static void btnSavedItemsClicked(GtkToolItem *widget,
 }
 
 static void btnUpClicked( GtkWidget *widget,
-                          CenterView *centerView) {
-	centerView->setSensitiveUp(FALSE);						  
-	centerView->showResultsData();
+                          ResultsController *controller) {
+	controller->btnUpClicked();
 }
 
 static void btnPrevClicked( GtkToolButton *widget,
@@ -712,7 +711,7 @@ int main( int   argc,
     g_signal_connect(GTK_WIDGET(btnUp),
                      "clicked", 
                      G_CALLBACK(btnUpClicked), 
-                     &centerView);
+                     &resultsController);
     
     g_signal_connect(btnPrev,
                      "clicked", 

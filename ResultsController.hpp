@@ -45,6 +45,14 @@ class ResultsController {
 		}
 	}
 	
+	void btnUpClicked() {
+		view->setSensitiveUp(FALSE);
+		view->showResultsData();
+		if(!view->isSavedItemsPressed()) {
+			history->updatePrevNextButtons();
+		}	
+	}
+	
 	void btnPrevClicked() {
 		history->saveToForwardStack(model);
 		model = history->restoreFromBackStack();
