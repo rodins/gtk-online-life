@@ -29,6 +29,10 @@ class PlaylistsTask {
     void start(string title, string js) {
 		this->title = title;
 		link = PlaylistsUtils::get_txt_link(js);
+		start();
+	}
+	
+	void start() {
 		if(!link.empty()) { // Playlists found
 			g_thread_pool_push(threadPool, (gpointer)1, NULL);
 		}

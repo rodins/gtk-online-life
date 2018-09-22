@@ -8,6 +8,7 @@ class ResultsTask {
     bool isThreadStarted;
     ResultsHistory *history;
     string title;
+    gboolean error;
     public:
     ResultsTask(CenterView *view, ResultsNet *net, ResultsHistory *history) {
 		this->view = view;
@@ -15,6 +16,7 @@ class ResultsTask {
 		this->history = history;
 		isPage = FALSE;
 		isThreadStarted = FALSE;
+		error = FALSE;
 		threadPool = g_thread_pool_new(ResultsTask::task,
 	                                   this,
 	                                   1, // Run one thread at the time
@@ -42,6 +44,7 @@ class ResultsTask {
 	void start() {
 		if(!isThreadStarted) {
 			isThreadStarted = TRUE;
+			error = FALSE;
 			view->showLoadingIndicator(isPage);
 			net->setMode(isPage); // needed to select url
 			net->resetFirstItem(); // needed to hide loading indicator
@@ -49,6 +52,10 @@ class ResultsTask {
 		                      (gpointer)1,
 		                       NULL);
 		}
+	}
+	
+	gboolean isError() {
+		return error;
 	}
 	
 	private:
@@ -65,6 +72,7 @@ class ResultsTask {
 				}
 			}
 		}else {
+			error = TRUE;
 			view->showError(isPage);
 		}
 		history->updatePrevNextButtons();

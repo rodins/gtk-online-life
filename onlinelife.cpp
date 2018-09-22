@@ -20,6 +20,7 @@
 #include "SavedItemsModel.hpp"
 #include "FileUtils.hpp"
 #include "CenterView.hpp"
+#include "PlaylistsTask.hpp"
 #include "ResultsController.hpp"
 //#include "ActorsHistory.hpp"
 #include "CategoriesModel.hpp"
@@ -32,7 +33,6 @@
 #include "PlayItem.hpp"
 #include "PlaylistsUtils.hpp"
 #include "PlayItemTask.hpp"
-#include "PlaylistsTask.hpp"
 #include "ErrorDialogs.hpp"
 #include "ActorsTask.hpp"
 #include "ConstantLinksTask.hpp"
@@ -669,13 +669,16 @@ int main( int   argc,
 	CenterView centerView(window, PROG_NAME, ivResults, vbCenter, spCenter, 
 	                      swIcon, swTree, hbResultsError, btnSavedItems, 
 	                      btnRefresh, btnUp, btnPrev, btnNext, &savedItemsModel);
+	
+	PlaylistsTask playlistsTask(&centerView,
+	                            gtk_tree_view_get_model(
+	                            GTK_TREE_VIEW(tvPlaylists)));
 	                      
 	ResultsController resultsController(&centerView, 
 	                                    imagesCache,
-	                                    imageIndices);
+	                                    imageIndices,
+	                                    playlistsTask);
 	
-	PlaylistsTask playlistsTask(&centerView,
-	                            gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists)));
 	PlayItemTask playItemTask;
 	ErrorDialogs errorDialogs(window);                                    
 	ActorsTask actorsTask;
