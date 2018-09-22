@@ -223,10 +223,11 @@ static void btnSavedItemsClicked(GtkToolItem *widget,
 	controller->btnSavedItemsClicked();	
 }
 
-/*static void btnUpClicked( GtkWidget *widget,
-                          ResultsHistory *resultsHistory ) {
-	resultsHistory->btnUpClicked();
-}*/
+static void btnUpClicked( GtkWidget *widget,
+                          CenterView *centerView) {
+	centerView->setSensitiveUp(FALSE);						  
+	centerView->showResultsData();
+}
 
 static void btnPrevClicked( GtkToolButton *widget,
                             ResultsController *controller) {   
@@ -674,7 +675,8 @@ int main( int   argc,
 	                                    imagesCache,
 	                                    imageIndices);
 	
-	PlaylistsTask playlistsTask(&centerView);
+	PlaylistsTask playlistsTask(&centerView,
+	                            gtk_tree_view_get_model(GTK_TREE_VIEW(tvPlaylists)));
 	PlayItemTask playItemTask;
 	ErrorDialogs errorDialogs(window);                                    
 	ActorsTask actorsTask;
@@ -707,10 +709,10 @@ int main( int   argc,
 				     G_CALLBACK(btnRefreshClicked), 
 				     &resultsController);
 				 
-    /*g_signal_connect(GTK_WIDGET(btnUp),
+    g_signal_connect(GTK_WIDGET(btnUp),
                      "clicked", 
                      G_CALLBACK(btnUpClicked), 
-                     &centerView);*/
+                     &centerView);
     
     g_signal_connect(btnPrev,
                      "clicked", 

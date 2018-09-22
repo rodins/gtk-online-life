@@ -167,7 +167,7 @@ class CenterView {
 	}
 	
 	void showPlaylistsData() {
-		setTitle(modelTitle);
+		setSensitiveUp();
 		gtk_widget_hide(spCenter);
 		gtk_widget_hide(swIcon);
 		gtk_widget_show(swTree);
