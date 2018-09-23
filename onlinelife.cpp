@@ -20,6 +20,8 @@
 #include "SavedItemsModel.hpp"
 #include "FileUtils.hpp"
 #include "CenterView.hpp"
+#include "PlayItem.hpp"
+#include "PlaylistsUtils.hpp"
 #include "PlaylistsTask.hpp"
 #include "ResultsController.hpp"
 //#include "ActorsHistory.hpp"
@@ -30,8 +32,6 @@
 #include "CategoriesTask.hpp"
 #include "CategoriesController.hpp"
 #include "ImagesDownloader.hpp"
-#include "PlayItem.hpp"
-#include "PlaylistsUtils.hpp"
 #include "PlayItemTask.hpp"
 #include "ErrorDialogs.hpp"
 #include "ActorsTask.hpp"
@@ -108,10 +108,10 @@ void actorsClicked(GtkTreeView *treeView,
 	g_free(link);
 }
 
-/*void playlistClicked(GtkTreeView *treeView,
+void playlistClicked(GtkTreeView *treeView,
                      GtkTreePath *path,
                      GtkTreeViewColumn *column,
-                     ActorsHistory *actorsHistory) {
+                     PlayItemTask *playItemTask) {
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -138,14 +138,14 @@ void actorsClicked(GtkTreeView *treeView,
 		playItem.comment = comment;
 		playItem.file = file;
 		playItem.download = download;
-		playItem.player = actorsHistory->getPlayer();
-		actorsHistory->runPlayItemDialog(playItem);
+		//playItem.player = actorsHistory->getPlayer();
+		playItemTask->start(playItem);
 	}
 	
 	g_free(comment);
 	g_free(file);
 	g_free(download);                   
-}*/
+}
 
 void resultFunc(GtkIconView *icon_view, 
                 GtkTreePath *path, 
@@ -677,7 +677,7 @@ int main( int   argc,
 	ResultsController resultsController(&centerView, 
 	                                    imagesCache,
 	                                    imageIndices,
-	                                    playlistsTask);
+	                                    &playlistsTask);
 	
 	PlayItemTask playItemTask;
 	ErrorDialogs errorDialogs(window);                                    
@@ -778,12 +778,12 @@ int main( int   argc,
                                 btnDelete,
                                 btnSavedItems,
                                 btnActors,
-                                &resultsHistory);
+                                &resultsHistory);*/
                                                      
-    g_signal_connect(selection,
+    /*g_signal_connect(selection,
 	                 "changed", 
 	                 G_CALLBACK(backActorsChanged), 
-	                 &actorsHistory);
+	                 &playItemTask);
 	                                  
     g_signal_connect(btnActors,
                      "clicked", 
@@ -793,14 +793,14 @@ int main( int   argc,
     g_signal_connect(btnActorsError,
                      "clicked",
                      G_CALLBACK(btnActorsRepeatClicked), 
-                     &actorsHistory);
+                     &actorsHistory);*/
                      
     g_signal_connect(tvPlaylists,
                      "row-activated", 
                      G_CALLBACK(playlistClicked), 
-                     &actorsHistory);
+                     &playItemTask);
                      
-    g_signal_connect(btnLinksError,
+    /*g_signal_connect(btnLinksError,
                      "clicked",
                      G_CALLBACK(btnLinksErrorClicked),
                      &actorsHistory);
