@@ -32,7 +32,10 @@
 #include "CategoriesTask.hpp"
 #include "CategoriesController.hpp"
 #include "ImagesDownloader.hpp"
-#include "PlayItemTask.hpp"
+#include "PlayItemPlayer.hpp"
+#include "PlayItemDialog.hpp"
+#include "LinksSizeTask.hpp"
+#include "PlayItemProcessor.hpp"
 #include "ErrorDialogs.hpp"
 #include "ActorsTask.hpp"
 #include "ConstantLinksTask.hpp"
@@ -111,7 +114,7 @@ void actorsClicked(GtkTreeView *treeView,
 void playlistClicked(GtkTreeView *treeView,
                      GtkTreePath *path,
                      GtkTreeViewColumn *column,
-                     PlayItemTask *playItemTask) {
+                     PlayItemProcessor *processor) {
 	// Get model from tree view
 	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
 	
@@ -134,12 +137,11 @@ void playlistClicked(GtkTreeView *treeView,
 	                   -1);
 	
 	if(file != NULL) {
-		PlayItem playItem;
+		static PlayItem playItem;
 		playItem.comment = comment;
 		playItem.file = file;
 		playItem.download = download;
-		//playItem.player = actorsHistory->getPlayer();
-		playItemTask->start(playItem);
+		processor->process(&playItem);
 	}
 	
 	g_free(comment);
@@ -679,12 +681,15 @@ int main( int   argc,
 	                                    imageIndices,
 	                                    &playlistsTask);
 	
-	PlayItemTask playItemTask;
+	PlayItemPlayer playItemPlayer;
+	PlayItemDialog playItemDialog(window, &playItemPlayer, btnActors);
+	LinksSizeTask linksSizeTask(&playItemDialog);
+	PlayItemProcessor playItemProcessor(&linksSizeTask);
 	ErrorDialogs errorDialogs(window);                                    
 	ActorsTask actorsTask;
 	ConstantLinksTask constantLinksTask(&centerView, 
 	                                    &playlistsTask,
-	                                    &playItemTask,
+	                                    &playItemProcessor,
 	                                    &errorDialogs);
 	                                    
 	ProcessResultController processResultController(btnActors,
@@ -798,7 +803,7 @@ int main( int   argc,
     g_signal_connect(tvPlaylists,
                      "row-activated", 
                      G_CALLBACK(playlistClicked), 
-                     &playItemTask);
+                     &playItemProcessor);
                      
     /*g_signal_connect(btnLinksError,
                      "clicked",

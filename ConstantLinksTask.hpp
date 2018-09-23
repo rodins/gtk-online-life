@@ -4,17 +4,17 @@ class ConstantLinksTask {
 	GThreadPool *threadPool;
 	CenterView *view;
 	PlaylistsTask *playlistsTask;
-	PlayItemTask *playItemTask;
+	PlayItemProcessor *playItemProcessor;
 	ErrorDialogs *errorDialogs;
 	string title;
 	public:
 	ConstantLinksTask(CenterView *view,
 	                  PlaylistsTask *playlistsTask,
-	                  PlayItemTask *playItemTask,
+	                  PlayItemProcessor *playItemProcessor,
 	                  ErrorDialogs *errorDialogs) {
         this->view = view;
         this->playlistsTask = playlistsTask;
-        this->playItemTask = playItemTask;
+        this->playItemProcessor = playItemProcessor;
         this->errorDialogs = errorDialogs;
 		// GThreadPool for constant links
 	    threadPool = g_thread_pool_new(ConstantLinksTask::task,
@@ -51,7 +51,7 @@ class ConstantLinksTask {
 		}else { // Not serial
 			task->view->showResultsData();
 		    if(js.length() > 500) { // Movie
-			    task->playItemTask->start(js);
+			    task->playItemProcessor->process(js);
 		    }else if(js.length() > 0){ //  Links error
 			    task->errorDialogs->runLinksErrorDialog();
 		    }else{
