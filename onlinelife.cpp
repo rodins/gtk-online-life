@@ -269,10 +269,10 @@ static void btnCategoriesRepeatClicked(GtkWidget *widget,
 	controller->repeat();
 }
 
-/*static void btnActorsRepeatClicked(GtkWidget *widget,
-                                   ActorsHistory *actorsHistory) {
-    actorsHistory->newActorsThread();
-}*/
+static void btnActorsRepeatClicked(GtkWidget *widget,
+                                   ActorsController *controller) {
+    controller->startTask();
+}
 
 void swIconVScrollChanged(GtkAdjustment* adj,
 	                      ResultsController *controller) {
@@ -805,10 +805,10 @@ int main( int   argc,
                      G_CALLBACK(btnActorsClicked),
                      &actorsController);
                      
-    /*g_signal_connect(btnActorsError,
+    g_signal_connect(btnActorsError,
                      "clicked",
                      G_CALLBACK(btnActorsRepeatClicked), 
-                     &actorsHistory);*/
+                     &actorsController);
                      
     g_signal_connect(tvPlaylists,
                      "row-activated", 
