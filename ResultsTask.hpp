@@ -63,7 +63,6 @@ class ResultsTask {
 		isThreadStarted = FALSE;
 		if(res == CURLE_OK) {
 			if(net->isEmpty()) {
-				//view->showEmpty();
 				view->showResultsData();
 			}else {
 				view->setSensitiveReferesh();

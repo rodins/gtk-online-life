@@ -81,7 +81,9 @@ class ResultsController {
 	}
 	
 	void append() {
-		if(!task->isStarted() && !view->isSavedItemsPressed()) {
+		if(!model.getNextLink().empty() && 
+		   !task->isStarted() &&
+		   !view->isSavedItemsPressed()) {
 			task->appendMode();
 		    task->start();
 		}
