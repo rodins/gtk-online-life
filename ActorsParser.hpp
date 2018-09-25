@@ -1,128 +1,63 @@
-//Actors.hpp
+// ActorsParser.hpp
 
-struct ListEpisodesArgs {
-	string title;
-	string playlist_link;
-};
-
-enum LinksMode {
-	LINKS_MODE_SERIAL,
-	LINKS_MODE_MOVIE, 
-	LINKS_MODE_HIDE,
-	LINKS_MODE_REFRESH
-};
-
-class Actors {
-    string actorsTitle;
-    string info;
-    
-    GtkListStore *store;
-    GtkTreeIter iter;
-    
-    GdkPixbuf *item;
-    
-    int count;
-    
-    string url, playerUrl, js;
-    
-    ListEpisodesArgs listEpisodesArgs;
-    LinksMode linksMode;
-    
-    bool networkOk;
-    
-    GdkPixbuf *pixbuf;
-    
+class ActorsParser {
+    ActorsModel *model;
+    string page;
     public:
-    
-    Actors() {
-	    count = 0;	
-	    networkOk = FALSE;
+    ActorsParser(ActorsModel *model) {
+		this->model = model;
 	}
 	
-	void setUrl(string u) {
-		url = u;
+	ActorsModel* getModel() {
+		return model;
 	}
 	
-	string getUrl() {
-		return url;
+	void init() {
+		page = "";
 	}
 	
-	string getPlayerUrl() {
-		return playerUrl;
-	}
-	
-	void setJs(string js) {
-		this->js = js;
-	}
-	
-	string getJs() {
-		return js;
-	}
-	
-	void setListEpisodesArgs(ListEpisodesArgs listEpisodesArgs) {
-		this->listEpisodesArgs = listEpisodesArgs;
-	}
-	
-	ListEpisodesArgs getListEpisodesArgs() {
-		return listEpisodesArgs;
-	}
-	
-	void setLinksMode(LinksMode linksMode) {
-		this->linksMode = linksMode;
-	}
-	
-	LinksMode getLinksMode() {
-		return linksMode;
-	}
-    
-	GtkTreeModel *getModel() {
-		return GTK_TREE_MODEL(store);
-	}
-	
-	int getCount() {
-		return count;
-	}
-    
-    void setTitle(string t) {
-		actorsTitle = t;
-	}
-	
-	string& getTitle() {
-		return actorsTitle;
-	}
-	
-	string& getInfo() {
-		return info;
-	}
-	
-	void setNetworkOk(bool isOk) {
-		networkOk = isOk;
-	}
-	
-	bool isNetworkOk() {
-		return networkOk;
-	}
-	
-	void setPixbuf(GdkPixbuf *pixbuf) {
-		this->pixbuf = pixbuf;
-	}
-	
-	GdkPixbuf *getPixbuf() {
-		return pixbuf;
-	}
-    
-    void parse(string &page) {
-		count = 0;
-		item = IconsFactory::getLinkIcon();
-		store = gtk_list_store_new(TREE_NUM_COLS, 
-                                   GDK_TYPE_PIXBUF,
-                                   G_TYPE_STRING,
-                                   G_TYPE_STRING);
+	gboolean parseData(string strData) {
+	    // Find begining
+	    size_t begin = strData.find(to_cp1251("Название:"));
+	    // Find end
+	    //string strEnd = to_cp1251("Премьера в мире:");
+	    string strEnd = "</iframe>";
+	    size_t end = strData.find(strEnd);
+	    
+	    // Append begining
+	    if(begin != string::npos && page.empty()) {
+			if(end != string::npos) { // End found in first line
+				string data_substr = strData.substr(begin, end - begin);
+                page.append(data_substr);
+				return TRUE;
+			}else {
+				string data_begin = strData.substr(begin);
+				page.append(data_begin);
+				return FALSE;
+			}
+		}
 		
+		// Append middle
+		if(end == string::npos && !page.empty()) {
+			page.append(strData);
+			return FALSE;
+		}
+
+		
+		// Append end
+		if(end != string::npos && !page.empty()) {
+			string data_end = strData.substr(0, end + strEnd.size());
+			page.append(data_end);
+			return TRUE; 
+		}
+		return FALSE;
+	}
+	
+	void parsePage() {		
 		page = to_utf8(page);
 		string year = parse_simple_info(page, "Год: ");
 		string country = parse_simple_info(page, "Страна: ");
-		info = actorsTitle + " - " + year + " - " + country;
+		model->setInfo(year, country);
 		parse_info(page, "Режиссер:", " (режиссер)");
 		parse_info(page, "В ролях:", "");
 		parse_iframe(page);
@@ -131,7 +66,6 @@ class Actors {
 	private:
 	
 	void parse_iframe(string &page) {
-		playerUrl = "";
 		size_t iframe_begin = page.find("<iframe");
 		size_t iframe_end = page.find("</iframe>", iframe_begin+10);
 		if(iframe_begin != string::npos && iframe_end != string::npos) {
@@ -142,23 +76,10 @@ class Actors {
 			size_t link_end = iframe.find("'", link_begin+6);
 			if(link_begin != string::npos && link_end != string::npos) {
 				size_t link_length = link_end - link_begin;
-			    playerUrl = iframe.substr(link_begin+5, link_length-5);
+			    string playerUrl = iframe.substr(link_begin+5, link_length-5);
+			    model->setPlayerUrl(playerUrl);
 			}
 		}
-	}
-	
-	void addToStore(string title, string link) {
-		gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store,
-                           &iter,
-                           TREE_IMAGE_COLUMN,
-                           item,
-                           TREE_TITLE_COLUMN, 
-                           title.c_str(),
-                           TREE_HREF_COLUMN,
-                           link.c_str(),
-                           -1);
-        count++;
 	}
 	
 	string parse_simple_info(string &page, string query) {
@@ -206,7 +127,7 @@ class Actors {
 						string href = anchor.substr(href_begin+6, href_length-7);
 						//cout << href << endl;
 						
-					    addToStore(title + director, href);
+					    model->addToStore(title + director, href);
 					}
 				}
 				

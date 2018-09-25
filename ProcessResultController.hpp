@@ -1,22 +1,19 @@
 // ProcessResultController.hpp
 
 class ProcessResultController {
-	ActorsTask *actorsTask;
+	ActorsController *actorsController;
 	ConstantLinksTask *constantLinksTask;
-    gboolean isActorsActive;
     public:
-    ProcessResultController(GtkToolItem *btnActors,
-                            ActorsTask *actorsTask,
+    ProcessResultController(ActorsController *actorsController,
                             ConstantLinksTask *constantLinksTask) {
-		this->actorsTask = actorsTask;
+		this->actorsController = actorsController;
 		this->constantLinksTask = constantLinksTask;
-		isActorsActive = gtk_toggle_tool_button_get_active(
-		                       GTK_TOGGLE_TOOL_BUTTON(btnActors));
 	}
 	
 	void onClick(string title, string href, GdkPixbuf *pixbuf) {
-		if(isActorsActive) {
-			actorsTask->start(title, href, pixbuf);
+		actorsController->setResultData(title, href);
+		if(actorsController->isActorsActive()) {
+			actorsController->startTask();
 		}else {
 			constantLinksTask->start(title, href);
 		}

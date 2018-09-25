@@ -37,7 +37,9 @@
 #include "LinksSizeTask.hpp"
 #include "PlayItemProcessor.hpp"
 #include "ErrorDialogs.hpp"
-#include "ActorsTask.hpp"
+#include "ActorsModel.hpp"
+#include "ActorsView.hpp"
+#include "ActorsController.hpp"
 #include "ConstantLinksTask.hpp"
 #include "ProcessResultController.hpp"
 
@@ -252,12 +254,12 @@ static void entryActivated( GtkWidget *widget,
 	}		  						  
 }
 
-/*static void btnActorsClicked(GtkWidget *widget,
-	                         ActorsHistory *actorsHistory){
-	actorsHistory->btnActorsClicked();
+static void btnActorsClicked(GtkWidget *widget,
+	                         ActorsController *controller){
+	controller->click();
 }
 
-static void backActorsChanged(GtkTreeSelection *treeselection,
+/*static void backActorsChanged(GtkTreeSelection *treeselection,
 	                          ActorsHistory *actorsHistory) {
 	actorsHistory->changed(treeselection);
 }*/
@@ -671,6 +673,14 @@ int main( int   argc,
 	CenterView centerView(window, PROG_NAME, ivResults, vbCenter, spCenter, 
 	                      swIcon, swTree, hbResultsError, btnSavedItems, 
 	                      btnRefresh, btnUp, btnPrev, btnNext, &savedItemsModel);
+	                      
+	ActorsView actorsView(vbRight, 
+	                      btnActors,
+	                      spActors,
+	                      frRightTop,
+	                      hbActorsError,
+	                      lbInfo,
+	                      tvActors);
 	
 	PlaylistsTask playlistsTask(&centerView,
 	                            gtk_tree_view_get_model(
@@ -686,14 +696,14 @@ int main( int   argc,
 	LinksSizeTask linksSizeTask(&playItemDialog);
 	PlayItemProcessor playItemProcessor(&linksSizeTask);
 	ErrorDialogs errorDialogs(window);                                    
-	ActorsTask actorsTask;
+	
+	ActorsController actorsController(&actorsView);
 	ConstantLinksTask constantLinksTask(&centerView, 
 	                                    &playlistsTask,
 	                                    &playItemProcessor,
 	                                    &errorDialogs);
 	                                    
-	ProcessResultController processResultController(btnActors,
-	                                                &actorsTask,
+	ProcessResultController processResultController(&actorsController,
 	                                                &constantLinksTask);
     
     // Disable all items                                                
@@ -788,14 +798,14 @@ int main( int   argc,
     /*g_signal_connect(selection,
 	                 "changed", 
 	                 G_CALLBACK(backActorsChanged), 
-	                 &playItemTask);
+	                 &playItemTask);*/
 	                                  
     g_signal_connect(btnActors,
                      "clicked", 
                      G_CALLBACK(btnActorsClicked),
-                     &actorsHistory);
+                     &actorsController);
                      
-    g_signal_connect(btnActorsError,
+    /*g_signal_connect(btnActorsError,
                      "clicked",
                      G_CALLBACK(btnActorsRepeatClicked), 
                      &actorsHistory);*/
