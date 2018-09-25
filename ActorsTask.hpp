@@ -30,7 +30,7 @@ class ActorsTask {
 		CURLcode res = task->net->getData();
 		// On post execute
 		gdk_threads_enter();
-		if(res == CURLE_WRITE_ERROR) { // This error means OK
+		if(res == CURLE_WRITE_ERROR || res == CURLE_OK) { // WRITE_ERROR is also OK
 			task->view->showData();
 		}else {
 		    task->view->showError();	
