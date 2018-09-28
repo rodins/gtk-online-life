@@ -31,6 +31,7 @@ class ActorsNet {
 	CURLcode getData() {
 		CURLcode res;
 		if(curl_handle) {
+			parser->init();
 			string url = parser->getModel()->getUrl();
 			curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
 			/* get it */

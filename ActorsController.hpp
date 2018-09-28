@@ -10,12 +10,13 @@ class ActorsController {
 	ActorsNet *net;
     ActorsTask *task;
     public:
-    ActorsController(ActorsView *view) {
+    ActorsController(ActorsView *view, DynamicLinksController *controller) {
 	    this->view = view;
 	    view->setModel(&model);
+	    controller->setModel(&model);
 	    parser = new ActorsParser(&model);
 	    net = new ActorsNet(parser);
-	    task = new ActorsTask(view, net);		 
+	    task = new ActorsTask(view, net, controller);		 
 	}
 	
 	~ActorsController() {

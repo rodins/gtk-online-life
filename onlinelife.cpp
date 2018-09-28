@@ -39,6 +39,8 @@
 #include "ErrorDialogs.hpp"
 #include "ActorsModel.hpp"
 #include "ActorsView.hpp"
+#include "DynamicLinksView.hpp"
+#include "DynamicLinksController.hpp"
 #include "ActorsController.hpp"
 #include "ConstantLinksTask.hpp"
 #include "ProcessResultController.hpp"
@@ -295,22 +297,22 @@ static void btnResultsRepeatClicked(GtkWidget *widget,
 	controller->repeat();
 }
 
-/*static void btnLinksErrorClicked(GtkWidget *widget,
-	                             ActorsHistory *actorsHistory) {
-	actorsHistory->btnLinksErrorClicked();
+static void btnLinksErrorClicked(GtkWidget *widget,
+	                             DynamicLinksController *controller) {
+	controller->startTask();
 }
 
 static void btnGetLinksClicked(GtkWidget *widget,
-	                           ActorsHistory *actorsHistory) {
-	actorsHistory->btnGetLinksClicked();
+	                           DynamicLinksController *controller) {
+	controller->btnFilmClicked();
 }
 
 static void btnListEpisodesClicked(GtkWidget *widget,
-	                               ResultsHistory *resultsHistory) {
-	resultsHistory->btnListEpisodesClicked();
+	                               DynamicLinksController *controller) {
+	controller->btnSerialClicked();
 }
 
-static void btnSaveClicked(GtkWidget *widget,
+/*static void btnSaveClicked(GtkWidget *widget,
 	                       ActorsHistory *actorsHistory) {
 	actorsHistory->btnSaveClicked();
 }
@@ -697,7 +699,15 @@ int main( int   argc,
 	PlayItemProcessor playItemProcessor(&linksSizeTask);
 	ErrorDialogs errorDialogs(window);                                    
 	
-	ActorsController actorsController(&actorsView);
+	DynamicLinksView dynamicLinksView(frActions,
+	                                  spLinks,
+	                                  btnGetLinks,
+	                                  btnListEpisodes,
+	                                  btnLinksError);
+	DynamicLinksController dynamicLinksController(&dynamicLinksView,
+	                                              &playlistsTask,
+	                                              &playItemProcessor);
+	ActorsController actorsController(&actorsView, &dynamicLinksController);
 	ConstantLinksTask constantLinksTask(&centerView, 
 	                                    &playlistsTask,
 	                                    &playItemProcessor,
@@ -761,10 +771,10 @@ int main( int   argc,
                      G_CALLBACK(entryActivated), 
                      &resultsController);
                                       
-    /*g_signal_connect(btnListEpisodes,
+    g_signal_connect(btnListEpisodes,
                      "clicked",
                      G_CALLBACK(btnListEpisodesClicked),
-                     &resultsHistory);*/
+                     &dynamicLinksController);
                      
     // IconView scroll to the bottom detection code
     GtkAdjustment *vadjustment;
@@ -815,17 +825,17 @@ int main( int   argc,
                      G_CALLBACK(playlistClicked), 
                      &playItemProcessor);
                      
-    /*g_signal_connect(btnLinksError,
+    g_signal_connect(btnLinksError,
                      "clicked",
                      G_CALLBACK(btnLinksErrorClicked),
-                     &actorsHistory);
+                     &dynamicLinksController);
                      
     g_signal_connect(btnGetLinks,
                      "clicked",
                      G_CALLBACK(btnGetLinksClicked),
-                     &actorsHistory);
+                     &dynamicLinksController);
                      
-    g_signal_connect(btnSave,
+    /*g_signal_connect(btnSave,
                      "clicked",
                      G_CALLBACK(btnSaveClicked),
                      &actorsHistory);
@@ -904,6 +914,8 @@ int main( int   argc,
     gtk_widget_hide(spActors);
     gtk_widget_hide(hbActorsError);
     gtk_widget_hide(frActions);
+    gtk_widget_hide(btnSave);
+    gtk_widget_hide(btnDelete);
     
     gtk_widget_hide(hbResultsError);
                                    

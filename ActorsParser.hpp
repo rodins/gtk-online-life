@@ -20,7 +20,6 @@ class ActorsParser {
 	    // Find begining
 	    size_t begin = strData.find(to_cp1251("Название:"));
 	    // Find end
-	    //string strEnd = to_cp1251("Премьера в мире:");
 	    string strEnd = "</iframe>";
 	    size_t end = strData.find(strEnd);
 	    
@@ -55,23 +54,22 @@ class ActorsParser {
 	
 	void parsePage() {		
 		page = to_utf8(page);
-		string year = parse_simple_info(page, "Год: ");
-		string country = parse_simple_info(page, "Страна: ");
+		string year = parse_simple_info("Год: ");
+		string country = parse_simple_info("Страна: ");
 		model->setInfo(year, country);
-		parse_info(page, "Режиссер:", " (режиссер)");
-		parse_info(page, "В ролях:", "");
-		parse_iframe(page);
+		parse_info("Режиссер:", " (режиссер)");
+		parse_info("В ролях:", "");
+		parse_iframe();
 	}
 	
 	private:
 	
-	void parse_iframe(string &page) {
+	void parse_iframe() {
 		size_t iframe_begin = page.find("<iframe");
 		size_t iframe_end = page.find("</iframe>", iframe_begin+10);
 		if(iframe_begin != string::npos && iframe_end != string::npos) {
 			size_t iframe_length = iframe_end - iframe_begin;
 			string iframe = page.substr(iframe_begin, iframe_length);
-
 			size_t link_begin = iframe.find("src=");
 			size_t link_end = iframe.find("'", link_begin+6);
 			if(link_begin != string::npos && link_end != string::npos) {
@@ -82,7 +80,7 @@ class ActorsParser {
 		}
 	}
 	
-	string parse_simple_info(string &page, string query) {
+	string parse_simple_info(string query) {
 		string end = "\n";
 		size_t info_begin = page.find(query);
 		size_t info_end = page.find(end, info_begin);
@@ -94,7 +92,7 @@ class ActorsParser {
 		return "";
 	}
 	
-	void parse_info(string page, string query, string director) {
+	void parse_info(string query, string director) {
 		string begin = query; // "В ролях:";
 		string end = "</p>";
 		size_t actors_begin = page.find(begin);

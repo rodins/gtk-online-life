@@ -5,10 +5,14 @@ class ActorsTask {
     ActorsView *view;
     ActorsModel *model;
     ActorsNet *net;
+    DynamicLinksController *controller;
     public:
-    ActorsTask(ActorsView *view, ActorsNet *net) {
+    ActorsTask(ActorsView *view, 
+               ActorsNet *net, 
+               DynamicLinksController *controller) {
 		this->view = view;
 		this->net = net;
+		this->controller = controller;
 		// GThreadPool for actors
 	    pool = g_thread_pool_new(ActorsTask::task,
 	                                   this,
@@ -26,11 +30,13 @@ class ActorsTask {
 		// On pre execute
 		gdk_threads_enter();
 		task->view->showLoadingIndicator();
+		task->controller->hideLinksButtons();
 		gdk_threads_leave();
 		CURLcode res = task->net->getData();
 		// On post execute
 		gdk_threads_enter();
 		if(res == CURLE_WRITE_ERROR || res == CURLE_OK) { // WRITE_ERROR is also OK
+			task->controller->startTask();
 			task->view->showData();
 		}else {
 		    task->view->showError();	

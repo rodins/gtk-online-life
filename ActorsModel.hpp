@@ -8,6 +8,7 @@ class ActorsModel {
     string title, link;
     string info;
     string playerUrl;
+    string js;
     public:
     ActorsModel() {
 		empty = TRUE;
@@ -25,6 +26,7 @@ class ActorsModel {
 		empty = TRUE;
 		gtk_list_store_clear(store);
 		playerUrl = "";
+		js = "";
 	}
 	
 	GtkTreeModel* getTreeModel() {
@@ -53,6 +55,14 @@ class ActorsModel {
 	
 	string getPlayerUrl() {
 		return playerUrl;
+	}
+	
+	void setJs(string js) {
+		this->js = js;
+	}
+	
+	string getJs() {
+		return js;
 	}
 	
 	gboolean isEmpty() {
