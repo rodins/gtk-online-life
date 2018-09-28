@@ -2,17 +2,18 @@
 
 class PlayItemProcessor {
     LinksSizeTask *sizeTask;
+    PlayItem playItem;
     public:
     PlayItemProcessor(LinksSizeTask *sizeTask) {
 		this->sizeTask = sizeTask;
 	}
     
     void process(string js) {
-        static PlayItem playItem = PlaylistsUtils::parse_play_item(js, FALSE);
+        playItem = PlaylistsUtils::parse_play_item(js, FALSE);
         process(&playItem);
     }
     
-    void process(PlayItem *playItem) {
-		sizeTask->start(playItem);
+    void process(PlayItem *pi) {
+		sizeTask->start(pi);
 	}
 };
