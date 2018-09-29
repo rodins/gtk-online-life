@@ -11,7 +11,7 @@ class ProcessResultController {
 	}
 	
 	void onClick(string title, string href, GdkPixbuf *pixbuf) {
-		actorsController->setResultData(title, href);
+		actorsController->setResultData(title, href, pixbuf);
 		if(actorsController->isActorsActive()) {
 			actorsController->startTask();
 		}else {

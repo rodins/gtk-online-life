@@ -4,6 +4,7 @@ class ActorsModel {
     GtkListStore *store;
     GtkTreeIter iter;
     GdkPixbuf *item;
+    GdkPixbuf *pixbuf;
     gboolean empty;
     string title, link;
     string info;
@@ -19,10 +20,11 @@ class ActorsModel {
                                    G_TYPE_STRING);
 	}
 	
-	void init(string title, string link) {
+	void init(string title, string link, GdkPixbuf *pixbuf) {
 		this->title = title;
 		this->info = title;
 		this->link = link;
+		this->pixbuf = pixbuf;
 		empty = TRUE;
 		gtk_list_store_clear(store);
 		playerUrl = "";
@@ -67,6 +69,10 @@ class ActorsModel {
 	
 	gboolean isEmpty() {
 		return empty;
+	}
+	
+	GdkPixbuf *getPixbuf() {
+		return pixbuf;
 	}
 	
 	void addToStore(string title, string link) {

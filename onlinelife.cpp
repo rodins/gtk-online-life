@@ -41,6 +41,8 @@
 #include "ActorsView.hpp"
 #include "DynamicLinksView.hpp"
 #include "DynamicLinksController.hpp"
+#include "SavedItemsView.hpp"
+#include "SavedItemsController.hpp"
 #include "ActorsController.hpp"
 #include "ConstantLinksTask.hpp"
 #include "ProcessResultController.hpp"
@@ -312,15 +314,15 @@ static void btnListEpisodesClicked(GtkWidget *widget,
 	controller->btnSerialClicked();
 }
 
-/*static void btnSaveClicked(GtkWidget *widget,
-	                       ActorsHistory *actorsHistory) {
-	actorsHistory->btnSaveClicked();
+static void btnSaveClicked(GtkWidget *widget,
+	                       SavedItemsController *controller) {
+	controller->btnSaveClicked();
 }
 
 static void btnDeleteClicked(GtkWidget *widget,
-	                         ActorsHistory *actorsHistory) {
-	actorsHistory->btnDeleteClicked();
-}*/
+	                         SavedItemsController *controller) {
+	controller->btnDeleteClicked();
+}
 
 int main( int   argc,
           char *argv[] )
@@ -706,7 +708,15 @@ int main( int   argc,
 	DynamicLinksController dynamicLinksController(&dynamicLinksView,
 	                                              &playlistsTask,
 	                                              &playItemProcessor);
-	ActorsController actorsController(&actorsView, &dynamicLinksController);
+	                                              
+	SavedItemsView savedItemsView(btnSave, btnDelete);
+	SavedItemsController savedItemsController(&savedItemsView,
+	                                          &savedItemsModel);
+	                                              
+	ActorsController actorsController(&actorsView, 
+	                                  &dynamicLinksController,
+	                                  &savedItemsController);
+	                                  
 	ConstantLinksTask constantLinksTask(&centerView, 
 	                                    &playlistsTask,
 	                                    &playItemProcessor,
@@ -834,15 +844,15 @@ int main( int   argc,
                      G_CALLBACK(btnGetLinksClicked),
                      &dynamicLinksController);
                      
-    /*g_signal_connect(btnSave,
+    g_signal_connect(btnSave,
                      "clicked",
                      G_CALLBACK(btnSaveClicked),
-                     &actorsHistory);
+                     &savedItemsController);
                      
     g_signal_connect(btnDelete,
                      "clicked",
                      G_CALLBACK(btnDeleteClicked),
-                     &actorsHistory);*/
+                     &savedItemsController);
                      
     g_signal_connect(ivResults, 
                      "item-activated", 

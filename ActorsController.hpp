@@ -9,14 +9,19 @@ class ActorsController {
 	ActorsParser *parser;
 	ActorsNet *net;
     ActorsTask *task;
+    SavedItemsController *savedItemsController;
     public:
-    ActorsController(ActorsView *view, DynamicLinksController *controller) {
+    ActorsController(ActorsView *view, 
+                     DynamicLinksController *dynamicLinksController,
+                     SavedItemsController *savedItemsController) {
 	    this->view = view;
+	    this->savedItemsController = savedItemsController;
 	    view->setModel(&model);
-	    controller->setModel(&model);
+	    dynamicLinksController->setModel(&model);
+	    savedItemsController->setModel(&model);
 	    parser = new ActorsParser(&model);
 	    net = new ActorsNet(parser);
-	    task = new ActorsTask(view, net, controller);		 
+	    task = new ActorsTask(view, net, dynamicLinksController);		 
 	}
 	
 	~ActorsController() {
@@ -25,8 +30,9 @@ class ActorsController {
 		g_free(parser);
 	}
 	
-	void setResultData(string title, string href) {
-		model.init(title, href);
+	void setResultData(string title, string href, GdkPixbuf *pixbuf) {
+		model.init(title, href, pixbuf);
+		savedItemsController->showSaveOrDelete();
 	}
 	
 	gboolean isActorsActive() {
