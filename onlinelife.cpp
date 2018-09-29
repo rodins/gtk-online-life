@@ -699,8 +699,7 @@ int main( int   argc,
 	PlayItemProcessor playItemProcessor(&linksSizeTask);
 	ErrorDialogs errorDialogs(window);                                    
 	
-	DynamicLinksView dynamicLinksView(frActions,
-	                                  spLinks,
+	DynamicLinksView dynamicLinksView(spLinks,
 	                                  btnGetLinks,
 	                                  btnListEpisodes,
 	                                  btnLinksError);
@@ -913,9 +912,6 @@ int main( int   argc,
     
     gtk_widget_hide(spActors);
     gtk_widget_hide(hbActorsError);
-    gtk_widget_hide(frActions);
-    gtk_widget_hide(btnSave);
-    gtk_widget_hide(btnDelete);
     
     gtk_widget_hide(hbResultsError);
                                    

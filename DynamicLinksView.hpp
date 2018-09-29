@@ -1,18 +1,15 @@
 // DynamicLinksView.hpp
 
 class DynamicLinksView {
-    GtkWidget *frActions;
     GtkWidget *spLinks;
     GtkWidget *btnGetLinks;
     GtkWidget *btnListEpisodes;
     GtkWidget *btnLinksError;
     public:
-    DynamicLinksView(GtkWidget *frActions,
-                     GtkWidget *spLinks,
+    DynamicLinksView(GtkWidget *spLinks,
                      GtkWidget *btnGetLinks,
                      GtkWidget *btnListEpisodes,
                      GtkWidget *btnLinksError) {
-	    this->frActions = frActions;
 	    this->spLinks = spLinks;
 	    this->btnGetLinks = btnGetLinks;
 	    this->btnListEpisodes = btnListEpisodes;
@@ -20,7 +17,6 @@ class DynamicLinksView {
 	}
 	
 	void showLoadingIndicator() {
-		gtk_widget_show(frActions);
 		gtk_widget_show(spLinks);
 		gtk_widget_hide(btnGetLinks);
 		gtk_widget_hide(btnListEpisodes);
@@ -41,7 +37,6 @@ class DynamicLinksView {
 	}
 	
 	void showEmpty() {
-		gtk_widget_hide(frActions);
 		gtk_widget_hide(spLinks);
 		gtk_widget_hide(btnGetLinks);
 		gtk_widget_hide(btnListEpisodes);
