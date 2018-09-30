@@ -6,18 +6,24 @@ class DynamicLinksTask {
 	ActorsModel *model;
 	string url, playerUrl;
 	public:
-	DynamicLinksTask(DynamicLinksView *view, ActorsModel *model) {
+	DynamicLinksTask(DynamicLinksView *view) {
 		this->view = view;
-		this->model = model;
+		this->model = NULL;
 		pool = g_thread_pool_new(DynamicLinksTask::task,
-	                                   this,
-	                                   1, // Run one thread at the time
-	                                   FALSE,
-	                                   NULL);
+	                             this,
+	                             1, // Run one thread at the time
+	                             FALSE,
+	                             NULL);
+	}
+	
+	void setModel(ActorsModel *model) {
+		this->model = model;
 	}
 
     void start() {
-		g_thread_pool_push(pool, (gpointer)1, NULL);
+		if(model != NULL) {
+			g_thread_pool_push(pool, (gpointer)1, NULL);
+		}
 	}
 	
 	private:
@@ -37,13 +43,17 @@ class DynamicLinksTask {
 		task->model->setJs(js);
 		if(js.length() > 1000) { // Serial
             task->view->showSerialButton();
+            task->model->setLinksMode(LINKS_MODE_SERIAL);
 		}else { // Not serial
 		    if(js.length() > 500) { // Movie
 			    task->view->showFilmButton();
+			    task->model->setLinksMode(LINKS_MODE_FILM);
 			}else if(js.length() > 0) {
 				task->view->showEmpty();
+				task->model->setLinksMode(LINKS_MODE_EMPTY);
 		    }else{ //  Links error
 			    task->view->showError();
+			    task->model->setLinksMode(LINKS_MODE_ERROR);
 		    }
 		}
 		gdk_threads_leave();

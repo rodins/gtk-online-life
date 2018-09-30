@@ -9,19 +9,21 @@ class ActorsController {
 	ActorsParser *parser;
 	ActorsNet *net;
     ActorsTask *task;
+    DynamicLinksController *dynamicLinksController;
     SavedItemsController *savedItemsController;
+    ActorsHistoryModel *actorsHistoryModel;
     public:
     ActorsController(ActorsView *view, 
                      DynamicLinksController *dynamicLinksController,
-                     SavedItemsController *savedItemsController) {
+                     SavedItemsController *savedItemsController,
+                     ActorsHistoryModel *actorsHistoryModel) {
 	    this->view = view;
+	    this->dynamicLinksController = dynamicLinksController;
 	    this->savedItemsController = savedItemsController;
-	    view->setModel(&model);
-	    dynamicLinksController->setModel(&model);
-	    savedItemsController->setModel(&model);
+	    this->actorsHistoryModel = actorsHistoryModel;
 	    parser = new ActorsParser(&model);
 	    net = new ActorsNet(parser);
-	    task = new ActorsTask(view, net, dynamicLinksController);		 
+	    task = new ActorsTask(view, net, dynamicLinksController);	 
 	}
 	
 	~ActorsController() {
@@ -31,12 +33,19 @@ class ActorsController {
 	}
 	
 	void setResultData(string title, string href, GdkPixbuf *pixbuf) {
+		actorsHistoryModel->saveActorsModel(model);
 		model.init(title, href, pixbuf);
-		savedItemsController->showSaveOrDelete();
+		setActorsModel();
 	}
 	
 	gboolean isActorsActive() {
 		return view->isBtnActorsActive();
+	}
+	
+	void changed(string key) {
+		actorsHistoryModel->saveActorsModel(model);
+		model = actorsHistoryModel->getActorsModel(key);
+		setActorsModel();
 	}
 	
 	void startTask() {
@@ -45,5 +54,12 @@ class ActorsController {
 	
 	void click() {
 		view->onActorsClick(model.isEmpty());
+	}
+	
+	private:
+	void setActorsModel() {
+	    view->setModel(&model);
+	    dynamicLinksController->setModel(&model);
+	    savedItemsController->setModel(&model);	
 	}
 };

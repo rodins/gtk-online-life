@@ -1,4 +1,5 @@
 // ActorsModel.hpp
+#include "LinksMode.hpp"
 
 class ActorsModel {
     GtkListStore *store;
@@ -6,6 +7,7 @@ class ActorsModel {
     GdkPixbuf *item;
     GdkPixbuf *pixbuf;
     gboolean empty;
+    LinksMode linksMode;
     string title, link;
     string info;
     string playerUrl;
@@ -14,19 +16,20 @@ class ActorsModel {
     ActorsModel() {
 		empty = TRUE;
 		item = IconsFactory::getLinkIcon();
+	}
+	
+	void init(string title, string link, GdkPixbuf *pixbuf) {
+		
+		this->title = stripNewLine(title);
+		this->info = this->title;
+		this->link = link;
+		this->pixbuf = pixbuf;
+		empty = TRUE;
+		linksMode = LINKS_MODE_EMPTY;
 		store = gtk_list_store_new(TREE_NUM_COLS, 
                                    GDK_TYPE_PIXBUF,
                                    G_TYPE_STRING,
                                    G_TYPE_STRING);
-	}
-	
-	void init(string title, string link, GdkPixbuf *pixbuf) {
-		this->title = title;
-		this->info = title;
-		this->link = link;
-		this->pixbuf = pixbuf;
-		empty = TRUE;
-		gtk_list_store_clear(store);
 		playerUrl = "";
 		js = "";
 	}
@@ -75,6 +78,14 @@ class ActorsModel {
 		return pixbuf;
 	}
 	
+	void setLinksMode(LinksMode linksMode) {
+	    this->linksMode = linksMode;	
+	}
+	
+	LinksMode getLinksMode() {
+	    return linksMode;	
+	}
+	
 	void addToStore(string title, string link) {
 		gtk_list_store_append(store, &iter);
         gtk_list_store_set(store,
@@ -87,5 +98,14 @@ class ActorsModel {
                            link.c_str(),
                            -1);
         empty = FALSE;
+	}
+	
+	private:
+	string stripNewLine(string title) {
+		size_t pos = title.find("\n");
+		if(pos != string::npos) {
+		    return title.substr(0, pos);	
+		}
+		return title;
 	}
 };

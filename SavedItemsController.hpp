@@ -14,14 +14,7 @@ class SavedItemsController {
 	
 	void setModel(ActorsModel *model) {
 		actorsModel = model;
-	}
-	
-	void showSaveOrDelete() {
-		if(FileUtils::isTitleSaved(actorsModel->getTitle())) {
-			view->showDelete();
-		}else {
-			view->showSave();
-		}	
+		showSaveOrDelete();
 	}
 	
 	void btnSaveClicked() {
@@ -42,5 +35,14 @@ class SavedItemsController {
 			FileUtils::listSavedFiles(*savedItemsModel);
 			view->showSave();
 		}
+	}
+	
+	private:
+	void showSaveOrDelete() {
+		if(FileUtils::isTitleSaved(actorsModel->getTitle())) {
+			view->showDelete();
+		}else {
+			view->showSave();
+		}	
 	}
 };

@@ -27,12 +27,16 @@ class DynamicLinksView {
 	void showFilmButton() {
 		gtk_widget_hide(spLinks);
 		gtk_widget_show(btnGetLinks);
+		gtk_widget_hide(btnListEpisodes);
+		gtk_widget_hide(btnLinksError);
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
 	void showSerialButton() {
 		gtk_widget_hide(spLinks);
+		gtk_widget_hide(btnGetLinks);
 		gtk_widget_show(btnListEpisodes);
+		gtk_widget_hide(btnLinksError);
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}
 	
@@ -46,6 +50,8 @@ class DynamicLinksView {
 	
 	void showError() {
 		gtk_widget_hide(spLinks);
+		gtk_widget_hide(btnGetLinks);
+		gtk_widget_hide(btnListEpisodes);
 		gtk_widget_show(btnLinksError);
 		gtk_spinner_stop(GTK_SPINNER(spLinks));
 	}

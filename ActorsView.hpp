@@ -30,6 +30,7 @@ class ActorsView {
 		this->model = model;
 		gtk_tree_view_set_model(GTK_TREE_VIEW(tvActors),
 		                                 model->getTreeModel());
+		setModelInfo();
 	}
 	
 	gboolean isBtnActorsActive() {
@@ -42,7 +43,6 @@ class ActorsView {
 	}
 	
 	void showLoadingIndicator() {
-		setModelInfo();
 		gtk_widget_show(vbRight);
 		gtk_widget_show(spActors);
 		gtk_widget_hide(frActors);

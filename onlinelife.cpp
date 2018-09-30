@@ -43,6 +43,7 @@
 #include "DynamicLinksController.hpp"
 #include "SavedItemsView.hpp"
 #include "SavedItemsController.hpp"
+#include "ActorsHistoryModel.hpp"
 #include "ActorsController.hpp"
 #include "ConstantLinksTask.hpp"
 #include "ProcessResultController.hpp"
@@ -263,10 +264,20 @@ static void btnActorsClicked(GtkWidget *widget,
 	controller->click();
 }
 
-/*static void backActorsChanged(GtkTreeSelection *treeselection,
-	                          ActorsHistory *actorsHistory) {
-	actorsHistory->changed(treeselection);
-}*/
+static void backActorsChanged(GtkTreeSelection *treeselection,
+	                          ActorsController *controller) {
+	GtkTreeIter iter;
+	GtkTreeModel *model;
+	gchar *value;
+	
+	if (gtk_tree_selection_get_selected(treeselection, 
+	                                    &model, 
+	                                    &iter)) {
+		gtk_tree_model_get(model, &iter, TITLE_COLUMN, &value, -1);
+		controller->changed(value);
+		g_free(value);
+    }
+}
 
 static void btnCategoriesRepeatClicked(GtkWidget *widget,
                 CategoriesController *controller) {
@@ -536,12 +547,12 @@ int main( int   argc,
     
     tvBackActors = createTreeView();
     // Set up store
-    GtkListStore *store = gtk_list_store_new(NUM_COLS, 
+    GtkListStore *savedActorsStore = gtk_list_store_new(NUM_COLS, 
                                              GDK_TYPE_PIXBUF, 
                                              G_TYPE_STRING);    
     gtk_tree_view_set_model(GTK_TREE_VIEW(tvBackActors), 
-        GTK_TREE_MODEL(store));
-	g_object_unref(store);
+                            GTK_TREE_MODEL(savedActorsStore));
+	//g_object_unref(store);
 	
 	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tvBackActors));
 
@@ -712,10 +723,14 @@ int main( int   argc,
 	SavedItemsView savedItemsView(btnSave, btnDelete);
 	SavedItemsController savedItemsController(&savedItemsView,
 	                                          &savedItemsModel);
+	                                          
+	ActorsHistoryModel actorsHistoryModel(frRightBottom, 
+	                                      savedActorsStore);
 	                                              
 	ActorsController actorsController(&actorsView, 
 	                                  &dynamicLinksController,
-	                                  &savedItemsController);
+	                                  &savedItemsController,
+	                                  &actorsHistoryModel);
 	                                  
 	ConstantLinksTask constantLinksTask(&centerView, 
 	                                    &playlistsTask,
@@ -792,32 +807,11 @@ int main( int   argc,
                      "value-changed",
                      G_CALLBACK(swIconVScrollChanged), 
                      &resultsController); 
-    
-    /*ActorsHistory actorsHistory(window,
-                                tvActors,
-                                tvBackActors,
-                                frRightBottom,
-                                lbInfo,
-                                frRightTop,
-                                frInfo,
-                                frActions,
-                                spActors,
-                                hbActorsError,
-                                vbRight,
-                                spLinks,
-                                btnLinksError,
-                                btnGetLinks,
-                                btnListEpisodes,
-                                btnSave,
-                                btnDelete,
-                                btnSavedItems,
-                                btnActors,
-                                &resultsHistory);*/
                                                      
-    /*g_signal_connect(selection,
+    g_signal_connect(selection,
 	                 "changed", 
 	                 G_CALLBACK(backActorsChanged), 
-	                 &playItemTask);*/
+	                 &actorsController);
 	                                  
     g_signal_connect(btnActors,
                      "clicked", 
