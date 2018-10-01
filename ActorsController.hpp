@@ -12,6 +12,9 @@ class ActorsController {
     DynamicLinksController *dynamicLinksController;
     SavedItemsController *savedItemsController;
     ActorsHistoryModel *actorsHistoryModel;
+    // Data of last clicked result
+    string title, href;
+    GdkPixbuf *pixbuf;
     public:
     ActorsController(ActorsView *view, 
                      DynamicLinksController *dynamicLinksController,
@@ -33,9 +36,9 @@ class ActorsController {
 	}
 	
 	void setResultData(string title, string href, GdkPixbuf *pixbuf) {
-		actorsHistoryModel->saveActorsModel(model);
-		model.init(title, href, pixbuf);
-		setActorsModel();
+		this->title = title;
+		this->href = href;
+		this->pixbuf = pixbuf;
 	}
 	
 	gboolean isActorsActive() {
@@ -49,11 +52,18 @@ class ActorsController {
 	}
 	
 	void startTask() {
+		actorsHistoryModel->saveActorsModel(model);
+		model.init(title, href, pixbuf);
+		setActorsModel();
 		task->start();
 	}
 	
 	void click() {
 		view->onActorsClick(model.isEmpty());
+		if(!href.empty() && href != model.getUrl() && 
+		   view->isBtnActorsActive()) {
+			startTask();
+		} 
 	}
 	
 	private:
