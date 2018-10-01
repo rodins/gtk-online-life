@@ -4,7 +4,6 @@ class PlayItemDialog {
 	const string FLV = "FLV", MP4 = "MP4", PLAY = "Play";
 	GtkWidget *window;
 	GtkToolItem *btnActors;
-	//ActorsController *actorsController; // Needed to react to btnActors click
 	PlayItemPlayer *player;
     public: 
     PlayItemDialog(GtkWidget *window, PlayItemPlayer *player, GtkToolItem *btnActors) {
@@ -108,12 +107,8 @@ class PlayItemDialog {
 			    player->playLink(playItem->download);
 			break;
 			case LINK_RESPONSE_INFO:
-			    // actorsController->showInfo();
-			    /*if(actors.isNetworkOk()) {
-					gtk_widget_show(vbRight);
-				}else if(!actors.getUrl().empty()) {
-					newActorsThread();
-				}*/
+			    cout << "Not yet implemented" << endl;
+			break;
 			case LINK_RESPONSE_CANCEL:
 			    // Do nothing.
 			break;
