@@ -8,12 +8,10 @@ class PlayItemPlayer {
 		if(system("which mpv") == 0) {
 			player = "mpv";
 			command = player + " --cache=2048 ";
-		}
-		if(system("which mplayer") == 0) {
+		}else if(system("which mplayer") == 0) {
 			player = "mplayer";
 			command = player + " -cache 2048 ";
-		}
-		if(system("which omxplayer") == 0) { // Raspberry Pi option
+		}else if(system("which omxplayer") == 0) { // Raspberry Pi option
 			player = "omxplayer";
 			command = "lxterminal -e " + player + " -b ";
 		}
