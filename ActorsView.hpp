@@ -42,6 +42,12 @@ class ActorsView {
 		gtk_widget_set_visible(vbRight, isBtnActorsActive() && !isEmpty);
 	}
 	
+	void setActorsActive() {
+		gtk_toggle_tool_button_set_active(
+		                       GTK_TOGGLE_TOOL_BUTTON(btnActors),
+		                       TRUE);
+	}
+	
 	void showLoadingIndicator() {
 		gtk_widget_show(vbRight);
 		gtk_widget_show(spActors);

@@ -45,6 +45,7 @@
 #include "SavedItemsController.hpp"
 #include "ActorsHistoryModel.hpp"
 #include "ActorsController.hpp"
+#include "PlayItemActorsDialog.hpp"
 #include "ConstantLinksTask.hpp"
 #include "ProcessResultController.hpp"
 
@@ -707,8 +708,8 @@ int main( int   argc,
 	                                    &playlistsTask);
 	
 	PlayItemPlayer playItemPlayer;
-	PlayItemDialog playItemDialog(window, &playItemPlayer, btnActors);
-	LinksSizeTask linksSizeTask(&playItemDialog);
+	PlayItemDialog playItemDialog(window, &playItemPlayer);
+	LinksSizeTask linksSizeTask(btnActors, &playItemDialog);
 	PlayItemProcessor playItemProcessor(&linksSizeTask);
 	ErrorDialogs errorDialogs(window);                                    
 	
@@ -731,6 +732,12 @@ int main( int   argc,
 	                                  &dynamicLinksController,
 	                                  &savedItemsController,
 	                                  &actorsHistoryModel);
+	                                  
+	PlayItemActorsDialog playItemActorsDialog(window,
+	                                          &playItemPlayer,
+	                                          &actorsController);
+	                                          
+	linksSizeTask.setActorsDialog(&playItemActorsDialog);
 	                                  
 	ConstantLinksTask constantLinksTask(&centerView, 
 	                                    &playlistsTask,

@@ -52,18 +52,23 @@ class ActorsController {
 	}
 	
 	void startTask() {
-		actorsHistoryModel->saveActorsModel(model);
-		model.init(title, href, pixbuf);
-		setActorsModel();
-		task->start();
+		if(!href.empty() && href != model.getUrl() && 
+		   view->isBtnActorsActive()) {
+			actorsHistoryModel->saveActorsModel(model);
+			model.init(title, href, pixbuf);
+			setActorsModel();
+			task->start();
+	    }
 	}
 	
 	void click() {
 		view->onActorsClick(model.isEmpty());
-		if(!href.empty() && href != model.getUrl() && 
-		   view->isBtnActorsActive()) {
-			startTask();
-		} 
+		startTask();
+	}
+	
+	void dialogClick() {
+		view->setActorsActive();
+		click();
 	}
 	
 	private:

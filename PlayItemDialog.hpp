@@ -3,14 +3,16 @@
 class PlayItemDialog {
 	const string FLV = "FLV", MP4 = "MP4", PLAY = "Play";
 	GtkWidget *window;
-	GtkToolItem *btnActors;
 	PlayItemPlayer *player;
     public: 
-    PlayItemDialog(GtkWidget *window, PlayItemPlayer *player, GtkToolItem *btnActors) {
+    PlayItemDialog(GtkWidget *window, PlayItemPlayer *player) {
 		this->window = window;
 		this->player = player;
-		this->btnActors = btnActors;
 	}
+	// TODO: remove these form interface
+	virtual void actorsClicked() {}
+	
+	virtual void addActorsButton(GtkWidget *dialog) {}
     
     void create(PlayItem *playItem, 
 	            string sizeFile, 
@@ -34,13 +36,7 @@ class PlayItemDialog {
 			msg = "Mplayer or mpv is not detected. Copy to clipboard";
 		}
 		
-		// Add actors button to dialog if actors is not displayed
-		if(!gtk_toggle_tool_button_get_active(
-		                GTK_TOGGLE_TOOL_BUTTON(btnActors))) {
-			gtk_dialog_add_button(GTK_DIALOG(dialog),
-		                          "Actors",
-                                  LINK_RESPONSE_INFO);
-		}                                      
+		addActorsButton(dialog);                                     
                            
         if(!sizeFile.empty()) {
 			string sizeTitle = FLV + " (" + sizeFile + ")";
@@ -107,7 +103,7 @@ class PlayItemDialog {
 			    player->playLink(playItem->download);
 			break;
 			case LINK_RESPONSE_INFO:
-			    cout << "Not yet implemented" << endl;
+			    actorsClicked();
 			break;
 			case LINK_RESPONSE_CANCEL:
 			    // Do nothing.
