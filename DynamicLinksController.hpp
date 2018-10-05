@@ -28,7 +28,7 @@ class DynamicLinksController {
 	}
 	
 	void btnFilmClicked() {
-		processor->process(model->getJs());
+		processor->process(model->getTitle(), model->getJs());
 	}
 	
 	void btnSerialClicked() {
