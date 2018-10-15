@@ -157,9 +157,10 @@ void playlistClicked(GtkTreeView *treeView,
 	g_free(download);                   
 }
 
-void resultFunc(GtkIconView *icon_view, 
-                GtkTreePath *path, 
-                gpointer data) {
+void resultActivated(GtkIconView *icon_view,
+                     GtkTreePath *path,
+                     gpointer data) {
+	                               
 	ProcessResultController *controller = (ProcessResultController*)data;
 	// Get model from ivResults
 	GtkTreeModel *model = gtk_icon_view_get_model(icon_view);
@@ -187,14 +188,6 @@ void resultFunc(GtkIconView *icon_view,
 	
 	g_free(resultTitle);
 	g_free(href);
-}
-
-void resultActivated(GtkWidget *widget,
-                     GtkTreePath *path,
-                     gpointer data) {
-	gtk_icon_view_selected_foreach(GTK_ICON_VIEW(widget),
-	                               resultFunc,
-	                               data);
 }
 
 GtkWidget *createTreeView(void) {
