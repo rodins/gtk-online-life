@@ -1,7 +1,6 @@
 // PlayItemDialog.hpp
 
 class PlayItemDialog {
-	const string FLV = "FLV", MP4 = "MP4", PLAY = "Play";
 	GtkWidget *window;
 	PlayItemPlayer *player;
     public: 
@@ -39,7 +38,7 @@ class PlayItemDialog {
 		addActorsButton(dialog);                                     
                            
         if(!sizeFile.empty()) {
-			string sizeTitle = FLV + " (" + sizeFile + ")";
+			string sizeTitle = "FLV (" + sizeFile + ")";
 			GtkWidget *btnFlv = gtk_dialog_add_button(GTK_DIALOG(dialog),
 		                               sizeTitle.c_str(),
                                        LINK_RESPONSE_PLAY);
@@ -50,9 +49,9 @@ class PlayItemDialog {
 			// If btnFlv is not available, change button title to "Play"
 			string title;
 			if(sizeFile.empty()) {
-			    title = PLAY;	
+			    title = "PLAY";	
 			}else {
-				title = MP4;
+				title = "MP4";
 			}
 		    string sizeTitle = title + " (" + sizeDownload + ")";
 			GtkWidget *btnMp4 = gtk_dialog_add_button(GTK_DIALOG(dialog),
