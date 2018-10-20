@@ -36,7 +36,9 @@ class DynamicLinksController {
 	}
 	
 	void startTask() {
-		task->start();
+		if(!model->getPlayerUrl().empty()) {
+			task->start();
+		}
 	}
 	
 	void hideLinksButtons() {

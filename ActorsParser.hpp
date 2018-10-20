@@ -71,7 +71,7 @@ class ActorsParser {
 			size_t iframe_length = iframe_end - iframe_begin;
 			string iframe = page.substr(iframe_begin, iframe_length);
 			size_t link_begin = iframe.find("src=");
-			size_t link_end = iframe.find("'", link_begin+6);
+			size_t link_end = iframe.find("\"", link_begin+6);
 			if(link_begin != string::npos && link_end != string::npos) {
 				size_t link_length = link_end - link_begin;
 			    string playerUrl = iframe.substr(link_begin+5, link_length-5);

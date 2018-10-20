@@ -13,15 +13,13 @@ class PlaylistsUtils {
 	}
 	
 	static string parsePlayerForUrl(string &player) {
-		size_t js_detect = player.find("js.php");
-		if(js_detect != string::npos) {
-			size_t js_begin = player.rfind("src=", js_detect);
-			size_t js_end = player.find("\"", js_begin+6);
-			if(js_begin != string::npos && js_end != string::npos) {
-				size_t js_length = js_end - js_begin;
-				string js = player.substr(js_begin+5, js_length-5);
-				return "http:" + js;
-			}
+		size_t begin = player.find("http%3A");
+		size_t end = player.find("\"", begin);
+		if(begin != string::npos && end != string::npos) {
+			size_t length = end - begin;
+			string url = player.substr(begin, length);
+			cout << "Url: " << url << endl;
+			return url;
 		}
 		return "";
 	}

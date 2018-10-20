@@ -30,13 +30,16 @@ class DynamicLinksTask {
 		DynamicLinksTask *task = (DynamicLinksTask*)arg2;
 	    // On pre execute
 		gdk_threads_enter();
-		string referer = task->model->getPlayerUrl();
+		string actorsUrl = task->model->getUrl();
+		string playerUrl = task->model->getPlayerUrl();
 		// Show links spinner
 		task->view->showLoadingIndicator();
 		gdk_threads_leave();	
-		string player = HtmlString::getPage(referer);
-		string url = PlaylistsUtils::parsePlayerForUrl(player);
-		string js = HtmlString::getPage(url, referer);
+		string player = HtmlString::getPage(playerUrl, actorsUrl);
+		cout << "Player: " << player << endl;
+		string urlEncoded = PlaylistsUtils::parsePlayerForUrl(player);
+		string url = HtmlString::urlDecode(urlEncoded);
+		string js = HtmlString::getPage(url, playerUrl);
 		gdk_threads_enter();
 		task->model->setJs(js);
 		if(js.length() > 1000) { // Serial
