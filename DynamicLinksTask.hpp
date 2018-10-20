@@ -4,7 +4,6 @@ class DynamicLinksTask {
 	GThreadPool *pool;
 	DynamicLinksView *view;
 	ActorsModel *model;
-	string url, playerUrl;
 	public:
 	DynamicLinksTask(DynamicLinksView *view) {
 		this->view = view;
@@ -31,7 +30,6 @@ class DynamicLinksTask {
 		DynamicLinksTask *task = (DynamicLinksTask*)arg2;
 	    // On pre execute
 		gdk_threads_enter();
-		string href = task->model->getUrl();
 		string referer = task->model->getPlayerUrl();
 		// Show links spinner
 		task->view->showLoadingIndicator();
