@@ -689,7 +689,7 @@ int main( int   argc,
 	PlayItemPlayer playItemPlayer;
 	PlayItemDialog playItemDialog(window, &playItemPlayer);
 	LinksSizeTask linksSizeTask(btnActors, &playItemDialog);
-	PlayItemProcessor playItemProcessor;
+	PlayItemProcessor playItemProcessor(&playItemPlayer);
 	ErrorDialogs errorDialogs(window);                                    
 	
 	DynamicLinksView dynamicLinksView(spLinks,

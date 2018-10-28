@@ -1,9 +1,13 @@
 // PlayItemProcessor.hpp
 
 class PlayItemProcessor {
+	PlayItemPlayer *player;
     public:
+    PlayItemProcessor(PlayItemPlayer *player) {
+		this->player = player;
+	}
     
     void process(string browserUrl) { 
-        cout << "Browser url: " << browserUrl << endl;
+        player->playLink(browserUrl);
     }
 };

@@ -29,11 +29,11 @@ class PlayItemDialog {
                                                    GTK_DIALOG_DESTROY_WITH_PARENT),
                                   NULL);
         string msg;
-		if(!player->getPlayer().empty()) {
+		/*if(!player->getPlayer().empty()) {
 			msg = "Play in " + player->getPlayer() + ". Copy to clipboard";
 		}else {
 			msg = "Mplayer or mpv is not detected. Copy to clipboard";
-		}
+		}*/
 		
 		addActorsButton(dialog);                                     
                            

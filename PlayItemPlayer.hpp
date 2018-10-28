@@ -1,24 +1,13 @@
 // PlayItemPlayer.hpp
 
 class PlayItemPlayer {
-    string player;
     string command;
     public:
     PlayItemPlayer() {
-		if(system("which omxplayer") == 0) { // Raspberry Pi option
-			player = "omxplayer";
-			command = "lxterminal -e " + player + " -b ";
-		}else if(system("which mpv") == 0) {
-			player = "mpv";
-			command = player + " --cache=2048 ";
-		}else if(system("which mplayer") == 0) {
-			player = "mplayer";
-			command = player + " -cache 2048 ";
+		// TODO: add more browsers and error dialog if browser is not detected
+		if(system("which chromium-browser") == 0) { // Raspberry Pi option
+			command = "chromium-browser ";
 		}
-	}
-	
-	string getPlayer() {
-		return player;
 	}
 	
 	void playLink(string link) {
