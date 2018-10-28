@@ -63,7 +63,13 @@ class HtmlString {
 	}
 	
 	static string urlDecode(string urlEncoded) {
-		
+		int urlDecodedSize;
+		CURL *curl_handle = get_curl_handle();
+		char *urlDecoded = curl_easy_unescape(curl_handle, 
+		                                      urlEncoded.c_str(),
+		                                      urlEncoded.size(),
+		                                      &urlDecodedSize);
+		return string(urlDecoded, urlDecodedSize);
 	}
 	
 	static string getConstantsPage(string id) {

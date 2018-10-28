@@ -36,27 +36,17 @@ class DynamicLinksTask {
 		task->view->showLoadingIndicator();
 		gdk_threads_leave();	
 		string player = HtmlString::getPage(playerUrl, actorsUrl);
-		cout << "Player: " << player << endl;
+		//cout << "Player: " << player << endl; // use it if you ever want to try to parse player
 		string urlEncoded = PlaylistsUtils::parsePlayerForUrl(player);
-		string url = HtmlString::urlDecode(urlEncoded);
-		string js = HtmlString::getPage(url, playerUrl);
-		gdk_threads_enter();
-		task->model->setJs(js);
-		if(js.length() > 1000) { // Serial
-            task->view->showSerialButton();
-            task->model->setLinksMode(LINKS_MODE_SERIAL);
-		}else { // Not serial
-		    if(js.length() > 500) { // Movie
-			    task->view->showFilmButton();
-			    task->model->setLinksMode(LINKS_MODE_FILM);
-			}else if(js.length() > 0) {
-				task->view->showEmpty();
-				task->model->setLinksMode(LINKS_MODE_EMPTY);
-		    }else{ //  Links error
-			    task->view->showError();
-			    task->model->setLinksMode(LINKS_MODE_ERROR);
-		    }
+		string browserUrl = HtmlString::urlDecode(urlEncoded);
+		
+		if(!browserUrl.empty()) {
+			task->view->showFilmButton();
+			task->model->setLinksMode(LINKS_MODE_FILM);
+			task->model->setBrowserUrl(browserUrl);
+		}else {
+			task->view->showError();
+			task->model->setLinksMode(LINKS_MODE_ERROR);
 		}
-		gdk_threads_leave();
 	}
 };

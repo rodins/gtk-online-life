@@ -17,9 +17,7 @@ class PlaylistsUtils {
 		size_t end = player.find("\"", begin);
 		if(begin != string::npos && end != string::npos) {
 			size_t length = end - begin;
-			string url = player.substr(begin, length);
-			cout << "Url: " << url << endl;
-			return url;
+		    return player.substr(begin, length);
 		}
 		return "";
 	}

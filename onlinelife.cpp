@@ -149,7 +149,7 @@ void playlistClicked(GtkTreeView *treeView,
 		playItem.comment = comment;
 		playItem.file = file;
 		playItem.download = download;
-		processor->process(&playItem);
+		//processor->process(&playItem);
 	}
 	
 	g_free(comment);
@@ -314,11 +314,6 @@ static void btnGetLinksClicked(GtkWidget *widget,
 	controller->btnFilmClicked();
 }
 
-static void btnListEpisodesClicked(GtkWidget *widget,
-	                               DynamicLinksController *controller) {
-	controller->btnSerialClicked();
-}
-
 static void btnSaveClicked(GtkWidget *widget,
 	                       SavedItemsController *controller) {
 	controller->btnSaveClicked();
@@ -367,8 +362,7 @@ int main( int   argc,
     GtkWidget *btnCategoriesError;
     GtkWidget *btnActorsError;
     
-    GtkWidget *btnGetLinks, 
-              *btnListEpisodes, 
+    GtkWidget *btnGetLinks,  
               *btnLinksError, 
               *btnSave,
               *btnDelete;
@@ -624,13 +618,6 @@ int main( int   argc,
     gtk_button_set_image(GTK_BUTTON(btnGetLinks), copyImage);
     gtk_widget_set_tooltip_text(btnGetLinks, "Get links");
     
-    //btnListEpisodes
-    btnListEpisodes = gtk_button_new();
-    GtkWidget *openImage = gtk_image_new_from_stock(GTK_STOCK_DIRECTORY,
-                                                    GTK_ICON_SIZE_BUTTON);
-    gtk_button_set_image(GTK_BUTTON(btnListEpisodes), openImage);
-    gtk_widget_set_tooltip_text(btnListEpisodes, "List episodes");
-    
     //btnLinksError
     btnLinksError = gtk_button_new();
     GtkWidget *refreshImage = gtk_image_new_from_stock(GTK_STOCK_REFRESH,
@@ -657,7 +644,6 @@ int main( int   argc,
     gtk_box_pack_start(GTK_BOX(hbActions), spLinks, TRUE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(hbActions), btnLinksError, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(hbActions), btnGetLinks, TRUE, TRUE, 1);
-    gtk_box_pack_start(GTK_BOX(hbActions), btnListEpisodes, TRUE, TRUE, 1);
     gtk_box_pack_end(GTK_BOX(hbActions), btnSave, TRUE, TRUE, 1);
     gtk_box_pack_end(GTK_BOX(hbActions), btnDelete, TRUE, TRUE, 1);
     gtk_container_add(GTK_CONTAINER(frActions), hbActions);
@@ -703,15 +689,13 @@ int main( int   argc,
 	PlayItemPlayer playItemPlayer;
 	PlayItemDialog playItemDialog(window, &playItemPlayer);
 	LinksSizeTask linksSizeTask(btnActors, &playItemDialog);
-	PlayItemProcessor playItemProcessor(&linksSizeTask);
+	PlayItemProcessor playItemProcessor;
 	ErrorDialogs errorDialogs(window);                                    
 	
 	DynamicLinksView dynamicLinksView(spLinks,
 	                                  btnGetLinks,
-	                                  btnListEpisodes,
 	                                  btnLinksError);
 	DynamicLinksController dynamicLinksController(&dynamicLinksView,
-	                                              &playlistsTask,
 	                                              &playItemProcessor);
 	                                              
 	SavedItemsView savedItemsView(btnSave, btnDelete);
@@ -794,11 +778,6 @@ int main( int   argc,
                      "activate", 
                      G_CALLBACK(entryActivated), 
                      &resultsController);
-                                      
-    g_signal_connect(btnListEpisodes,
-                     "clicked",
-                     G_CALLBACK(btnListEpisodesClicked),
-                     &dynamicLinksController);
                      
     // IconView scroll to the bottom detection code
     GtkAdjustment *vadjustment;

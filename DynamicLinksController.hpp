@@ -4,15 +4,12 @@
 class DynamicLinksController {
 	DynamicLinksView *view;
 	DynamicLinksTask *task;
-	PlaylistsTask *playlistsTask;
 	PlayItemProcessor *processor;
     ActorsModel *model;
     public:
     DynamicLinksController(DynamicLinksView *view,
-                           PlaylistsTask *playlistsTask,
                            PlayItemProcessor *processor) {
 		this->view = view;
-		this->playlistsTask = playlistsTask;
 		this->processor = processor;
 		task = new DynamicLinksTask(view);					   
 	}
@@ -28,11 +25,7 @@ class DynamicLinksController {
 	}
 	
 	void btnFilmClicked() {
-		processor->process(model->getTitle(), model->getJs());
-	}
-	
-	void btnSerialClicked() {
-		playlistsTask->start(model->getTitle(), model->getJs());
+		processor->process(model->getBrowserUrl());
 	}
 	
 	void startTask() {
@@ -51,9 +44,6 @@ class DynamicLinksController {
 	    switch(model->getLinksMode()) {
 			case LINKS_MODE_FILM:
 			    view->showFilmButton();
-			break;
-			case LINKS_MODE_SERIAL:
-			    view->showSerialButton();
 			break;
 			case LINKS_MODE_EMPTY:
 			    view->showEmpty();
