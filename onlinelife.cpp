@@ -20,7 +20,6 @@
 #include "SavedItemsModel.hpp"
 #include "FileUtils.hpp"
 #include "CenterView.hpp"
-#include "PlayItem.hpp"
 #include "ResultsController.hpp"
 #include "CategoriesModel.hpp"
 #include "CategoriesParser.hpp"
