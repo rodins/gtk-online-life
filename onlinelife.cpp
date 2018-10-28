@@ -21,8 +21,6 @@
 #include "FileUtils.hpp"
 #include "CenterView.hpp"
 #include "PlayItem.hpp"
-#include "PlaylistsUtils.hpp"
-#include "PlaylistsTask.hpp"
 #include "ResultsController.hpp"
 #include "CategoriesModel.hpp"
 #include "CategoriesParser.hpp"
@@ -42,7 +40,6 @@
 #include "SavedItemsController.hpp"
 #include "ActorsHistoryModel.hpp"
 #include "ActorsController.hpp"
-#include "ConstantLinksTask.hpp"
 #include "ProcessResultController.hpp"
 
 using namespace std;
@@ -113,44 +110,6 @@ void actorsClicked(GtkTreeView *treeView,
 	                   
 	g_free(title);
 	g_free(link);
-}
-
-void playlistClicked(GtkTreeView *treeView,
-                     GtkTreePath *path,
-                     GtkTreeViewColumn *column,
-                     PlayItemProcessor *processor) {
-	// Get model from tree view
-	GtkTreeModel *model = gtk_tree_view_get_model(treeView);
-	
-	// Get iter from path
-	GtkTreeIter iter;
-	gtk_tree_model_get_iter(model, &iter, path);
-	
-	// Get title and link values from iter
-	gchar *comment = NULL;
-	gchar *file = NULL;
-	gchar *download = NULL;
-	gtk_tree_model_get(model,
-	                   &iter, 
-	                   PLAYLIST_COMMENT_COLUMN, 
-	                   &comment,
-	                   PLAYLIST_FILE_COLUMN,
-	                   &file, 
-	                   PLAYLIST_DOWNLOAD_COLUMN,
-	                   &download,
-	                   -1);
-	
-	if(file != NULL) {
-		static PlayItem playItem;
-		playItem.comment = comment;
-		playItem.file = file;
-		playItem.download = download;
-		//processor->process(&playItem);
-	}
-	
-	g_free(comment);
-	g_free(file);
-	g_free(download);                   
 }
 
 void resultActivated(GtkIconView *icon_view,
@@ -324,7 +283,6 @@ int main( int   argc,
           char *argv[] )
 {   
 	GtkWidget *window;
-	GtkWidget *tvPlaylists;
 	GtkWidget *ivResults;
 	
 	GtkWidget *frRightBottom;
@@ -354,7 +312,7 @@ int main( int   argc,
     GtkWidget *toolbar; 
     GtkWidget *hbCenter;    
     GtkWidget *swRightTop, *swRightBottom;
-    GtkWidget *swTree, *swIcon;
+    GtkWidget *swIcon;
     GtkWidget *btnCategoriesError;
     GtkWidget *btnActorsError;
     
@@ -402,17 +360,6 @@ int main( int   argc,
 	gtk_window_set_icon(GTK_WINDOW(window), icon);
     
     vbox = gtk_vbox_new(FALSE, 1);
-    
-    tvPlaylists = createTreeView();
-    
-    GtkTreeStore *playlistsStore = gtk_tree_store_new(PLAYLIST_NUM_COLS, 
-						                              GDK_TYPE_PIXBUF,
-									                  G_TYPE_STRING,
-									                  G_TYPE_STRING,
-									                  G_TYPE_STRING);
-    gtk_tree_view_set_model(GTK_TREE_VIEW(tvPlaylists),
-                            GTK_TREE_MODEL(playlistsStore));
-    g_object_unref(playlistsStore);
     
     // set model to ivResults
     // it's kind of not needed but it removes some error
@@ -513,12 +460,6 @@ int main( int   argc,
 	    G_CALLBACK(gtk_main_quit), NULL);
     
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 1);
-    
-    swTree = gtk_scrolled_window_new(NULL, NULL);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swTree),
-            GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swTree),
-            GTK_SHADOW_ETCHED_IN);
             
     swIcon = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swIcon),
@@ -526,7 +467,6 @@ int main( int   argc,
     gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(swIcon),
             GTK_SHADOW_ETCHED_IN);
     
-    gtk_container_add(GTK_CONTAINER(swTree), tvPlaylists);
     gtk_container_add(GTK_CONTAINER(swIcon), ivResults);
     
     tvBackActors = createTreeView();
@@ -654,7 +594,6 @@ int main( int   argc,
     // add vbox center
     vbCenter = gtk_vbox_new(FALSE, 1);
     // add items to vbCenter
-    gtk_box_pack_start(GTK_BOX(vbCenter), swTree, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbCenter), swIcon, TRUE, TRUE, 1);
     gtk_box_pack_start(GTK_BOX(vbCenter), spCenter, TRUE, FALSE, 1);
     gtk_box_pack_start(GTK_BOX(vbCenter), hbResultsError, TRUE, FALSE, 1);
@@ -662,7 +601,7 @@ int main( int   argc,
 	SavedItemsModel savedItemsModel;
 								 
 	CenterView centerView(window, PROG_NAME, ivResults, vbCenter, spCenter, 
-	                      swIcon, swTree, hbResultsError, btnSavedItems, 
+	                      swIcon, hbResultsError, btnSavedItems, 
 	                      btnRefresh, btnUp, btnPrev, btnNext, &savedItemsModel);
 	                      
 	ActorsView actorsView(vbRight, 
@@ -672,15 +611,10 @@ int main( int   argc,
 	                      hbActorsError,
 	                      lbInfo,
 	                      tvActors);
-	
-	PlaylistsTask playlistsTask(&centerView,
-	                            gtk_tree_view_get_model(
-	                            GTK_TREE_VIEW(tvPlaylists)));
 	                      
 	ResultsController resultsController(&centerView, 
 	                                    imagesCache,
-	                                    imageIndices,
-	                                    &playlistsTask);
+	                                    imageIndices);
 	
 	PlayItemPlayer playItemPlayer;
 	PlayItemProcessor playItemProcessor(&playItemPlayer);
@@ -784,11 +718,6 @@ int main( int   argc,
                      G_CALLBACK(btnActorsRepeatClicked), 
                      &actorsController);
                      
-    g_signal_connect(tvPlaylists,
-                     "row-activated", 
-                     G_CALLBACK(playlistClicked), 
-                     &playItemProcessor);
-                     
     g_signal_connect(btnLinksError,
                      "clicked",
                      G_CALLBACK(btnLinksErrorClicked),
@@ -865,7 +794,6 @@ int main( int   argc,
     
     gtk_widget_hide(vbRight);
     
-    gtk_widget_hide(swTree);
     gtk_widget_hide(frRightBottom);
     
     gtk_widget_hide(spCenter);

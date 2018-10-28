@@ -5,7 +5,7 @@ class CenterView {
 	GtkWidget *ivResults;
 	GtkWidget *vbCenter;
 	GtkWidget *spCenter;
-    GtkWidget *swTree, *swIcon;
+    GtkWidget *swIcon;
 	GtkWidget *hbResultsError;
 	
 	GtkToolItem *btnSavedItems, *btnRefresh, *btnUp, *btnPrev, *btnNext;
@@ -14,7 +14,7 @@ class CenterView {
 	public:
 	CenterView(GtkWidget *window, string progName, GtkWidget *ivResults,
 	           GtkWidget *vbCenter, GtkWidget *spCenter, 
-	           GtkWidget *swIcon, GtkWidget *swTree,
+	           GtkWidget *swIcon,
 	           GtkWidget *hbResultsError,
 	           GtkToolItem *btnSavedItems, GtkToolItem *btnRefresh,
 	           GtkToolItem *btnUp, GtkToolItem *btnPrev, 
@@ -25,7 +25,6 @@ class CenterView {
 		this->vbCenter = vbCenter;
 		this->spCenter = spCenter;
 		this->swIcon = swIcon;
-		this->swTree = swTree;
 		this->hbResultsError = hbResultsError;
 		
 		this->btnSavedItems = btnSavedItems;
@@ -151,7 +150,6 @@ class CenterView {
 		    GTK_PACK_START);
 		gtk_widget_show(spCenter);
 		gtk_widget_set_visible(swIcon, isPage);
-		gtk_widget_hide(swTree);
 		gtk_widget_hide(hbResultsError);
 		gtk_spinner_start(GTK_SPINNER(spCenter));
 	}
@@ -159,7 +157,6 @@ class CenterView {
 	void showResultsData() {
 		setTitle(modelTitle);
 		setSensitiveSavedItems();
-		gtk_widget_hide(swTree);
 		gtk_widget_show(swIcon);
 		gtk_widget_hide(spCenter);
 		gtk_widget_hide(hbResultsError);
@@ -170,7 +167,6 @@ class CenterView {
 		setSensitiveUp();
 		gtk_widget_hide(spCenter);
 		gtk_widget_hide(swIcon);
-		gtk_widget_show(swTree);
 		gtk_widget_hide(hbResultsError);
 		gtk_spinner_stop(GTK_SPINNER(spCenter));
 	}
@@ -190,7 +186,6 @@ class CenterView {
 		gtk_widget_hide(spCenter);
 		// Show and hide of ivResults depends on isPage
 		gtk_widget_set_visible(swIcon, isPage);
-		gtk_widget_hide(swTree);
 		gtk_widget_show(hbResultsError);
 		gtk_spinner_stop(GTK_SPINNER(spCenter));
 	}

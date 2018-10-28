@@ -11,19 +11,16 @@ class ResultsController {
     ResultsModel model;
     ResultsParser *parser;
     ResultsTask *task;
-    PlaylistsTask *playlistsTask; // Needed for error button click
     set<int> *imageIndices;
     public:
     ResultsController(CenterView *view,
                       map<string, GdkPixbuf*> *imagesCache,
-                      set<int> *imageIndices,
-                      PlaylistsTask *playlistsTask) {
+                      set<int> *imageIndices) {
 		this->view = view;
 		parser = new ResultsParser(view);
 		history = new ResultsHistory(view);
 	    net = new ResultsNet(parser);
 	    task = new ResultsTask(view, net, history);
-	    this->playlistsTask = playlistsTask;
 	    model.setImagesCache(imagesCache);
 	    this->imageIndices = imageIndices;
 	}
@@ -92,8 +89,6 @@ class ResultsController {
 	void repeat() {
 		if(task->isError()) {
 		    task->start();
-		}else {
-			playlistsTask->start();
 		}
 	}
 	
