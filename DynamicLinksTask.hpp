@@ -1,4 +1,5 @@
 // DynamicLinksTask.hpp
+#include "DynamicLinksParser.hpp"
 
 class DynamicLinksTask {
 	GThreadPool *pool;
@@ -37,7 +38,7 @@ class DynamicLinksTask {
 		gdk_threads_leave();	
 		string player = HtmlString::getPage(playerUrl, actorsUrl);
 		//cout << "Player: " << player << endl; // use it if you ever want to try to parse player
-		string urlEncoded = PlaylistsUtils::parsePlayerForUrl(player);
+		string urlEncoded = DynamicLinksParser::parsePlayerForUrl(player);
 		string browserUrl = HtmlString::urlDecode(urlEncoded);
 		
 		if(!browserUrl.empty()) {
