@@ -52,8 +52,7 @@ class ActorsController {
 	}
 	
 	void startTask() {
-		if(!href.empty() && href != model.getUrl() && 
-		   view->isBtnActorsActive()) {
+		if(!href.empty() && href != model.getUrl()) {
 			actorsHistoryModel->saveActorsModel(model);
 			model.init(title, href, pixbuf);
 			setActorsModel();

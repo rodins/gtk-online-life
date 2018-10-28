@@ -2,21 +2,14 @@
 
 class ProcessResultController {
 	ActorsController *actorsController;
-	ConstantLinksTask *constantLinksTask;
     public:
-    ProcessResultController(ActorsController *actorsController,
-                            ConstantLinksTask *constantLinksTask) {
+    ProcessResultController(ActorsController *actorsController) {
 		this->actorsController = actorsController;
-		this->constantLinksTask = constantLinksTask;
 	}
 	
 	void onClick(string title, string href, GdkPixbuf *pixbuf) {
 		actorsController->setResultData(title, href, pixbuf);
-		if(actorsController->isActorsActive()) {
-			actorsController->startTask();
-		}else {
-			constantLinksTask->start(title, href);
-		}
+		actorsController->startTask();
 	}
     
 };

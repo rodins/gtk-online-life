@@ -24,7 +24,6 @@
 #include "PlaylistsUtils.hpp"
 #include "PlaylistsTask.hpp"
 #include "ResultsController.hpp"
-//#include "ActorsHistory.hpp"
 #include "CategoriesModel.hpp"
 #include "CategoriesParser.hpp"
 #include "CategoriesNet.hpp"
@@ -33,8 +32,6 @@
 #include "CategoriesController.hpp"
 #include "ImagesDownloader.hpp"
 #include "PlayItemPlayer.hpp"
-#include "PlayItemDialog.hpp"
-#include "LinksSizeTask.hpp"
 #include "PlayItemProcessor.hpp"
 #include "ErrorDialogs.hpp"
 #include "ActorsModel.hpp"
@@ -45,7 +42,6 @@
 #include "SavedItemsController.hpp"
 #include "ActorsHistoryModel.hpp"
 #include "ActorsController.hpp"
-#include "PlayItemActorsDialog.hpp"
 #include "ConstantLinksTask.hpp"
 #include "ProcessResultController.hpp"
 
@@ -687,8 +683,6 @@ int main( int   argc,
 	                                    &playlistsTask);
 	
 	PlayItemPlayer playItemPlayer;
-	PlayItemDialog playItemDialog(window, &playItemPlayer);
-	LinksSizeTask linksSizeTask(btnActors, &playItemDialog);
 	PlayItemProcessor playItemProcessor(&playItemPlayer);
 	ErrorDialogs errorDialogs(window);                                    
 	
@@ -709,20 +703,8 @@ int main( int   argc,
 	                                  &dynamicLinksController,
 	                                  &savedItemsController,
 	                                  &actorsHistoryModel);
-	                                  
-	PlayItemActorsDialog playItemActorsDialog(window,
-	                                          &playItemPlayer,
-	                                          &actorsController);
-	                                          
-	linksSizeTask.setActorsDialog(&playItemActorsDialog);
-	                                  
-	ConstantLinksTask constantLinksTask(&centerView, 
-	                                    &playlistsTask,
-	                                    &playItemProcessor,
-	                                    &errorDialogs);
 	                                    
-	ProcessResultController processResultController(&actorsController,
-	                                                &constantLinksTask);
+	ProcessResultController processResultController(&actorsController);
     
     // Disable all items                                                
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
