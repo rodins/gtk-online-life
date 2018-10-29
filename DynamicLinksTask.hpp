@@ -37,10 +37,10 @@ class DynamicLinksTask {
 		task->view->showLoadingIndicator();
 		gdk_threads_leave();	
 		string player = HtmlString::getPage(playerUrl, actorsUrl);
-		cout << "Player: " << player << endl; // use it if you ever want to try to parse player
+		//cout << "Player: " << player << endl; // use it if you ever want to try to parse player
 		string urlEncoded = DynamicLinksParser::parsePlayerForUrl(player);
 		string browserUrl = HtmlString::urlDecode(urlEncoded);
-		cout << "Browser url: " << browserUrl << endl;
+		
 		if(!browserUrl.empty()) {
 			task->view->showFilmButton();
 			task->model->setLinksMode(LINKS_MODE_FILM);

@@ -71,10 +71,5 @@ class HtmlString {
 		                                      &urlDecodedSize);
 		return string(urlDecoded, urlDecodedSize);
 	}
-	
-	static string getConstantsPage(string id) {
-		string url = "http://play.cidwo.com/js.php?id=" + id;
-		string referer = "http://play.cidwo.com/player.php?newsid=" + id;
-		return getPage(url, referer);
-	}
+
 };
