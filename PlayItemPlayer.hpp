@@ -7,6 +7,8 @@ class PlayItemPlayer {
 		// TODO: add more browsers and error dialog if browser is not detected
 		if(system("which chromium-browser") == 0) { // Raspberry Pi option
 			command = "chromium-browser ";
+		}else if(system("which firefox") == 0) {
+			command = "firefox ";
 		}
 	}
 	
