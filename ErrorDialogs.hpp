@@ -7,12 +7,8 @@ class ErrorDialogs {
 		this->window = window;
 	}
     
-    void runLinksErrorDialog() {
-		runErrorDialog("No links found");
-	}
-	
-	void runNetErrorDialog() {
-		runErrorDialog("Network problem");
+    void runBrowserErrorDialog() {
+		runErrorDialog("Supported browser is not found");
 	}
 	
 	private:

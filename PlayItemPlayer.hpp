@@ -12,6 +12,10 @@ class PlayItemPlayer {
 		}
 	}
 	
+	bool isPlayerFound() {
+		return !command.empty();
+	}
+	
 	void playLink(string link) {
 		string finalCommand = command + link + " &";
 		system(finalCommand.c_str());
