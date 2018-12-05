@@ -2,12 +2,18 @@
 
 class PlayItemProcessor {
 	PlayItemPlayer *player;
+	ErrorDialogs *errorDialogs;
     public:
-    PlayItemProcessor(PlayItemPlayer *player) {
+    PlayItemProcessor(PlayItemPlayer *player, ErrorDialogs *errorDialogs) {
 		this->player = player;
+		this->errorDialogs = errorDialogs;
 	}
     
     void process(string browserUrl) { 
-        player->playLink(browserUrl);
+		if(player->isPlayerFound()) {
+			player->playLink(browserUrl);
+		}else {
+		    errorDialogs->runBrowserErrorDialog();	
+		}
     }
 };

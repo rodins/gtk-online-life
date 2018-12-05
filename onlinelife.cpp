@@ -29,8 +29,8 @@
 #include "CategoriesController.hpp"
 #include "ImagesDownloader.hpp"
 #include "PlayItemPlayer.hpp"
-#include "PlayItemProcessor.hpp"
 #include "ErrorDialogs.hpp"
+#include "PlayItemProcessor.hpp"
 #include "ActorsModel.hpp"
 #include "ActorsView.hpp"
 #include "DynamicLinksView.hpp"
@@ -604,10 +604,10 @@ int main( int   argc,
 	ResultsController resultsController(&centerView, 
 	                                    imagesCache,
 	                                    imageIndices);
-	
+	                                   
 	PlayItemPlayer playItemPlayer;
-	PlayItemProcessor playItemProcessor(&playItemPlayer);
-	ErrorDialogs errorDialogs(window);                                    
+	ErrorDialogs errorDialogs(window);
+	PlayItemProcessor playItemProcessor(&playItemPlayer, &errorDialogs);                                    
 	
 	DynamicLinksView dynamicLinksView(spLinks,
 	                                  btnGetLinks,
