@@ -180,11 +180,6 @@ static void btnSavedItemsClicked(GtkToolItem *widget,
 	controller->btnSavedItemsClicked();	
 }
 
-static void btnUpClicked( GtkWidget *widget,
-                          ResultsController *controller) {
-	controller->btnUpClicked();
-}
-
 static void btnPrevClicked( GtkToolButton *widget,
                             ResultsController *controller) {   
 	controller->btnPrevClicked();  
@@ -324,7 +319,6 @@ int main( int   argc,
 	GtkToolItem *btnCategories;
 	GtkToolItem *btnSavedItems;
 	GtkToolItem *btnRefresh;
-	GtkToolItem *btnUp;
     GtkToolItem *btnPrev;
     GtkToolItem *btnNext;
     GtkWidget *entry;
@@ -420,10 +414,6 @@ int main( int   argc,
         
     sep = gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
-    
-    btnUp = gtk_tool_button_new_from_stock(GTK_STOCK_GO_UP);
-    gtk_tool_item_set_tooltip_text(btnUp, "Move up");
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnUp, -1);
     
     gtk_tool_item_set_tooltip_text(btnPrev, "Go back in history");
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), btnPrev, -1);
@@ -601,7 +591,7 @@ int main( int   argc,
 								 
 	CenterView centerView(window, PROG_NAME, ivResults, vbCenter, spCenter, 
 	                      swIcon, hbResultsError, btnSavedItems, 
-	                      btnRefresh, btnUp, btnPrev, btnNext, &savedItemsModel);
+	                      btnRefresh, btnPrev, btnNext, &savedItemsModel);
 	                      
 	ActorsView actorsView(vbRight, 
 	                      btnActors,
@@ -641,7 +631,6 @@ int main( int   argc,
     
     // Disable all items                                                
     gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
-	gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 	
@@ -658,11 +647,6 @@ int main( int   argc,
 				     "clicked", 
 				     G_CALLBACK(btnRefreshClicked), 
 				     &resultsController);
-				 
-    g_signal_connect(GTK_WIDGET(btnUp),
-                     "clicked", 
-                     G_CALLBACK(btnUpClicked), 
-                     &resultsController);
     
     g_signal_connect(btnPrev,
                      "clicked", 

@@ -8,7 +8,7 @@ class CenterView {
     GtkWidget *swIcon;
 	GtkWidget *hbResultsError;
 	
-	GtkToolItem *btnSavedItems, *btnRefresh, *btnUp, *btnPrev, *btnNext;
+	GtkToolItem *btnSavedItems, *btnRefresh, *btnPrev, *btnNext;
 	string progName, modelTitle;
 	SavedItemsModel *savedItemsModel;
 	public:
@@ -17,8 +17,8 @@ class CenterView {
 	           GtkWidget *swIcon,
 	           GtkWidget *hbResultsError,
 	           GtkToolItem *btnSavedItems, GtkToolItem *btnRefresh,
-	           GtkToolItem *btnUp, GtkToolItem *btnPrev, 
-	           GtkToolItem *btnNext, SavedItemsModel *savedItemsModel) {
+	           GtkToolItem *btnPrev, GtkToolItem *btnNext, 
+	           SavedItemsModel *savedItemsModel) {
 		this->window = window;
 		this->progName = progName;
 		this->ivResults = ivResults;
@@ -29,7 +29,6 @@ class CenterView {
 		
 		this->btnSavedItems = btnSavedItems;
 		this->btnRefresh = btnRefresh;
-		this->btnUp = btnUp;
 		this->btnPrev = btnPrev;
 		this->btnNext = btnNext;
 		
@@ -115,10 +114,6 @@ class CenterView {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), state);
 	}
 	
-	void setSensitiveUp(bool state=TRUE) {
-		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), state);
-	}
-	
 	void setSensitivePrev(bool state=TRUE) {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), state);
 	}
@@ -163,14 +158,6 @@ class CenterView {
 		gtk_spinner_stop(GTK_SPINNER(spCenter));
 	}
 	
-	void showPlaylistsData() {
-		setSensitiveUp();
-		gtk_widget_hide(spCenter);
-		gtk_widget_hide(swIcon);
-		gtk_widget_hide(hbResultsError);
-		gtk_spinner_stop(GTK_SPINNER(spCenter));
-	}
-	
 	void showError(bool isPage) {
 		if(!isPage) {
 			setTitle("Error");
@@ -194,7 +181,6 @@ class CenterView {
 	
 	void showToolbarSavedItems() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 	}
@@ -202,7 +188,6 @@ class CenterView {
 	void showToolbarLoadingIndicator() {
 		gtk_widget_set_sensitive(GTK_WIDGET(btnSavedItems), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnRefresh), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(btnUp), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnPrev), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(btnNext), FALSE);
 	}
